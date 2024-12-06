@@ -54,4 +54,32 @@ public class Produto {
     public void setAtivo(Boolean ativo) {
         this.ativo = ativo;
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public BigDecimal getPreco() {
+        return preco;
+    }
+
+    public Integer getQuantidade() {
+        return quantidade;
+    }
+
+    public Categoria getCategoria() {
+        return categoria;
+    }
+
+    public LocalDateTime getCriadoEm() {
+        return criadoEm;
+    }
 }
