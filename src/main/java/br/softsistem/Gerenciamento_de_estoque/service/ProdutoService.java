@@ -16,7 +16,7 @@ public class ProdutoService {
     private ProdutoRepository repository;
 
     public List<Produto> listarTodos() {
-        return repository.findAll();
+        return repository.findByAtivoTrue();
     }
 
     public Produto salvar(Produto produto) {
