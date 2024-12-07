@@ -25,7 +25,7 @@ import java.util.List;
         }
 
         @PostMapping
-        public ProdutoDto salvar(@Valid @RequestBody ProdutoDto produtoDto) {
+        public ProdutoDto salvar(@RequestBody  @Valid ProdutoDto produtoDto) {
             // Converte o DTO para Produto antes de salvar
             Produto produto = new Produto();
             produto.setNome(produtoDto.nome());
