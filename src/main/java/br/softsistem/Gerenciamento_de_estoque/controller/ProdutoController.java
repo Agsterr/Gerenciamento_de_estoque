@@ -3,6 +3,7 @@ package br.softsistem.Gerenciamento_de_estoque.controller;
 import br.softsistem.Gerenciamento_de_estoque.dto.ProdutoDto;
 import br.softsistem.Gerenciamento_de_estoque.model.Produto;
 import br.softsistem.Gerenciamento_de_estoque.service.ProdutoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,7 +25,7 @@ import java.util.List;
         }
 
         @PostMapping
-        public ProdutoDto salvar(@RequestBody ProdutoDto produtoDto) {
+        public ProdutoDto salvar(@Valid @RequestBody ProdutoDto produtoDto) {
             // Converte o DTO para Produto antes de salvar
             Produto produto = new Produto();
             produto.setNome(produtoDto.nome());
