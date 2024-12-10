@@ -3,6 +3,8 @@ package br.softsistem.Gerenciamento_de_estoque.controller;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
 import br.softsistem.Gerenciamento_de_estoque.repository.UsuarioRepository;
 import br.softsistem.Gerenciamento_de_estoque.service.JwtService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -24,17 +26,19 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequest request) {
+    public String login(@Valid @RequestBody LoginRequest request) {
         var usuario = usuarioRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-        if (!passwordEncoder.matches(request.getPassword(), usuario.getSenha())) {
+        if (!passwordEncoder.matches(request.getSenha(), usuario.getSenha())) {
             throw new RuntimeException("Senha incorreta");
         }
         return jwtService.generateToken((UserDetails) usuario);
     }
 
+
     @PostMapping("/register")
     public String register(@RequestBody Usuario usuario) {
+        usuario.setUsername(usuario.getUsername());
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         usuario.setAtivo(true);
         usuarioRepository.save(usuario);
@@ -43,9 +47,11 @@ public class AuthController {
 }
 
 class LoginRequest {
+    @NotBlank(message = "O username não pode ser vazio.")
     private String username;
-    private String password;
 
+    @NotBlank(message = "A senha não pode ser vazia.")
+    private String senha;
 
     public String getUsername() {
         return username;
@@ -55,31 +61,31 @@ class LoginRequest {
         this.username = username;
     }
 
-    public String getPassword() {
-        return password;
+    public String getSenha() {
+        return senha;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setSenha(String senha) {
+        this.senha = senha;
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         LoginRequest that = (LoginRequest) o;
-        return Objects.equals(username, that.username) && Objects.equals(password, that.password);
+        return Objects.equals(username, that.username) && Objects.equals(senha, that.senha);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(username, password);
+        return Objects.hash(username, senha);
     }
 
     @Override
     public String toString() {
         return "LoginRequest{" +
                 "username='" + username + '\'' +
-                ", password='" + password + '\'' +
+                ", password='" + senha + '\'' +
                 '}';
     }
 }

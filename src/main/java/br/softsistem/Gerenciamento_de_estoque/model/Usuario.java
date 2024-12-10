@@ -1,42 +1,104 @@
 package br.softsistem.Gerenciamento_de_estoque.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 
 @Entity
 @Table(name = "usuarios")
-public class Usuario {
+public class Usuario implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "O username é obrigatório.")
+    @Size(max = 100, message = "O username deve ter no máximo 100 caracteres.")
     @Column(nullable = false, length = 100)
     private String username;
 
-
+    @NotBlank(message = "O e-mail é obrigatório.")
+    @Email(message = "O e-mail deve ser válido.")
+    @Size(max = 150, message = "O e-mail deve ter no máximo 150 caracteres.")
     @Column(nullable = false, unique = true, length = 150)
     private String email;
 
+    @NotBlank(message = "A senha é obrigatória.")
+    @Size(min = 8, message = "A senha deve ter no mínimo 8 caracteres.")
     @Column(nullable = false)
     private String senha;
 
+    @NotNull(message = "A data de criação não pode ser nula.")
     @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm = LocalDateTime.now();
 
+    @NotNull(message = "O status ativo é obrigatório.")
     @Column(nullable = false)
-    private Boolean ativo = true; // Adiciona o campo "ativo"
+    private Boolean ativo = true;
 
-    // Getters e Setters
+    // Métodos de UserDetails
 
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        // Aqui você pode adicionar as permissões do usuário (roles)
+        return Collections.emptyList();
+    }
 
-    public String getNome() {
+    @Override
+    public String getPassword() {
+        return senha;
+    }
+
+    public String getSenha() {
+        return senha;
+    }
+
+    @Override
+    public String getUsername() {
         return username;
     }
 
-    public void setNome(String nome) {
-        this.username = nome;
+    @Override
+    public boolean isAccountNonExpired() {
+        return true; // Customize se necessário
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true; // Customize se necessário
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true; // Customize se necessário
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return ativo; // Utiliza o campo "ativo" para verificar se o usuário está habilitado
+    }
+
+    // Getters e Setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getEmail() {
@@ -45,10 +107,6 @@ public class Usuario {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getSenha() {
-        return senha;
     }
 
     public void setSenha(String senha) {
@@ -63,26 +121,39 @@ public class Usuario {
         this.ativo = ativo;
     }
 
+    public LocalDateTime getCriadoEm() {
+        return criadoEm;
+    }
+
+    public void setCriadoEm(LocalDateTime criadoEm) {
+        this.criadoEm = criadoEm;
+    }
+
+    // equals, hashCode e toString
+
     @Override
     public boolean equals(Object o) {
+        if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Usuario usuario = (Usuario) o;
-        return Objects.equals(id, usuario.id) && Objects.equals(username, usuario.username) && Objects.equals(email, usuario.email) && Objects.equals(senha, usuario.senha) && Objects.equals(criadoEm, usuario.criadoEm);
+        return Objects.equals(id, usuario.id) &&
+                Objects.equals(username, usuario.username) &&
+                Objects.equals(email, usuario.email);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, username, email, senha, criadoEm);
+        return Objects.hash(id, username, email);
     }
 
     @Override
     public String toString() {
         return "Usuario{" +
                 "id=" + id +
-                ", nome='" + username + '\'' +
+                ", username='" + username + '\'' +
                 ", email='" + email + '\'' +
-                ", senha='" + senha + '\'' +
                 ", criadoEm=" + criadoEm +
+                ", ativo=" + ativo +
                 '}';
     }
 }
