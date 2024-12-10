@@ -1,5 +1,6 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
+import br.softsistem.Gerenciamento_de_estoque.exception.UsuarioDesativadoException;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
 import br.softsistem.Gerenciamento_de_estoque.repository.UsuarioRepository;
 import br.softsistem.Gerenciamento_de_estoque.service.JwtService;
@@ -27,13 +28,24 @@ public class AuthController {
 
     @PostMapping("/login")
     public String login(@Valid @RequestBody LoginRequest request) {
+        // Buscar o usuário pelo nome de usuário
         var usuario = usuarioRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        // Verificar se o usuário está ativo
+        if (!usuario.getAtivo()) {
+            throw new UsuarioDesativadoException("Usuário foi desativado");
+        }
+
+        // Verificar se a senha está correta
         if (!passwordEncoder.matches(request.getSenha(), usuario.getSenha())) {
             throw new RuntimeException("Senha incorreta");
         }
+
+        // Gerar o token JWT
         return jwtService.generateToken((UserDetails) usuario);
     }
+
 
 
     @PostMapping("/register")

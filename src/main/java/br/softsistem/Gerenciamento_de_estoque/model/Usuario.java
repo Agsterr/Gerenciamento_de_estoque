@@ -156,4 +156,6 @@ public class Usuario implements UserDetails {
                 ", ativo=" + ativo +
                 '}';
     }
+
+
 }
