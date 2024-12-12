@@ -1,9 +1,11 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
+import br.softsistem.Gerenciamento_de_estoque.repository.UsuarioRepository;
 import br.softsistem.Gerenciamento_de_estoque.service.UsuarioService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,6 +14,11 @@ import java.util.List;
 @RequestMapping("/usuarios")
 public class UsuarioController {
 
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
     private final UsuarioService usuarioService;
 
     public UsuarioController(UsuarioService usuarioService) {
@@ -23,6 +30,22 @@ public class UsuarioController {
         usuarioService.ativarUsuario(id);
         return "Usuário ativado com sucesso!";
     }
+
+    @Transactional
+    @PostMapping("/reativar-usuario")
+    public ResponseEntity<String> reativarUsuario(@RequestBody String username) {
+        var usuario = usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        if (!usuario.getAtivo()) {
+            usuario.setAtivo(true); // Reativa o usuário
+            usuarioRepository.save(usuario); // Atualiza no banco de dados
+            return ResponseEntity.ok("Usuário reativado com sucesso.");
+        }
+
+        return ResponseEntity.badRequest().body("O usuário já está ativo.");
+    }
+
 
     @Transactional
     @PutMapping("/{id}/desativar")

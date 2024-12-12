@@ -11,44 +11,57 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
 @Table(name = "usuarios")
 public class Usuario implements UserDetails {
 
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "O username é obrigatório.")
-    @Size(max = 100, message = "O username deve ter no máximo 100 caracteres.")
+    @NotBlank
+    @Size(max = 100)
     @Column(nullable = false, length = 100)
     private String username;
 
-    @NotBlank(message = "O e-mail é obrigatório.")
-    @Email(message = "O e-mail deve ser válido.")
-    @Size(max = 150, message = "O e-mail deve ter no máximo 150 caracteres.")
+    @NotBlank
+    @Email
+    @Size(max = 150)
     @Column(nullable = false, unique = true, length = 150)
     private String email;
 
-    @NotBlank(message = "A senha é obrigatória.")
-    @Size(min = 8, message = "A senha deve ter no mínimo 8 caracteres.")
+    @NotBlank
+    @Size(min = 8)
     @Column(nullable = false)
     private String senha;
 
-    @NotNull(message = "A data de criação não pode ser nula.")
     @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm = LocalDateTime.now();
 
-    @NotNull(message = "O status ativo é obrigatório.")
     @Column(nullable = false)
     private Boolean ativo = true;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "usuario_roles",
+            joinColumns = @JoinColumn(name = "usuario_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private List<Role> roles; // Relacionamento com a entidade Role
+
+
+
 
     // Métodos de UserDetails
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
+
+
         // Aqui você pode adicionar as permissões do usuário (roles)
         return Collections.emptyList();
     }
@@ -128,6 +141,15 @@ public class Usuario implements UserDetails {
     public void setCriadoEm(LocalDateTime criadoEm) {
         this.criadoEm = criadoEm;
     }
+
+    public List<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<Role> roles) {
+        this.roles = roles;
+    }
+
 
     // equals, hashCode e toString
 
