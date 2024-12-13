@@ -2,9 +2,12 @@ package br.softsistem.Gerenciamento_de_estoque.model;
 
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
 import jakarta.persistence.*;
+import jakarta.transaction.Transactional;
+
 import java.util.List;
 
 @Entity
+@Transactional
 @Table(name = "role")
 public class Role {
 
