@@ -1,6 +1,7 @@
 package br.softsistem.Gerenciamento_de_estoque.model;
 
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
 
@@ -18,6 +19,8 @@ public class Role {
     @Column(nullable = false, unique = true)
     private String nome;
 
+
+    @JsonIgnore
     @ManyToMany(mappedBy = "roles")
     private List<Usuario> usuarios; // Relacionamento bidirecional com Usuario
 
