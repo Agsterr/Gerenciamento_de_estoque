@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
@@ -29,6 +30,7 @@ public class AuthController {
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
+
     }
 
     @PostMapping("/login")
@@ -55,13 +57,24 @@ public class AuthController {
 
     @PostMapping("/register")
     public String register(@RequestBody Usuario usuario) {
+
+        // Processar as roles recebidas do payload
+        List<Role> rolesPersistidas = usuario.getRoles().stream()
+                .map(role -> {
+                    // Buscar no banco a role pelo nome
+                    return roleRepository.findByNome(role.getNome())
+                            .orElseGet(() -> roleRepository.save(new Role(role.getNome())));
+                })
+                .toList();
+
+
+        // Associar as roles persistidas ao usuário
+        usuario.setRoles(rolesPersistidas);
+
         usuario.setUsername(usuario.getUsername());
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         usuario.setAtivo(true);
 
-        // Buscar as roles pelo nome
-        List<Role> roles = roleRepository.findByNomeIn(usuario.getRoles());  // Método customizado que busca por nome
-        usuario.setRoles(roles);
 
         usuarioRepository.save(usuario);
         return "Usuário registrado com sucesso!";

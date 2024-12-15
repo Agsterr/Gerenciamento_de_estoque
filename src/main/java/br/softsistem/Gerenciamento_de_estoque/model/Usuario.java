@@ -9,10 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Entity
 @Table(name = "usuarios")
@@ -53,7 +50,7 @@ public class Usuario implements UserDetails {
             joinColumns = @JoinColumn(name = "usuario_id"), // Coluna para a entidade Usuario
             inverseJoinColumns = @JoinColumn(name = "role_id") // Coluna para a entidade Role
     )
-    private List<Role> roles; // Lista de roles associadas ao usuário
+    private List<Role>roles; // Lista de roles associadas ao usuário
 
 
 

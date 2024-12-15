@@ -25,5 +25,7 @@ public class UsuarioService {
 
     public List<Usuario> listarUsuariosAtivos() {
         return usuarioRepository.findByAtivoTrue();
+
+
     }
 }
