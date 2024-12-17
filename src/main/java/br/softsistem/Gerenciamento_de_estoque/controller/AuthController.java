@@ -1,5 +1,7 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
+import br.softsistem.Gerenciamento_de_estoque.dto.UsuarioDto;
+import br.softsistem.Gerenciamento_de_estoque.dto.UsuarioRequestDto;
 import br.softsistem.Gerenciamento_de_estoque.exception.UsuarioDesativadoException;
 import br.softsistem.Gerenciamento_de_estoque.model.Role;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
@@ -54,74 +56,30 @@ public class AuthController {
     }
 
 
-
     @PostMapping("/register")
-    public String register(@RequestBody Usuario usuario) {
+    public UsuarioDto register(@RequestBody UsuarioRequestDto usuarioRequestDto) {
 
-        // Processar as roles recebidas do payload
-        List<Role> rolesPersistidas = usuario.getRoles().stream()
-                .map(role -> {
-                    // Buscar no banco a role pelo nome
-                    return roleRepository.findByNome(role.getNome())
-                            .orElseGet(() -> roleRepository.save(new Role(role.getNome())));
-                })
+        // Processar as roles recebidas do payload (convertendo de nomes para entidades persistidas)
+        List<Role> rolesPersistidas = usuarioRequestDto.roles().stream()
+                .map(nomeRole -> roleRepository.findByNome(nomeRole)
+                        .orElseGet(() -> roleRepository.save(new Role(nomeRole))))
                 .toList();
 
+        // Criar a entidade Usuario
+        Usuario novoUsuario = new Usuario();
+        novoUsuario.setUsername(usuarioRequestDto.username());
+        novoUsuario.setEmail(usuarioRequestDto.email());
+        novoUsuario.setSenha(passwordEncoder.encode(usuarioRequestDto.senha()));
+        novoUsuario.setAtivo(true);
+        novoUsuario.setRoles(rolesPersistidas);
 
-        // Associar as roles persistidas ao usuário
-        usuario.setRoles(rolesPersistidas);
+        // Salvar o usuário no banco
+        Usuario usuarioSalvo = usuarioRepository.save(novoUsuario);
 
-        usuario.setUsername(usuario.getUsername());
-        usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
-        usuario.setAtivo(true);
-
-
-        usuarioRepository.save(usuario);
-        return "Usuário registrado com sucesso!";
-    }
-}
-
-class LoginRequest {
-    @NotBlank(message = "O username não pode ser vazio.")
-    private String username;
-
-    @NotBlank(message = "A senha não pode ser vazia.")
-    private String senha;
-
-    public String getUsername() {
-        return username;
+        // Retornar um DTO como resposta
+        return new UsuarioDto(usuarioSalvo);
     }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
 
-    public String getSenha() {
-        return senha;
-    }
-
-    public void setSenha(String senha) {
-        this.senha = senha;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        LoginRequest that = (LoginRequest) o;
-        return Objects.equals(username, that.username) && Objects.equals(senha, that.senha);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(username, senha);
-    }
-
-    @Override
-    public String toString() {
-        return "LoginRequest{" +
-                "username='" + username + '\'' +
-                ", password='" + senha + '\'' +
-                '}';
-    }
 }
 
