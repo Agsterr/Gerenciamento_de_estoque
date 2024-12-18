@@ -3,8 +3,10 @@ package br.softsistem.Gerenciamento_de_estoque.config;
 import br.softsistem.Gerenciamento_de_estoque.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -16,6 +18,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity // Habilita o uso de @PreAuthorize
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
@@ -49,6 +52,8 @@ public class SecurityConfig {
                 }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login", "/auth/register").permitAll() // Endpoints públicos
+                        .requestMatchers("/usuarios/reativar-usuario").hasRole("ADMIN") // Somente ROLE_ADMIN pode a
+                        .requestMatchers(HttpMethod.PUT, "/usuarios/{id}/desativar").hasRole("ADMIN") // Apenas ADMIN pode desativar
                         .anyRequest().authenticated() // Requer autenticação para todas as outras requisições
 
                 )

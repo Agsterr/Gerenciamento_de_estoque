@@ -57,29 +57,27 @@ public class AuthController {
 
 
     @PostMapping("/register")
-    public UsuarioDto register(@RequestBody UsuarioRequestDto usuarioRequestDto) {
+    public UsuarioDto register(@RequestBody @Valid UsuarioRequestDto usuarioRequestDto) {
 
-        // Processar as roles recebidas do payload (convertendo de nomes para entidades persistidas)
+        // Processar as roles recebidas no payload (convertendo de nomes para entidades persistidas)
         List<Role> rolesPersistidas = usuarioRequestDto.roles().stream()
                 .map(nomeRole -> roleRepository.findByNome(nomeRole)
                         .orElseGet(() -> roleRepository.save(new Role(nomeRole))))
                 .toList();
 
-        // Criar a entidade Usuario
-        Usuario novoUsuario = new Usuario();
-        novoUsuario.setUsername(usuarioRequestDto.username());
-        novoUsuario.setEmail(usuarioRequestDto.email());
-        novoUsuario.setSenha(passwordEncoder.encode(usuarioRequestDto.senha()));
-        novoUsuario.setAtivo(true);
-        novoUsuario.setRoles(rolesPersistidas);
+        // Criar o objeto Usuario e preencher os dados
+        Usuario usuario = new Usuario();
+        usuario.setUsername(usuarioRequestDto.username());
+        usuario.setSenha(passwordEncoder.encode(usuarioRequestDto.senha())); // Criptografar a senha
+        usuario.setEmail(usuarioRequestDto.email());
+        usuario.setRoles(rolesPersistidas);
+        usuario.setAtivo(true);
 
         // Salvar o usuário no banco
-        Usuario usuarioSalvo = usuarioRepository.save(novoUsuario);
+        usuario = usuarioRepository.save(usuario);
 
-        // Retornar um DTO como resposta
-        return new UsuarioDto(usuarioSalvo);
+        // Retornar o DTO com os dados do usuário salvo
+        return new UsuarioDto(usuario);
     }
-
-
 }
 

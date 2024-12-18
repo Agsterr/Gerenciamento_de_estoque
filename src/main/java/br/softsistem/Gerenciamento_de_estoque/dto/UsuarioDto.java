@@ -2,9 +2,23 @@ package br.softsistem.Gerenciamento_de_estoque.dto;
 
 import br.softsistem.Gerenciamento_de_estoque.model.Role;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
+import java.util.List;
 
-public record UsuarioDto(String username, String email, Boolean ativo, java.util.List<Role> role, Long id) {
-
-
+public record UsuarioDto(
+        Long id,
+        String username,
+        String email,
+        Boolean ativo,
+        List<String> roles
+) {
     public UsuarioDto(Usuario usuario) {
-        this(usuario.getUsername(),usuario.getEmail(),usuario. getAtivo(),usuario.getRoles(),usuario.getId()); } }
+        this(
+                usuario.getId(),
+                usuario.getUsername(),
+                usuario.getEmail(),
+                usuario.getAtivo(),
+                usuario.getRoles().stream().map(Role::getNome).toList()
+        );
+    }
+}
+

@@ -2,11 +2,14 @@ package br.softsistem.Gerenciamento_de_estoque.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -37,7 +40,15 @@ public class GlobalExceptionHandler {
         public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
         }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public Map<String, String> handleAccessDeniedException(AccessDeniedException ex) {
+        Map<String, String> response = new HashMap<>();
+        response.put("error", "Você não tem autorização para desativar usuários");
+        return response;
     }
+}
+
 
 
 

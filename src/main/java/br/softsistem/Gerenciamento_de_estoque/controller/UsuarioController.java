@@ -6,6 +6,7 @@ import br.softsistem.Gerenciamento_de_estoque.service.UsuarioService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,6 +34,7 @@ public class UsuarioController {
 
     @Transactional
     @PostMapping("/reativar-usuario")
+    @PreAuthorize("hasRole('ADMIN')") // Apenas ADMIN pode acessar
     public ResponseEntity<String> reativarUsuario(@RequestBody String username) {
         var usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
@@ -49,9 +51,15 @@ public class UsuarioController {
 
     @Transactional
     @PutMapping("/{id}/desativar")
-    public String desativarUsuario(@PathVariable Long id) {
-        usuarioService.desativarUsuario(id);
-        return "Usuário desativado com sucesso!";
+    @PreAuthorize("hasRole('ADMIN')") // Apenas ADMIN pode acessar
+    public ResponseEntity<String> desativarUsuario(@PathVariable Long id) {
+        return usuarioRepository.findById(id)
+                .map(usuario -> {
+                    usuario.setAtivo(false); // Desativa o usuário
+                    usuarioRepository.save(usuario);
+                    return ResponseEntity.ok("Usuário desativado com sucesso!");
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/ativos")
