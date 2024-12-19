@@ -1,4 +1,4 @@
-package br.softsistem.Gerenciamento_de_estoque.dto;
+package br.softsistem.Gerenciamento_de_estoque.dto.produtoDto;
 
 import br.softsistem.Gerenciamento_de_estoque.model.Categoria;
 import br.softsistem.Gerenciamento_de_estoque.model.Produto;

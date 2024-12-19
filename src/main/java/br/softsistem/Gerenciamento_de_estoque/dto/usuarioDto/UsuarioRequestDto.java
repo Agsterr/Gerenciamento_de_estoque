@@ -1,4 +1,4 @@
-package br.softsistem.Gerenciamento_de_estoque.dto;
+package br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

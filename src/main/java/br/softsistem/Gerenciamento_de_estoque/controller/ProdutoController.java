@@ -1,6 +1,6 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
-import br.softsistem.Gerenciamento_de_estoque.dto.ProdutoDto;
+import br.softsistem.Gerenciamento_de_estoque.dto.produtoDto.ProdutoDto;
 import br.softsistem.Gerenciamento_de_estoque.model.Produto;
 import br.softsistem.Gerenciamento_de_estoque.service.ProdutoService;
 import jakarta.validation.Valid;

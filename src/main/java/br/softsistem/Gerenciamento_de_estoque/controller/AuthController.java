@@ -1,7 +1,7 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
-import br.softsistem.Gerenciamento_de_estoque.dto.UsuarioDto;
-import br.softsistem.Gerenciamento_de_estoque.dto.UsuarioRequestDto;
+import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioDto;
+import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioRequestDto;
 import br.softsistem.Gerenciamento_de_estoque.exception.UsuarioDesativadoException;
 import br.softsistem.Gerenciamento_de_estoque.model.Role;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
@@ -9,14 +9,11 @@ import br.softsistem.Gerenciamento_de_estoque.repository.RoleRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.UsuarioRepository;
 import br.softsistem.Gerenciamento_de_estoque.service.JwtService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")

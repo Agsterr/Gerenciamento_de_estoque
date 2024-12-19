@@ -44,7 +44,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public Map<String, String> handleAccessDeniedException(AccessDeniedException ex) {
         Map<String, String> response = new HashMap<>();
-        response.put("error", "Você não tem autorização para desativar usuários");
+        response.put("error", "Você não tem autorização suficiente para essa ação!!!");
         return response;
     }
 }

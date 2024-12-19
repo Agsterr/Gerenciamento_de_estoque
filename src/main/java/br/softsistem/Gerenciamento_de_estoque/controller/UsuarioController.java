@@ -1,6 +1,6 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
-import br.softsistem.Gerenciamento_de_estoque.dto.ReativarUsuarioRequest;
+import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.ReativarUsuarioRequest;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
 import br.softsistem.Gerenciamento_de_estoque.repository.UsuarioRepository;
 import br.softsistem.Gerenciamento_de_estoque.service.UsuarioService;

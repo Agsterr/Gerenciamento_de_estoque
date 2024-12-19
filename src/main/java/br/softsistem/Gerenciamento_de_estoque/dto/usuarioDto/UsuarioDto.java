@@ -1,4 +1,4 @@
-package br.softsistem.Gerenciamento_de_estoque.dto;
+package br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto;
 
 import br.softsistem.Gerenciamento_de_estoque.model.Role;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
