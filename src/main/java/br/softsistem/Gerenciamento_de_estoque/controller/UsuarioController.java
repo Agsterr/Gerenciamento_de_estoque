@@ -1,5 +1,6 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
+import br.softsistem.Gerenciamento_de_estoque.dto.ReativarUsuarioRequest;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
 import br.softsistem.Gerenciamento_de_estoque.repository.UsuarioRepository;
 import br.softsistem.Gerenciamento_de_estoque.service.UsuarioService;
@@ -35,13 +36,14 @@ public class UsuarioController {
     @Transactional
     @PostMapping("/reativar-usuario")
     @PreAuthorize("hasRole('ADMIN')") // Apenas ADMIN pode acessar
-    public ResponseEntity<String> reativarUsuario(@RequestBody String username) {
-        var usuario = usuarioRepository.findByUsername(username)
+    public ResponseEntity<String> reativarUsuario(@RequestBody ReativarUsuarioRequest request) {
+        System.out.println("Username recebido: " + request.username());
+        var usuario = usuarioRepository.findByUsername(request.username())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
         if (!usuario.getAtivo()) {
-            usuario.setAtivo(true); // Reativa o usuário
-            usuarioRepository.save(usuario); // Atualiza no banco de dados
+            usuario.setAtivo(true);
+            usuarioRepository.save(usuario);
             return ResponseEntity.ok("Usuário reativado com sucesso.");
         }
 
@@ -62,6 +64,7 @@ public class UsuarioController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("hasRole('ADMIN')") // Apenas ADMIN pode acessar
     @GetMapping("/ativos")
     public List<Usuario> listarUsuariosAtivos() {
         return usuarioService.listarUsuariosAtivos();
