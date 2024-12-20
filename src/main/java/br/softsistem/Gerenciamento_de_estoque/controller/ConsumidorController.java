@@ -1,5 +1,6 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
+import br.softsistem.Gerenciamento_de_estoque.dto.consumidorDto.ConsumidorDto;
 import br.softsistem.Gerenciamento_de_estoque.model.Consumidor;
 import br.softsistem.Gerenciamento_de_estoque.repository.ConsumidorRepository;
 import org.springframework.http.ResponseEntity;
@@ -18,14 +19,22 @@ public class ConsumidorController {
     }
 
     @PostMapping
-    public ResponseEntity<Consumidor> adicionarConsumidor(@RequestBody Consumidor consumidor) {
-        Consumidor salvo = consumidorRepository.save(consumidor);
-        return ResponseEntity.ok(salvo);
+    public ResponseEntity<ConsumidorDto> adicionarConsumidor(@RequestBody ConsumidorDto consumidorDto) {
+        // Converte DTO para Entidade e salva
+        Consumidor salvo = consumidorRepository.save(consumidorDto.toEntity());
+
+        // Retorna o DTO convertido da Entidade salva
+        return ResponseEntity.ok(ConsumidorDto.fromEntity(salvo));
     }
 
     @GetMapping
-    public ResponseEntity<List<Consumidor>> listarConsumidores() {
-        List<Consumidor> consumidores = consumidorRepository.findAll();
-        return ResponseEntity.ok(consumidores);
+    public ResponseEntity<List<ConsumidorDto>> listarConsumidores() {
+        // Busca entidades no banco e converte para lista de DTOs
+        List<ConsumidorDto> consumidoresDto = consumidorRepository.findAll()
+                .stream()
+                .map(ConsumidorDto::fromEntity)
+                .toList();
+
+        return ResponseEntity.ok(consumidoresDto);
     }
 }

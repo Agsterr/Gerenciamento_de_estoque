@@ -1,5 +1,6 @@
 package br.softsistem.Gerenciamento_de_estoque.repository;
 
+
 import br.softsistem.Gerenciamento_de_estoque.model.Consumidor;
 import org.springframework.data.jpa.repository.JpaRepository;
 
