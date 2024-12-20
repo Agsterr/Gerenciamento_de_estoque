@@ -2,7 +2,7 @@ package br.softsistem.Gerenciamento_de_estoque.dto.entregaDto;
 
 import br.softsistem.Gerenciamento_de_estoque.model.Consumidor;
 
-public class EntregaRequest {
+public class EntregaRequestDto {
     private Long produtoId;
     private int quantidade;
     private Consumidor consumidor;

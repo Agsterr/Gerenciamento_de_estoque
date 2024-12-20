@@ -1,6 +1,7 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
-import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaRequest;
+import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaRequestDto;
+import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaResponseDto;
 import br.softsistem.Gerenciamento_de_estoque.model.Entrega;
 import br.softsistem.Gerenciamento_de_estoque.model.Produto;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
@@ -13,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/entregas")
@@ -29,7 +31,7 @@ public class EntregaController {
     }
 
     @PostMapping
-    public ResponseEntity<String> registrarEntrega(@RequestBody EntregaRequest request) {
+    public ResponseEntity<String> registrarEntrega(@RequestBody EntregaRequestDto request) {
         // Obtendo o usuário logado
         String username = getLoggedUserUsername();
 
@@ -64,7 +66,7 @@ public class EntregaController {
         }
     }
 
-    private Entrega criarEntrega(EntregaRequest request, Usuario entregador, Produto produto) {
+    private Entrega criarEntrega(EntregaRequestDto request, Usuario entregador, Produto produto) {
         Entrega entrega = new Entrega();
         entrega.setConsumidor(request.getConsumidor());
         entrega.setProduto(produto);
@@ -73,4 +75,19 @@ public class EntregaController {
         entrega.setHorarioEntrega(LocalDateTime.now());
         return entrega;
     }
+
+    @GetMapping
+    public ResponseEntity<List<EntregaResponseDto>> listarEntregas() {
+        // Busca todas as entregas do banco de dados
+        List<Entrega> entregas = entregaRepository.findAll();
+
+        // Converte a lista de entidades Entrega em uma lista de DTOs EntregaResponse
+        List<EntregaResponseDto> entregaResponses = entregas.stream()
+                .map(EntregaResponseDto::fromEntity)
+                .toList();
+
+        // Retorna a lista de entregas com status HTTP 200
+        return ResponseEntity.ok(entregaResponses);
+    }
+
 }
