@@ -1,10 +1,15 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
 import br.softsistem.Gerenciamento_de_estoque.dto.produtoDto.ProdutoDto;
+import br.softsistem.Gerenciamento_de_estoque.dto.produtoDto.ProdutoRequest;
+import br.softsistem.Gerenciamento_de_estoque.model.Categoria;
 import br.softsistem.Gerenciamento_de_estoque.model.Produto;
+import br.softsistem.Gerenciamento_de_estoque.repository.CategoriaRepository;
+import br.softsistem.Gerenciamento_de_estoque.repository.ProdutoRepository;
 import br.softsistem.Gerenciamento_de_estoque.service.ProdutoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,6 +18,15 @@ import java.util.List;
     @RestController
     @RequestMapping("/produtos")
     public class ProdutoController {
+
+
+        private final ProdutoRepository produtoRepository;
+        private final CategoriaRepository categoriaRepository;
+
+        public ProdutoController(ProdutoRepository produtoRepository, CategoriaRepository categoriaRepository) {
+            this.produtoRepository = produtoRepository;
+            this.categoriaRepository = categoriaRepository;
+        }
 
         @Autowired
         private ProdutoService service;
@@ -25,23 +39,26 @@ import java.util.List;
         }
 
         @PostMapping
-        public ProdutoDto salvar(@RequestBody  @Valid ProdutoDto produtoDto) {
-            // Converte o DTO para Produto antes de salvar
+        public ResponseEntity<String> criarProduto(@RequestBody @Valid ProdutoRequest produtoRequest) {
+            // Busca a categoria vinculada
+            Categoria categoria = categoriaRepository.findById(produtoRequest.getCategoriaId())
+                    .orElseThrow(() -> new RuntimeException("Categoria não encontrada."));
+
+            // Converte o DTO para a entidade Produto
             Produto produto = new Produto();
-            produto.setNome(produtoDto.nome());
-            produto.setQuantidade(produtoDto.quantidade());
-            produto.setPreco(produtoDto.preco());
-            produto.setCategoria(produtoDto.categoria());
-            produto.setCriadoEm(produtoDto.dateTime());
-            produto.setDescricao(produtoDto.descricao());
+            produto.setNome(produtoRequest.getNome());
+            produto.setDescricao(produtoRequest.getDescricao());
+            produto.setPreco(produtoRequest.getPreco());
+            produto.setQuantidade(produtoRequest.getQuantidade());
+            produto.setQuantidadeMinima(produtoRequest.getQuantidadeMinima());
+            produto.setCategoria(categoria);
 
-            Produto produtoSalvo = service.salvar(produto);
+            // Salva o produto
+            produtoRepository.save(produto);
 
-
-
-            // Retorna o Produto salvo como ProdutoDto
-            return new ProdutoDto(produtoSalvo);
+            return ResponseEntity.ok("Produto criado com sucesso.");
         }
+
 
         @DeleteMapping("/{id}")
         public void excluir(@PathVariable Long id) {
@@ -50,4 +67,3 @@ import java.util.List;
 
 
     }
-
