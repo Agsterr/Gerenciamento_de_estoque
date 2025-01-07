@@ -8,7 +8,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
   standalone: true,
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
-  imports: [ReactiveFormsModule] // Adicione aqui o ReactiveFormsModule
+  imports: [ReactiveFormsModule], // Importe o ReactiveFormsModule aqui
 })
 export class LoginComponent {
   loginForm: FormGroup;
@@ -16,7 +16,7 @@ export class LoginComponent {
   constructor(private fb: FormBuilder) {
     this.loginForm = this.fb.group({
       username: ['', Validators.required],
-      senha: ['', Validators.required]
+      senha: ['', Validators.required],
     });
   }
 
@@ -24,3 +24,4 @@ export class LoginComponent {
     console.log('Login Data:', this.loginForm.value);
   }
 }
+

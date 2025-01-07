@@ -1,0 +1,49 @@
+/* Estilo do contêiner principal */
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Alinha os elementos no topo */
+    align-items: center;
+    min-height: 100vh; /* Altura mínima igual à tela */
+    background-color: #070606; /* Fundo cinza escuro */
+    color: #ffffff; /* Texto branco */
+    padding: 20px;
+    box-sizing: border-box;
+    text-align: center;
+  }
+  
+  /* Estilo do título */
+  h1 {
+    margin-bottom: 20px;
+    color: #ffffff; /* Branco */
+  }
+  
+  /* Estilo do menu de navegação */
+  nav {
+    margin-bottom: 20px;
+  }
+  
+  nav a {
+    color: #4a90e2; /* Azul claro */
+    text-decoration: none;
+    font-size: 1.2rem;
+    margin: 0 10px;
+  }
+  
+  nav a.active {
+    font-weight: bold;
+    text-decoration: underline;
+  }
+  
+  nav a:hover {
+    color: #357ab8; /* Azul mais escuro no hover */
+  }
+  
+  /* Estilo para o router-outlet */
+  .router-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 20px;
+  }
+  
