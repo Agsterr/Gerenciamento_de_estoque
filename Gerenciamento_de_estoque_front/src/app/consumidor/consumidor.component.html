@@ -1,0 +1,6 @@
+<div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+<div *ngIf="consumidores.length > 0">
+  <ul>
+    <li *ngFor="let consumidor of consumidores">{{ consumidor.nome }}</li>
+  </ul>
+</div>

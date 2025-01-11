@@ -1,5 +1,6 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
+import br.softsistem.Gerenciamento_de_estoque.dto.LoginRequest;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioRequestDto;
 import br.softsistem.Gerenciamento_de_estoque.exception.UsuarioDesativadoException;

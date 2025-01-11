@@ -1,0 +1,43 @@
+/* home.component.css */
+
+/* Estilo para o contêiner principal */
+.home-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  
+  /* Estilo para o título */
+  .home-title {
+    font-size: 2.5em;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  
+  /* Estilo para a descrição */
+  .home-description {
+    font-size: 1.2em;
+    color: #666;
+    text-align: center;
+    max-width: 600px;
+  }
+  
+  /* Estilo para um botão */
+  .home-button {
+    margin-top: 30px;
+  }
+  
+  .home-button a {
+    text-decoration: none;
+    color: white;
+    background-color: #007BFF;
+    padding: 10px 20px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .home-button a:hover {
+    background-color: #0056b3;
+  }
+  

@@ -1,0 +1,7 @@
+<div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+<div *ngIf="produtos.length > 0">
+  <ul>
+    <li *ngFor="let produto of produtos">{{ produto.nome }}</li>
+  </ul>
+</div>
+

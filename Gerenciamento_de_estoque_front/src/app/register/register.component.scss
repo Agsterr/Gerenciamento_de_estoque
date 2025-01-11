@@ -1,0 +1,113 @@
+/* Centraliza o contêiner na tela */
+.container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #4a90e2; /* Fundo azul */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    color: white; /* Texto branco para contraste */
+    box-sizing: border-box;
+  }
+  
+  /* Título */
+  h2 {
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+  }
+  
+  /* Formulário */
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    text-align: left;
+  }
+  
+  input {
+    padding: 10px;
+    margin-bottom: 15px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    width: 100%; /* Ocupa toda a largura */
+    box-sizing: border-box;
+  }
+  
+  /* Botão */
+  button {
+    padding: 10px;
+    background-color: #357ab8; /* Azul mais escuro para o botão */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+  }
+  
+  button:disabled {
+    background-color: #ccc; /* Cinza para botão desabilitado */
+    cursor: not-allowed;
+  }
+  
+  /* Mensagens */
+  .success-message {
+    color: #2ecc71; /* Verde para sucesso */
+    margin-top: 10px;
+  }
+  
+  .error-message {
+    color: #e74c3c; /* Vermelho para erro */
+    margin-top: 10px;
+  }
+  
+  /* Responsividade */
+  @media (max-width: 768px) {
+    /* Para tablets e celulares */
+    .container {
+      padding: 15px;
+      max-width: 90%; /* O contêiner ocupa 90% da largura */
+    }
+  
+    h2 {
+      font-size: 1.5rem;
+    }
+  
+    input {
+      font-size: 0.9rem;
+      padding: 8px;
+    }
+  
+    button {
+      font-size: 0.9rem;
+      padding: 8px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    /* Para celulares pequenos */
+    .container {
+      padding: 10px;
+    }
+  
+    h2 {
+      font-size: 1.2rem;
+    }
+  
+    input {
+      font-size: 0.8rem;
+      padding: 6px;
+    }
+  
+    button {
+      font-size: 0.8rem;
+      padding: 6px;
+    }
+  }
+  

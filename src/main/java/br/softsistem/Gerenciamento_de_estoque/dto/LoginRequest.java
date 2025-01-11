@@ -1,10 +1,10 @@
-package br.softsistem.Gerenciamento_de_estoque.controller;
+package br.softsistem.Gerenciamento_de_estoque.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
 import java.util.Objects;
 
-class LoginRequest {
+public class LoginRequest {
     @NotBlank(message = "O username não pode ser vazio.")
     private String username;
 
