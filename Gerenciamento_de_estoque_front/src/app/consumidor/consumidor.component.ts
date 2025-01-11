@@ -1,30 +1,46 @@
+
+// src/app/consumers/consumers.component.ts
+
 import { Component, OnInit } from '@angular/core';
-import { ConsumidorService } from '../services/consumidor.service';
+import { ConsumerService, Consumer } from '../services/consumidor.service';
+import { ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-consumidor',
+  selector: 'app-consumers',
+  standalone: true, // Torna o componente standalone
   templateUrl: './consumidor.component.html',
-  styleUrls: ['./consumidor.component.css']
+  styleUrls: ['./consumidor.component.scss'],
+  imports: [ReactiveFormsModule, CommonModule, FormsModule] 
 })
-export class ConsumidorComponent implements OnInit {
-  consumidores: any[] = [];
-  errorMessage: string = '';
+export class ConsumersComponent implements OnInit {
+  consumers: Consumer[] = [];
+  filteredConsumers: Consumer[] = [];
+  searchTerm: string = '';
 
-  constructor(private consumidorService: ConsumidorService) {}
+  constructor(private consumerService: ConsumerService) { }
 
   ngOnInit(): void {
-    this.loadConsumidores();
+    this.fetchConsumers();
   }
 
-  loadConsumidores(): void {
-    this.consumidorService.getConsumidores().subscribe({
-      next: (data) => {
-        this.consumidores = data;
-      },
-      error: (error) => {
-        this.errorMessage = 'Erro ao carregar consumidores.';
-      }
+  // Busca os consumidores do back-end e ordena alfabeticamente pelo nome
+  fetchConsumers(): void {
+    this.consumerService.getConsumers().subscribe((data) => {
+      this.consumers = data.sort((a, b) => a.nome.localeCompare(b.nome));
+      this.applyFilter();
     });
   }
-}
 
+  // Aplica o filtro de acordo com o searchTerm
+  applyFilter(): void {
+    if (this.searchTerm.trim() === '') {
+      this.filteredConsumers = this.consumers;
+    } else {
+      this.filteredConsumers = this.consumers.filter(consumer =>
+        consumer.nome.toLowerCase().includes(this.searchTerm.toLowerCase())
+      );
+    }
+  }
+}

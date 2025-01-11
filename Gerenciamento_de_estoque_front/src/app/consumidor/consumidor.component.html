@@ -1,6 +1,29 @@
-<div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
-<div *ngIf="consumidores.length > 0">
-  <ul>
-    <li *ngFor="let consumidor of consumidores">{{ consumidor.nome }}</li>
-  </ul>
+<div class="consumer-container">
+  <h2>Lista de Consumidores</h2>
+  
+  <!-- Campo de pesquisa -->
+  <div class="search-box">
+    <input type="text"
+           placeholder="Pesquisar por nome..."
+           [(ngModel)]="searchTerm"
+           (input)="applyFilter()" />
+  </div>
+
+  <!-- Tabela de consumidores -->
+  <table>
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>CPF</th>
+        <!-- Aqui você pode adicionar colunas para outras informações -->
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let consumer of filteredConsumers">
+        <td>{{ consumer.nome }}</td>
+        <td>{{ consumer.cpf }}</td>
+      </tr>
+    </tbody>
+  </table>
 </div>
+

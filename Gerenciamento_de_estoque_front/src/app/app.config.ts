@@ -1,10 +1,13 @@
 import { ApplicationConfig } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { routes } from './app.routes'; // Importa as rotas definidas
+import { provideHttpClient } from '@angular/common/http';
+import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter(routes), // Configura as rotas aqui
+    provideRouter(routes),         // Configura as rotas
+    provideHttpClient(),           // Configura o HttpClient
   ],
 };
+
 

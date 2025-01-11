@@ -1,7 +1,20 @@
-<div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
-<div *ngIf="produtos.length > 0">
+<div *ngIf="produto">
+  <h2>Detalhes do Produto: {{ produto.nome }}</h2>
+  <p>Quantidade em Estoque: {{ produto.quantidadeEstoque }}</p>
+  
+  <h3>Entradas:</h3>
   <ul>
-    <li *ngFor="let produto of produtos">{{ produto.nome }}</li>
+    <li *ngFor="let entrada of produto.entradas">
+      {{ entrada.quantidade }} - Consumidor: {{ entrada.consumidor.nome }} - Data: {{ entrada.data }}
+    </li>
+  </ul>
+
+  <h3>Saídas:</h3>
+  <ul>
+    <li *ngFor="let saida of produto.saidas">
+      {{ saida.quantidade }} - Consumidor: {{ saida.consumidor.nome }} - Data: {{ saida.data }}
+    </li>
   </ul>
 </div>
+
 

@@ -1,3 +1,4 @@
+
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -32,7 +33,7 @@ export class ApiService {
 
   // Função para adicionar cabeçalhos com token de autenticação (se necessário)
   private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('jwtToken');
+    const token = localStorage.getItem('jwtToken'); // Usando 'jwtToken' como chave
     return new HttpHeaders({
       Authorization: `Bearer ${token}`, // Adiciona o token JWT
       'Content-Type': 'application/json',

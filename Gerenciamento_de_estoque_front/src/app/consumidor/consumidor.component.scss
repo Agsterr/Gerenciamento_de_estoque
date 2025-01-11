@@ -1,4 +1,29 @@
-.error {
-    color: red;
-  }
-  
+.consumer-container {
+  padding: 20px;
+}
+
+.search-box {
+  margin-bottom: 15px;
+}
+
+.search-box input {
+  width: 100%;
+  max-width: 300px;
+  padding: 8px;
+  font-size: 1rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background-color: #f2f2f2;
+}
+
+th, td {
+  padding: 10px;
+  text-align: left;
+  border: 1px solid #ddd;
+}

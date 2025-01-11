@@ -1,10 +1,8 @@
-
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service'; // Serviço genérico para comunicação com a API
-import { Observable } from 'rxjs';
+import { Observable, tap, catchError } from 'rxjs';
 import { LoginResponse } from '../models/login-response.model'; // Importe a interface LoginResponse
-import { RegisterRequest } from '../models/register-request.model'; // Importe a interface RegisterRequest
-import { RegisterResponse } from '../models/register-response.model'; // Importe a interface RegisterResponse
+import { of } from 'rxjs';  // Para retornar um Observable vazio em caso de erro
 
 @Injectable({
   providedIn: 'root',
@@ -20,14 +18,37 @@ export class AuthService {
    */
   login(username: string, senha: string): Observable<LoginResponse> {
     const loginData = { username, senha };
-    return this.apiService.post<LoginResponse>('/auth/login', loginData); // Requisição POST para /auth/login
+
+    return this.apiService.post<LoginResponse>('/auth/login', loginData).pipe(
+      tap((response: LoginResponse) => {
+        if (response && response.token) {
+          // Salva o token JWT diretamente, sem usar JSON.parse
+          localStorage.setItem('jwtToken', response.token);  // Armazena o JWT no localStorage
+          localStorage.setItem('loggedUser', JSON.stringify({ username }));
+        }
+      }),
+      catchError((err) => {
+        console.error('Erro ao fazer login', err); // Logando o erro no console
+        return of(err); // Retorna um Observable vazio para que o fluxo continue
+      })
+    );
   }
 
   /**
-   * Realiza logout do usuário (se necessário, apenas limpa o token local).
+   * Retorna os dados do usuário logado a partir do localStorage.
+   * @returns objeto com os dados do usuário ou null se não estiver logado.
+   */
+  getLoggedUser(): any {
+    const userData = localStorage.getItem('loggedUser');
+    return userData ? JSON.parse(userData) : null;
+  }
+
+  /**
+   * Realiza logout do usuário (limpa o token e os dados do usuário).
    */
   logout(): void {
-    localStorage.removeItem('jwtToken'); // Remove o token JWT do armazenamento local
+    localStorage.removeItem('jwtToken');
+    localStorage.removeItem('loggedUser');
   }
 
   /**
@@ -35,7 +56,8 @@ export class AuthService {
    * @param data - Dados para registro.
    * @returns Observable com a resposta da API.
    */
-  register(data: RegisterRequest): Observable<RegisterResponse> {
-    return this.apiService.post<RegisterResponse>('/auth/register', data); // Requisição POST para /auth/register
+  register(data: any): Observable<any> {
+    return this.apiService.post('/auth/register', data);
   }
 }
+

@@ -1,30 +1,23 @@
-
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { ProdutoService } from '../services/produto.service';
 
 @Component({
   selector: 'app-produto',
   templateUrl: './produto.component.html',
-  styleUrls: ['./produto.component.css']
+  styleUrls: ['./produto.component.scss']
 })
 export class ProdutoComponent implements OnInit {
-  produtos: any[] = [];
-  errorMessage: string = '';
+  produto: any;
 
-  constructor(private produtoService: ProdutoService) {}
+  constructor(private produtoService: ProdutoService, private route: ActivatedRoute) {}
 
   ngOnInit(): void {
-    this.loadProdutos();
-  }
-
-  loadProdutos(): void {
-    this.produtoService.getProdutos().subscribe({
-      next: (data) => {
-        this.produtos = data;
-      },
-      error: (error) => {
-        this.errorMessage = 'Erro ao carregar produtos.';
-      }
-    });
+    const produtoId = this.route.snapshot.paramMap.get('id');
+    if (produtoId) {
+      this.produtoService.getProdutoDetalhado(+produtoId).subscribe(data => {
+        this.produto = data;
+      });
+    }
   }
 }
