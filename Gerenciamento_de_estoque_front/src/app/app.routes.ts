@@ -10,6 +10,7 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { EstoqueComponent } from './estoque/estoque.component'; // Componente Estoque
 import { EntradasComponent } from './estoque/entradas/entradas.component'; // Componente Entradas
 import { SaidasComponent } from './estoque/saidas/saidas.component'; // Componente Saídas
+import { ConsumersComponent } from './consumidor/consumidor.component'; // Componente Consumers
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -26,6 +27,10 @@ export const routes: Routes = [
           { path: 'entradas', component: EntradasComponent }, // Rota de Entradas
           { path: 'saidas', component: SaidasComponent }, // Rota de Saídas
         ],
+      },
+      {
+        path: 'consumidores', // Rota para consumidores
+        component: ConsumersComponent,
       },
     ],
   },

@@ -1,29 +1,25 @@
-<div class="consumer-container">
-  <h2>Lista de Consumidores</h2>
-  
-  <!-- Campo de pesquisa -->
-  <div class="search-box">
-    <input type="text"
-           placeholder="Pesquisar por nome..."
-           [(ngModel)]="searchTerm"
-           (input)="applyFilter()" />
+
+<div class="consumidor-container">
+  <h1>Gestão de Consumidores</h1>
+
+  <!-- Campo de busca -->
+  <div class="search-container">
+    <input
+      type="text"
+      placeholder="Buscar consumidores"
+      [(ngModel)]="searchTerm"
+      (input)="applyFilter()"
+    />
   </div>
 
-  <!-- Tabela de consumidores -->
-  <table>
-    <thead>
-      <tr>
-        <th>Nome</th>
-        <th>CPF</th>
-        <!-- Aqui você pode adicionar colunas para outras informações -->
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let consumer of filteredConsumers">
-        <td>{{ consumer.nome }}</td>
-        <td>{{ consumer.cpf }}</td>
-      </tr>
-    </tbody>
-  </table>
+  <!-- Lista de consumidores -->
+  <div class="lista-consumidores">
+    <h2>Lista de Consumidores</h2>
+    <ul>
+      <li *ngFor="let consumer of filteredConsumers">
+        {{ consumer.nome }} - {{ consumer.cpf }}
+      </li>
+    </ul>
+  </div>
 </div>
 
