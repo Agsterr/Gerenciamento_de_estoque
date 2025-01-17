@@ -1,3 +1,5 @@
+
+
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service'; // Serviço genérico para comunicação com a API
 import { Observable, tap, catchError } from 'rxjs';
@@ -22,13 +24,14 @@ export class AuthService {
     return this.apiService.post<LoginResponse>('/auth/login', loginData).pipe(
       tap((response: LoginResponse) => {
         if (response && response.token) {
-          // Salva o token JWT diretamente, sem usar JSON.parse
+          // Armazena o JWT no localStorage
           localStorage.setItem('jwtToken', response.token);  // Armazena o JWT no localStorage
           localStorage.setItem('loggedUser', JSON.stringify({ username }));
         }
       }),
       catchError((err) => {
         console.error('Erro ao fazer login', err); // Logando o erro no console
+        // Aqui você pode lançar um erro específico ou retornar uma resposta amigável
         return of(err); // Retorna um Observable vazio para que o fluxo continue
       })
     );
@@ -60,4 +63,3 @@ export class AuthService {
     return this.apiService.post('/auth/register', data);
   }
 }
-
