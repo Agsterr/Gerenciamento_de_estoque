@@ -1,11 +1,12 @@
+
 import { Component } from '@angular/core';
+import { RouterModule } from '@angular/router'; // Importa RouterModule para usar rotas filhas
 
 @Component({
   selector: 'app-estoque',
-  imports: [],
+  standalone: true,
   templateUrl: './estoque.component.html',
-  styleUrl: './estoque.component.scss'
+  styleUrls: ['./estoque.component.scss'],
+  imports: [RouterModule], // Necessário para rotas filhas
 })
-export class EstoqueComponent {
-
-}
+export class EstoqueComponent {}
