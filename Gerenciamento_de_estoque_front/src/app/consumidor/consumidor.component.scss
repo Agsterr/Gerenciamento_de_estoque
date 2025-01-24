@@ -1,0 +1,149 @@
+/* Estilos para o contêiner principal */
+#consumidor-container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: #ffffff; /* Fundo branco */
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  color: #000000; /* Texto preto */
+}
+
+/* Título */
+#titulo-gestao {
+  text-align: center;
+  color: #333; /* Cor mais escura para o título */
+}
+
+/* Botões de ações */
+#acoes-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+#botao-listar,
+#botao-adicionar {
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  transition: background-color 0.3s;
+}
+
+#botao-listar:hover,
+#botao-adicionar:hover {
+  background-color: #0056b3;
+}
+
+/* Campo de busca */
+#busca-container {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+#campo-busca {
+  width: 100%;
+  max-width: 500px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+/* Lista de consumidores */
+#lista-container {
+  margin-top: 20px;
+  color: #000; /* Texto preto */
+}
+
+#titulo-lista {
+  margin-bottom: 10px;
+  color: #555; /* Cor mais escura para o título da lista */
+}
+
+#lista-consumidores {
+  list-style: none;
+  padding: 0;
+  background-color: #ffffff; /* Fundo branco */
+}
+
+#item-consumidor {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  background-color: #ffffff; /* Fundo branco */
+  color: #000; /* Texto preto */
+}
+
+/* Botão de deletar */
+#botao-deletar {
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  background-color: #dc3545;
+  color: white;
+  transition: background-color 0.3s;
+}
+
+#botao-deletar:hover {
+  background-color: #a71d2a;
+}
+
+/* Responsividade */
+@media (max-width: 600px) {
+  #acoes-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  #campo-busca {
+    max-width: 100%;
+  }
+}
+/* Formulário de adicionar consumidor */
+#form-adicionar-container {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+#form-adicionar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#form-adicionar label {
+  font-weight: bold;
+}
+
+#form-adicionar input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+#botao-salvar {
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  transition: background-color 0.3s;
+}
+
+#botao-salvar:hover {
+  background-color: #0056b3;
+}

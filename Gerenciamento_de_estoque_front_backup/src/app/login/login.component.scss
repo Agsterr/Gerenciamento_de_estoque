@@ -1,0 +1,77 @@
+/* Estilo do contêiner de login */
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%; /* Ocupa toda a largura disponível */
+  max-width: 600px; /* Limite de largura maior para telas maiores */
+  min-height: 60vh; /* Altura mínima: 60% da altura da tela */
+  background-color: #ffffff; /* Fundo branco para contraste */
+  padding: 40px; /* Espaço interno maior */
+  border-radius: 10px; /* Bordas arredondadas */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra leve */
+  box-sizing: border-box;
+  margin: auto; /* Centraliza vertical e horizontalmente */
+  text-align: center;
+}
+
+/* Estilo do título */
+h2 {
+  margin-bottom: 20px;
+  color: #333; /* Texto escuro */
+}
+
+/* Estilo do formulário */
+form {
+  width: 100%; /* Largura total do contêiner */
+}
+
+label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #333; /* Texto escuro */
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9; /* Fundo claro */
+  color: #333; /* Texto escuro */
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  background-color: #4a90e2; /* Azul claro */
+  color: #ffffff; /* Texto branco */
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #357ab8; /* Azul mais escuro */
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .container {
+    max-width: 90%; /* Ajusta a largura para quase preencher a tela */
+    padding: 20px; /* Reduz o espaço interno */
+    min-height: auto; /* Remove a altura mínima */
+  }
+
+  h2 {
+    font-size: 1.5rem; /* Reduz o tamanho do título */
+  }
+}

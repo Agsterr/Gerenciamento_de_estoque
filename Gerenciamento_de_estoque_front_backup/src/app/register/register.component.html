@@ -1,0 +1,47 @@
+<div class="container">
+  <h2>Registro</h2>
+  <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+    <!-- Campo Username -->
+    <div>
+      <label for="username">Username:</label>
+      <input id="username" formControlName="username" type="text" />
+      <div *ngIf="registerForm.get('username')?.invalid && registerForm.get('username')?.touched" class="error">
+        Username é obrigatório.
+      </div>
+    </div>
+
+    <!-- Campo Senha -->
+    <div>
+      <label for="senha">Senha:</label>
+      <input id="senha" formControlName="senha" type="password" />
+      <div *ngIf="registerForm.get('senha')?.hasError('required') && registerForm.get('senha')?.touched" class="error">
+        Senha é obrigatória.
+      </div>
+      <div *ngIf="registerForm.get('senha')?.hasError('minlength') && registerForm.get('senha')?.touched" class="error">
+        Senha deve ter no mínimo 6 caracteres.
+      </div>
+    </div>
+
+    <!-- Campo Email -->
+    <div>
+      <label for="email">Email:</label>
+      <input id="email" formControlName="email" type="email" />
+      <div *ngIf="registerForm.get('email')?.hasError('required') && registerForm.get('email')?.touched" class="error">
+        Email é obrigatório.
+      </div>
+      <div *ngIf="registerForm.get('email')?.hasError('email') && registerForm.get('email')?.touched" class="error">
+        Email inválido.
+      </div>
+    </div>
+
+    <!-- Botões -->
+    <button type="submit" [disabled]="registerForm.invalid">Registrar</button>
+    <button type="button" (click)="cancel()">Cancelar</button>
+
+    <!-- Mensagens de sucesso e erro -->
+    <p *ngIf="successMessage" class="success-message">{{ successMessage }}</p>
+    <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
+  </form>
+</div>
+
+  

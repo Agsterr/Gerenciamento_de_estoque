@@ -1,0 +1,7 @@
+<div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+<div *ngIf="entregas.length > 0">
+  <ul>
+    <li *ngFor="let entrega of entregas">{{ entrega.nome }}</li>
+  </ul>
+</div>
+

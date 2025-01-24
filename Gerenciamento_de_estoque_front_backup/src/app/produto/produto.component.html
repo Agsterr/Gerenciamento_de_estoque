@@ -1,0 +1,70 @@
+
+
+<div class="produto-container">
+  <!-- Mensagens de feedback -->
+  <div *ngIf="mensagem" class="mensagem sucesso">{{ mensagem }}</div>
+  <div *ngIf="mensagemErro" class="mensagem erro">{{ mensagemErro }}</div>
+
+  <!-- Controle de exibição de seções -->
+  <div class="menu">
+    <button (click)="exibirListaProdutos()">Lista de Produtos</button>
+    <button (click)="exibirCriarProduto()">Criar Novo Produto</button>
+  </div>
+
+  <!-- Lista de Produtos -->
+  <div *ngIf="exibirLista" class="produto-lista">
+    <h2>Lista de Produtos</h2>
+    <ul>
+      <li *ngFor="let produto of produtos" class="produto-item">
+        <div class="produto-detalhes">
+          <strong>{{ produto.nome }}</strong>
+          <p>{{ produto.descricao }}</p>
+          <p><strong>Preço:</strong> {{ produto.preco | currency }}</p>
+          <p><strong>Quantidade:</strong> {{ produto.quantidade }}</p>
+          <p><strong>Categoria:</strong> {{ produto.categoria.nome }}</p>
+        </div>
+        <div class="produto-acoes">
+          <button (click)="deletarProduto(produto.id)">Deletar</button>
+        </div>
+      </li>
+    </ul>
+    <div *ngIf="produtos.length === 0" class="sem-produtos">Nenhum produto encontrado.</div>
+
+    <!-- Paginação -->
+    <div class="pagination">
+      <button (click)="paginaAnterior()" [disabled]="currentPage === 0">Anterior</button>
+      <button (click)="proximaPagina()" [disabled]="currentPage === totalPages - 1">Próxima</button>
+      <p>Página {{ currentPage + 1 }} de {{ totalPages }}</p>
+    </div>
+  </div>
+
+  <!-- Formulário de Criação -->
+  <div *ngIf="exibirCriar" class="produto-criar">
+    <h2>Criar Novo Produto</h2>
+    <form [formGroup]="produtoForm" (ngSubmit)="criarProduto()">
+      <label for="nome">Nome:</label>
+      <input id="nome" formControlName="nome" type="text" />
+
+      <label for="descricao">Descrição:</label>
+      <input id="descricao" formControlName="descricao" type="text" />
+
+      <label for="preco">Preço:</label>
+      <input id="preco" formControlName="preco" type="number" />
+
+      <label for="quantidade">Quantidade:</label>
+      <input id="quantidade" formControlName="quantidade" type="number" />
+
+      <label for="quantidadeMinima">Quantidade Mínima:</label>
+      <input id="quantidadeMinima" formControlName="quantidadeMinima" type="number" />
+
+      <label for="categoriaId">Categoria:</label>
+      <select id="categoriaId" formControlName="categoriaId">
+        <option *ngFor="let categoria of categorias" [value]="categoria.id">
+          {{ categoria.nome }}
+        </option>
+      </select>
+
+      <button type="submit" [disabled]="produtoForm.invalid">Criar Produto</button>
+    </form>
+  </div>
+</div>
