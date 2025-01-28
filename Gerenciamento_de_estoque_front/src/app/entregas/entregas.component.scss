@@ -1,4 +1,216 @@
-.error {
-    color: red;
+/* src/app/entregas/entregas.component.scss */
+
+/* Estilos para o contêiner principal */
+.entrega-container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  max-width: 1000px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  color: #000;
+}
+
+/* Título */
+.entrega-container h2 {
+  text-align: center;
+  color: #333;
+}
+
+/* Mensagens de Sucesso e Erro */
+.alert {
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Botões de Ação */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.action-buttons .btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.action-buttons .btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.action-buttons .btn-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.action-buttons .btn:hover {
+  background-color: #0056b3;
+}
+
+/* Campo de Busca */
+.search-input {
+  width: 100%;
+  max-width: 500px;
+  padding: 10px;
+  margin: 0 auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  display: block;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+/* Controle de Paginação */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.pagination-controls button {
+  padding: 5px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.pagination-controls button:disabled {
+  background-color: #f0f0f0;
+  cursor: not-allowed;
+}
+
+.pagination-controls button:hover {
+  background-color: #007bff;
+  color: white;
+}
+
+/* Tabela de Entregas */
+.entrega-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.entrega-table th,
+.entrega-table td {
+  padding: 12px;
+  text-align: left;
+  border: 1px solid #ddd;
+}
+
+.entrega-table th {
+  background-color: #f4f4f4;
+}
+
+.entrega-table td {
+  background-color: #ffffff;
+}
+
+/* Botão de Deletar */
+.btn-danger {
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  background-color: #dc3545;
+  color: white;
+  transition: background-color 0.3s;
+}
+
+.btn-danger:hover {
+  background-color: #a71d2a;
+}
+
+/* Formulário de Adição de Entrega */
+.add-form-section {
+  margin-top: 30px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.add-form-section h3 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.add-form-section .form-group {
+  margin-bottom: 15px;
+}
+
+.add-form-section label {
+  font-weight: bold;
+}
+
+.add-form-section input.form-control {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* Botão de Submissão */
+.btn-success {
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  background-color: #28a745;
+  color: white;
+  transition: background-color 0.3s;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+}
+
+.btn-success:disabled {
+  background-color: #c6e5c6;
+  cursor: not-allowed;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .action-buttons {
+    flex-direction: column;
+    gap: 10px;
   }
-  
+
+  .search-input {
+    max-width: 100%;
+  }
+
+  .pagination-controls {
+    flex-direction: column;
+  }
+
+  .entrega-table {
+    font-size: 12px;
+  }
+}
