@@ -2,10 +2,11 @@
 
 
 export interface Entrega {
-  id: number; // ID único da entrega
-  nomeConsumidor: string; // Nome do consumidor
-  nomeProduto: string; // Nome do produto
-  nomeEntregador: string; // Nome do entregador
-  quantidade: number; // Quantidade do produto entregue
-  horarioEntrega: string; // Horário da entrega
+  id: number;
+  nomeConsumidor: string;
+  nomeProduto: string;
+  nomeEntregador: string;
+  quantidade: number;
+  horarioEntrega: string | null;  // Permitir null
 }
+

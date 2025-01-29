@@ -7,12 +7,14 @@ import { Entrega } from '../models/entrega.model'; // Modelo Entrega
 import { PageEntregaResponse } from '../models/PageEntregaResponse.model'; // Modelo PageEntregaResponse
 import { EntregaRequest } from '../models/EntregaRequest.model'; // Modelo EntregaRequest
 
+
 @Component({
   selector: 'app-entregas',
   standalone: true,
   templateUrl: './entregas.component.html',
   styleUrls: ['./entregas.component.scss'],
   imports: [CommonModule, FormsModule],
+  
 })
 export class EntregasComponent implements OnInit {
   entregas: Entrega[] = [];
@@ -39,7 +41,10 @@ export class EntregasComponent implements OnInit {
   mensagem: string = '';
   mensagemErro: string = '';
 
-  constructor(private entregasService: EntregasService) {}
+  constructor(
+    private entregasService: EntregasService,
+   
+  ) {}
 
   ngOnInit(): void {}
 
@@ -93,12 +98,40 @@ export class EntregasComponent implements OnInit {
   }
 
   // Busca as entregas do back-end com paginação
+  
   fetchEntregas(page: number): void {
     this.entregasService.listarEntregas(page, this.pageSize).subscribe({
       next: (data: PageEntregaResponse) => {
-        this.entregas = data.content.sort((a, b) =>
-          a.nomeConsumidor.localeCompare(b.nomeConsumidor)
-        );
+        // Formatar as datas ao receber os dados
+        this.entregas = data.content.map((entrega) => {
+          let formattedDate: string = ''; // Deixar em branco caso seja inválido
+  
+          if (entrega.horarioEntrega) {
+            const horarioISO = new Date(entrega.horarioEntrega); // Cria a data a partir da string recebida
+  
+            // Verifica se a data gerada é válida
+            if (!isNaN(horarioISO.getTime())) {
+              // Formatar manualmente para 'dd/MM/yy HH:mm'
+              const day = String(horarioISO.getDate()).padStart(2, '0');
+              const month = String(horarioISO.getMonth() + 1).padStart(2, '0'); // Meses começam do 0
+              const year = String(horarioISO.getFullYear()).slice(-2); // Pegando os dois últimos dígitos do ano
+              const hours = String(horarioISO.getHours()).padStart(2, '0');
+              const minutes = String(horarioISO.getMinutes()).padStart(2, '0');
+              
+              // Monta a data no formato desejado
+              formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
+            } else {
+              console.error('Formato de data inválido:', entrega.horarioEntrega);
+              formattedDate = 'Data inválida'; // Caso a data seja inválida
+            }
+          }
+  
+          return {
+            ...entrega,
+            horarioEntrega: formattedDate, // A data formatada ou a mensagem de erro
+          };
+        });
+  
         this.currentPage = data.number;
         this.totalPages = data.totalPages;
         this.applyFilter();
@@ -109,7 +142,17 @@ export class EntregasComponent implements OnInit {
       },
     });
   }
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
+  
   // Envia os dados da nova entrega para o backend
   submitAddForm(): void {
     if (
@@ -197,3 +240,4 @@ export class EntregasComponent implements OnInit {
     }, delay);
   }
 }
+

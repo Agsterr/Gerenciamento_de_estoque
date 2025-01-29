@@ -9,6 +9,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes), // Configura as rotas
     provideHttpClient(
       withInterceptors([AuthInterceptor]) // Registra o interceptor
-    ),
+    )
   ],
 };
+
