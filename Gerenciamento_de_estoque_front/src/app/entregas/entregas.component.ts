@@ -7,14 +7,12 @@ import { Entrega } from '../models/entrega.model'; // Modelo Entrega
 import { PageEntregaResponse } from '../models/PageEntregaResponse.model'; // Modelo PageEntregaResponse
 import { EntregaRequest } from '../models/EntregaRequest.model'; // Modelo EntregaRequest
 
-
 @Component({
   selector: 'app-entregas',
   standalone: true,
   templateUrl: './entregas.component.html',
   styleUrls: ['./entregas.component.scss'],
   imports: [CommonModule, FormsModule],
-  
 })
 export class EntregasComponent implements OnInit {
   entregas: Entrega[] = [];
@@ -41,10 +39,7 @@ export class EntregasComponent implements OnInit {
   mensagem: string = '';
   mensagemErro: string = '';
 
-  constructor(
-    private entregasService: EntregasService,
-   
-  ) {}
+  constructor(private entregasService: EntregasService) {}
 
   ngOnInit(): void {}
 
@@ -98,17 +93,16 @@ export class EntregasComponent implements OnInit {
   }
 
   // Busca as entregas do back-end com paginação
-  
   fetchEntregas(page: number): void {
     this.entregasService.listarEntregas(page, this.pageSize).subscribe({
       next: (data: PageEntregaResponse) => {
         // Formatar as datas ao receber os dados
         this.entregas = data.content.map((entrega) => {
           let formattedDate: string = ''; // Deixar em branco caso seja inválido
-  
+
           if (entrega.horarioEntrega) {
             const horarioISO = new Date(entrega.horarioEntrega); // Cria a data a partir da string recebida
-  
+
             // Verifica se a data gerada é válida
             if (!isNaN(horarioISO.getTime())) {
               // Formatar manualmente para 'dd/MM/yy HH:mm'
@@ -125,13 +119,13 @@ export class EntregasComponent implements OnInit {
               formattedDate = 'Data inválida'; // Caso a data seja inválida
             }
           }
-  
+
           return {
             ...entrega,
             horarioEntrega: formattedDate, // A data formatada ou a mensagem de erro
           };
         });
-  
+
         this.currentPage = data.number;
         this.totalPages = data.totalPages;
         this.applyFilter();
@@ -142,17 +136,7 @@ export class EntregasComponent implements OnInit {
       },
     });
   }
-  
-  
-  
-  
-  
-  
-  
-  
-  
 
-  
   // Envia os dados da nova entrega para o backend
   submitAddForm(): void {
     if (
@@ -240,4 +224,3 @@ export class EntregasComponent implements OnInit {
     }, delay);
   }
 }
-

@@ -16,6 +16,7 @@
 .entrega-container h2 {
   text-align: center;
   color: #333;
+  margin-bottom: 20px; /* Adiciona um pequeno espaço abaixo do título */
 }
 
 /* Mensagens de Sucesso e Erro */
@@ -75,7 +76,7 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   display: block;
-  margin-bottom: 20px;
+  margin-bottom: 25px; /* Aumenta o espaço abaixo da busca */
   font-size: 14px;
 }
 
@@ -97,7 +98,8 @@
 }
 
 .pagination-controls button:disabled {
-  background-color: #f0f0f0;
+  background-color: #ddd; /* Melhor contraste para desabilitado */
+  color: #aaa; /* Cor do texto desabilitado */
   cursor: not-allowed;
 }
 
@@ -191,7 +193,7 @@
 }
 
 .btn-success:disabled {
-  background-color: #c6e5c6;
+  background-color: #b0e0b3; /* Cor mais visível para o botão desabilitado */
   cursor: not-allowed;
 }
 
@@ -212,5 +214,9 @@
 
   .entrega-table {
     font-size: 12px;
+  }
+
+  .entrega-table th, .entrega-table td {
+    padding: 8px; /* Reduzindo o padding em telas menores */
   }
 }

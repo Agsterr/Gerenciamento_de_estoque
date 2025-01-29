@@ -1,6 +1,5 @@
 
 
-
 <div class="entrega-container">
   <h2>Gerenciamento de Entregas</h2>
 
@@ -56,7 +55,7 @@
           <td>{{ entrega.nomeProduto }}</td>
           <td>{{ entrega.nomeEntregador }}</td>
           <td>{{ entrega.quantidade }}</td>
-          <td>{{ entrega.horarioEntrega | date: 'short' }}</td>
+          <td>{{ entrega.horarioEntrega }}</td>
           <td>
             <button (click)="deleteEntrega(entrega.id)" class="btn btn-danger btn-sm">
               Deletar
