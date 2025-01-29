@@ -1,4 +1,3 @@
-
 import { Component, OnInit } from '@angular/core';
 import { ProdutoService } from '../services/produto.service';
 import { CategoriaService } from '../services/categoria.service';
@@ -26,6 +25,7 @@ export class ProdutoComponent implements OnInit {
   // Controle de exibição
   exibirLista: boolean = true;
   exibirCriar: boolean = false;
+  produtoDetalhado: Produto | null = null; // Armazenar produto detalhado
 
   constructor(
     private produtoService: ProdutoService,
@@ -52,6 +52,7 @@ export class ProdutoComponent implements OnInit {
     this.exibirCriar = false;
     this.mensagem = '';
     this.mensagemErro = '';
+    this.produtoDetalhado = null; // Limpar detalhes ao voltar para a lista
   }
 
   exibirCriarProduto(): void {
@@ -59,6 +60,7 @@ export class ProdutoComponent implements OnInit {
     this.exibirCriar = true;
     this.mensagem = '';
     this.mensagemErro = '';
+    this.produtoDetalhado = null; // Limpar detalhes ao criar novo produto
   }
 
   carregarProdutos(page: number = 0): void {
@@ -85,6 +87,25 @@ export class ProdutoComponent implements OnInit {
         console.error('Erro ao carregar categorias:', error);
       }
     );
+  }
+
+  verDetalhes(produtoId: number): void {
+    this.produtoService.getProdutoById(produtoId).subscribe(
+      (produto) => {
+        this.produtoDetalhado = produto; // Exibir detalhes do produto
+        this.exibirLista = false; // Esconde a lista ao exibir os detalhes
+        this.exibirCriar = false;
+      },
+      (error) => {
+        this.mensagemErro = 'Erro ao carregar detalhes do produto.';
+        console.error('Erro ao carregar detalhes do produto:', error);
+      }
+    );
+  }
+
+  fecharDetalhes(): void {
+    this.produtoDetalhado = null;
+    this.exibirListaProdutos(); // Voltar para a lista de produtos
   }
 
   criarProduto(): void {

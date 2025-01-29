@@ -25,6 +25,7 @@
         </div>
         <div class="produto-acoes">
           <button (click)="deletarProduto(produto.id)">Deletar</button>
+          <button (click)="verDetalhes(produto.id)">Ver Detalhes</button> <!-- Novo botão -->
         </div>
       </li>
     </ul>
@@ -67,4 +68,18 @@
       <button type="submit" [disabled]="produtoForm.invalid">Criar Produto</button>
     </form>
   </div>
+
+<!-- Detalhes do Produto -->
+<div *ngIf="produtoDetalhado" class="produto-detalhado">
+  <h2>Detalhes do Produto</h2>
+  <p><strong>ID:</strong> {{ produtoDetalhado.id }}</p> <!-- Exibe o ID do produto -->
+  <p><strong>Nome:</strong> {{ produtoDetalhado.nome }}</p>
+  <p><strong>Descrição:</strong> {{ produtoDetalhado.descricao }}</p>
+  <p><strong>Preço:</strong> {{ produtoDetalhado.preco | currency }}</p>
+  <p><strong>Quantidade:</strong> {{ produtoDetalhado.quantidade }}</p>
+  <p><strong>Quantidade Mínima:</strong> {{ produtoDetalhado.quantidadeMinima }}</p>
+  <p><strong>Categoria:</strong> {{ produtoDetalhado.categoria.nome }}</p>
+  <p><strong>Data de Criação:</strong> {{ produtoDetalhado.dateTime | date:'dd/MM/yy HH:mm' }}</p> <!-- Formato de data desejado -->
+  <button (click)="fecharDetalhes()">Fechar</button>
 </div>
+ 
