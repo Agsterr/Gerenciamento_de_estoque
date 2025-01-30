@@ -12,178 +12,6 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); /* Sombra para destacar o contêiner */
 }
 
-/* Menu de botões */
-.menu {
-  display: flex;
-  justify-content: flex-start;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-}
-
-.menu button {
-  margin: 5px 10px 5px 0;
-  padding: 10px 15px;
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.menu button:hover {
-  background-color: #0056b3;
-  transform: scale(1.05);
-}
-
-/* Lista de produtos */
-.produto-lista ul {
-  list-style: none;
-  padding: 0;
-}
-
-.produto-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #f9f9f9;
-  margin-bottom: 15px;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.produto-item strong {
-  font-size: 1.2rem;
-}
-
-.produto-item p {
-  margin: 5px 0;
-  font-size: 0.95rem;
-}
-
-.produto-item button {
-  padding: 8px 12px;
-  background-color: #dc3545;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.produto-item button:hover {
-  background-color: #c82333;
-}
-
-/* Detalhes do Produto */
-.produto-detalhado {
-  background-color: #f9f9f9;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  margin-top: 20px;
-}
-
-.produto-detalhado h2 {
-  font-size: 1.5rem;
-  margin-bottom: 20px;
-}
-
-.produto-detalhado p {
-  font-size: 1rem;
-  margin: 5px 0;
-}
-
-.produto-detalhado button {
-  background-color: #007bff;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.produto-detalhado button:hover {
-  background-color: #0056b3;
-}
-
-/* Paginação */
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 20px;
-}
-
-.pagination button {
-  padding: 8px 12px;
-  margin: 0 5px;
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.pagination button:hover {
-  background-color: #0056b3;
-}
-
-.pagination p {
-  margin: 0 10px;
-  font-size: 0.9rem;
-}
-
-/* Formulário de criação */
-.produto-criar {
-  background: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-
-.produto-criar h2 {
-  margin-bottom: 15px;
-  font-size: 1.5rem;
-}
-
-.produto-criar form {
-  display: flex;
-  flex-direction: column;
-}
-
-.produto-criar label {
-  margin-bottom: 5px;
-  font-size: 0.9rem;
-  font-weight: bold;
-}
-
-.produto-criar input,
-.produto-criar select {
-  margin-bottom: 15px;
-  padding: 10px;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
-.produto-criar button {
-  padding: 10px 15px;
-  background-color: #28a745;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.produto-criar button:hover {
-  background-color: #218838;
-}
-
 /* Mensagens de feedback */
 .mensagem {
   margin-bottom: 15px;
@@ -205,29 +33,338 @@
   border: 1px solid #f5c6cb;
 }
 
+/* Menu de controle */
+.menu {
+  display: flex;
+  gap: 10px; /* Espaçamento entre os botões */
+  margin-bottom: 20px;
+
+  button {
+    padding: 10px 15px;
+    background-color: #007bff; /* Azul */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+
+    &:hover {
+      background-color: #0056b3;
+      transform: scale(1.05);
+    }
+  }
+}
+
+/* Lista de produtos */
+.produto-lista h2 {
+  margin-bottom: 15px;
+  font-size: 1.5rem;
+}
+
+.produto-lista ul {
+  list-style: none;
+  padding: 0;
+}
+
+.produto-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #f9f9f9;
+  margin-bottom: 15px;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
+
+  .produto-detalhes {
+    flex: 1 1 60%;
+    strong {
+      font-size: 1.2rem;
+    }
+
+    p {
+      margin: 5px 0;
+      font-size: 0.95rem;
+    }
+  }
+
+  .produto-acoes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-left: 20px;
+
+    button {
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      border: none;
+      color: white;
+      font-size: 0.9rem;
+    }
+
+    .btn-deletar {
+      background-color: #dc3545; /* Vermelho */
+
+      &:hover {
+        background-color: #c82333;
+        transform: scale(1.05);
+      }
+    }
+
+    .btn-detalhes {
+      background-color: #007bff; /* Azul */
+
+      &:hover {
+        background-color: #0056b3;
+        transform: scale(1.05);
+      }
+    }
+
+    .btn-adicionar-mais {
+      background-color: #28a745; /* Verde */
+
+      &:hover {
+        background-color: #218838;
+        transform: scale(1.05);
+      }
+    }
+  }
+
+  /* Novo: Campo para adicionar quantidade */
+  .adicionar-quantidade {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+    gap: 10px;
+
+    input[type="number"] {
+      width: 150px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+
+    .btn-confirmar {
+      background-color: #28a745; /* Verde */
+      color: white;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+
+      &:hover {
+        background-color: #218838;
+        transform: scale(1.05);
+      }
+    }
+
+    .btn-cancelar {
+      background-color: #6c757d; /* Cinza */
+      color: white;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+
+      &:hover {
+        background-color: #5a6268;
+        transform: scale(1.05);
+      }
+    }
+  }
+}
+
+/* Paginação */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  gap: 10px;
+
+  button {
+    padding: 8px 12px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+
+    &:hover {
+      background-color: #0056b3;
+      transform: scale(1.05);
+    }
+
+    &:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+      transform: none;
+    }
+  }
+
+  p {
+    margin: 0 10px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Formulário de criação */
+.produto-criar {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+
+  h2 {
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+
+    label {
+      margin-bottom: 5px;
+      font-size: 0.9rem;
+      font-weight: bold;
+    }
+
+    input,
+    select {
+      margin-bottom: 15px;
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px 15px;
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+
+      &:hover {
+        background-color: #218838;
+        transform: scale(1.05);
+      }
+
+      &:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+        transform: none;
+      }
+    }
+  }
+}
+
+/* Detalhes do Produto */
+.produto-detalhado {
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+
+  p {
+    font-size: 1rem;
+    margin: 5px 0;
+  }
+
+  button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+
+    &:hover {
+      background-color: #0056b3;
+      transform: scale(1.05);
+    }
+  }
+}
+
+/* Sem produtos */
+.sem-produtos {
+  text-align: center;
+  font-size: 1rem;
+  color: #6c757d;
+  margin-top: 20px;
+}
+
 /* Estilos responsivos */
 @media (max-width: 768px) {
   .menu {
     flex-direction: column;
     align-items: flex-start;
-  }
 
-  .menu button {
-    margin-bottom: 10px;
-    width: 100%;
+    button {
+      width: 100%;
+    }
   }
 
   .produto-item {
     flex-direction: column;
     align-items: flex-start;
+
+    .produto-acoes {
+      flex-direction: row;
+      margin-left: 0;
+      margin-top: 10px;
+
+      button {
+        flex: 1;
+        text-align: center;
+      }
+    }
+  }
+
+  .adicionar-quantidade {
+    flex-direction: column;
+    align-items: flex-start;
+
+    input[type="number"] {
+      width: 100%;
+    }
+
+    .btn-confirmar,
+    .btn-cancelar {
+      width: 100%;
+    }
   }
 
   .pagination {
     flex-direction: column;
-  }
 
-  .pagination button {
-    margin: 10px 0;
+    button {
+      width: 100%;
+    }
+
+    p {
+      margin: 10px 0;
+    }
   }
 }
 
@@ -236,16 +373,74 @@
     padding: 10px;
   }
 
-  .produto-item strong {
-    font-size: 1rem;
-  }
-
-  .produto-criar input,
-  .produto-criar select {
+  .menu button {
+    padding: 8px 10px;
     font-size: 0.9rem;
   }
 
-  .produto-criar button {
+  .produto-item {
+    padding: 10px;
+
+    .produto-detalhes {
+      strong {
+        font-size: 1rem;
+      }
+
+      p {
+        font-size: 0.85rem;
+      }
+    }
+
+    .produto-acoes {
+      button {
+        padding: 6px 8px;
+        font-size: 0.8rem;
+      }
+    }
+
+    .adicionar-quantidade {
+      input[type="number"] {
+        padding: 6px;
+        font-size: 0.9rem;
+      }
+
+      .btn-confirmar,
+      .btn-cancelar {
+        padding: 6px 8px;
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .produto-criar h2,
+  .produto-lista h2,
+  .produto-detalhado h2 {
+    font-size: 1.3rem;
+  }
+
+  .produto-criar form {
+    label {
+      font-size: 0.8rem;
+    }
+
+    input,
+    select {
+      font-size: 0.9rem;
+      padding: 8px;
+    }
+
+    button {
+      padding: 8px 12px;
+      font-size: 0.9rem;
+    }
+  }
+
+  .produto-detalhado p {
+    font-size: 0.9rem;
+  }
+
+  .produto-detalhado button {
+    padding: 8px 12px;
     font-size: 0.9rem;
   }
 }

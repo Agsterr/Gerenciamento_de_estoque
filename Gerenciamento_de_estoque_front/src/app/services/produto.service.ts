@@ -42,11 +42,13 @@ export class ProdutoService {
     return this.http.post<Produto>(this.apiUrl, produto, { headers });
   }
 
-  // Método para atualizar um produto por ID
-  atualizarProduto(produtoId: number, produto: Partial<Produto>): Observable<Produto> {
+   // Método para atualizar a quantidade do produto via PATCH
+   atualizarProdutoQuantidade(produtoId: number, quantidade: number): Observable<Produto> {
     const headers = this.getAuthHeaders();
-    return this.http.put<Produto>(`${this.apiUrl}/${produtoId}`, produto, { headers });
+    // Atualiza a quantidade do produto adicionando a quantidade fornecida
+    return this.http.patch<Produto>(`${this.apiUrl}/${produtoId}/quantidade`, { quantidade }, { headers });
   }
+
 
   // Método para deletar um produto pelo ID
   deletarProduto(produtoId: number): Observable<string> {

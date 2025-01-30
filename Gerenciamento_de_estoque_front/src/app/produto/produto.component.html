@@ -24,8 +24,22 @@
           <p><strong>Categoria:</strong> {{ produto.categoria.nome }}</p>
         </div>
         <div class="produto-acoes">
-          <button (click)="deletarProduto(produto.id)">Deletar</button>
-          <button (click)="verDetalhes(produto.id)">Ver Detalhes</button> <!-- Novo botão -->
+          <button (click)="deletarProduto(produto.id)" class="btn-deletar">Deletar</button>
+          <button (click)="verDetalhes(produto.id)" class="btn-detalhes">Ver Detalhes</button>
+          <button (click)="toggleAdicionar(produto.id)" class="btn-adicionar-mais">
+            Adicionar Mais
+          </button>
+        </div>
+        <!-- Novo: Campo para adicionar quantidade -->
+        <div *ngIf="quantidadesAdicionar[produto.id] !== undefined" class="adicionar-quantidade">
+          <input 
+            type="number" 
+            [(ngModel)]="quantidadesAdicionar[produto.id]" 
+            min="1" 
+            placeholder="Quantidade a adicionar"
+          />
+          <button (click)="confirmarAdicionar(produto.id)" class="btn-confirmar">Confirmar</button>
+          <button (click)="toggleAdicionar(produto.id)" class="btn-cancelar">Cancelar</button>
         </div>
       </li>
     </ul>
@@ -69,17 +83,17 @@
     </form>
   </div>
 
-<!-- Detalhes do Produto -->
-<div *ngIf="produtoDetalhado" class="produto-detalhado">
-  <h2>Detalhes do Produto</h2>
-  <p><strong>ID:</strong> {{ produtoDetalhado.id }}</p> <!-- Exibe o ID do produto -->
-  <p><strong>Nome:</strong> {{ produtoDetalhado.nome }}</p>
-  <p><strong>Descrição:</strong> {{ produtoDetalhado.descricao }}</p>
-  <p><strong>Preço:</strong> {{ produtoDetalhado.preco | currency }}</p>
-  <p><strong>Quantidade:</strong> {{ produtoDetalhado.quantidade }}</p>
-  <p><strong>Quantidade Mínima:</strong> {{ produtoDetalhado.quantidadeMinima }}</p>
-  <p><strong>Categoria:</strong> {{ produtoDetalhado.categoria.nome }}</p>
-  <p><strong>Data de Criação:</strong> {{ produtoDetalhado.dateTime | date:'dd/MM/yy HH:mm' }}</p> <!-- Formato de data desejado -->
-  <button (click)="fecharDetalhes()">Fechar</button>
+  <!-- Detalhes do Produto -->
+  <div *ngIf="produtoDetalhado" class="produto-detalhado">
+    <h2>Detalhes do Produto</h2>
+    <p><strong>ID:</strong> {{ produtoDetalhado.id }}</p>
+    <p><strong>Nome:</strong> {{ produtoDetalhado.nome }}</p>
+    <p><strong>Descrição:</strong> {{ produtoDetalhado.descricao }}</p>
+    <p><strong>Preço:</strong> {{ produtoDetalhado.preco | currency }}</p>
+    <p><strong>Quantidade:</strong> {{ produtoDetalhado.quantidade }}</p>
+    <p><strong>Quantidade Mínima:</strong> {{ produtoDetalhado.quantidadeMinima }}</p>
+    <p><strong>Categoria:</strong> {{ produtoDetalhado.categoria.nome }}</p>
+    <p><strong>Data de Criação:</strong> {{ produtoDetalhado.dateTime | date:'dd/MM/yy HH:mm' }}</p>
+    <button (click)="fecharDetalhes()">Fechar</button>
+  </div>
 </div>
- 
