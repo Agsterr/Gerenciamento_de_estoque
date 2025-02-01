@@ -1,11 +1,15 @@
 
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common'; // Para diretivas como *ngIf e *ngFor
-import { FormsModule } from '@angular/forms'; // Para [(ngModel)]
-import { EntregasService } from '../services/entregas.service'; // Serviço para consumir API
-import { Entrega } from '../models/entrega.model'; // Modelo Entrega
-import { PageEntregaResponse } from '../models/PageEntregaResponse.model'; // Modelo PageEntregaResponse
-import { EntregaRequest } from '../models/EntregaRequest.model'; // Modelo EntregaRequest
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { EntregasService } from '../services/entregas.service';
+import { ProdutoService } from '../services/produto.service';
+import { ConsumidorService } from '../services/consumidor.service';
+import { Entrega } from '../models/entrega.model';
+import { PageEntregaResponse } from '../models/PageEntregaResponse.model';
+import { EntregaRequest } from '../models/EntregaRequest.model';
+import { Produto } from '../models/produto.model';
+import { Consumer } from '../models/consumer.model';
 
 @Component({
   selector: 'app-entregas',
@@ -21,14 +25,19 @@ export class EntregasComponent implements OnInit {
   showList: boolean = false;
   showAddForm: boolean = false;
 
-  // Objeto inicializado corretamente
+  produtos: Produto[] = [];
+  consumidores: Consumer[] = [];
+
+  selectedProduto: Produto | undefined;
+  selectedConsumidor: Consumer | undefined;
+
   novaEntrega: Partial<EntregaRequest> = {
     produtoId: undefined,
-    quantidade: undefined,
+    quantidade: 1,
+    consumidorId: undefined,
     consumidor: {
       nome: '',
       cpf: '',
-      endereco: '',
     },
   };
 
@@ -39,44 +48,67 @@ export class EntregasComponent implements OnInit {
   mensagem: string = '';
   mensagemErro: string = '';
 
-  constructor(private entregasService: EntregasService) {}
+  constructor(
+    private entregasService: EntregasService,
+    private produtoService: ProdutoService,
+    private consumidorService: ConsumidorService
+  ) {}
 
-  ngOnInit(): void {}
-
-  // Getter e setter para 'nome'
-  get nome(): string {
-    return this.novaEntrega.consumidor?.nome || '';
+  ngOnInit(): void {
+    this.carregarProdutos();
+    this.carregarConsumidores();
   }
 
-  set nome(value: string) {
-    if (this.novaEntrega.consumidor) {
-      this.novaEntrega.consumidor.nome = value;
+  carregarProdutos(): void {
+    this.produtoService.listarProdutos(0, 100).subscribe({
+      next: (data) => {
+        this.produtos = data.content;
+        console.log('Produtos carregados:', this.produtos);
+        this.onProdutoChange(); // Chama a função de seleção após os produtos serem carregados
+      },
+      error: (err) => {
+        console.error('Erro ao carregar produtos:', err);
+        this.mensagemErro = 'Erro ao carregar produtos. Por favor, tente novamente.';
+      },
+    });
+  }
+
+  carregarConsumidores(): void {
+    this.consumidorService.listarConsumidores().subscribe({
+      next: (data) => {
+        this.consumidores = data;
+        console.log('Consumidores carregados:', this.consumidores);
+        this.onConsumidorChange(); // Chama a função de seleção após os consumidores serem carregados
+      },
+      error: (err) => {
+        console.error('Erro ao carregar consumidores:', err);
+        this.mensagemErro = 'Erro ao carregar consumidores. Por favor, tente novamente.';
+      },
+    });
+  }
+
+  onProdutoChange(): void {
+    console.log('Produto ID:', this.novaEntrega.produtoId); // Verifique o produtoId
+    if (this.novaEntrega.produtoId != null && this.produtos.length > 0) {
+      // Garantindo que a comparação de ID seja feita corretamente
+      this.selectedProduto = this.produtos.find(p => p.id === Number(this.novaEntrega.produtoId));
+      console.log('Produto selecionado:', this.selectedProduto); // Verifique o produto selecionado
+    } else {
+      this.selectedProduto = undefined;
     }
   }
 
-  // Getter e setter para 'cpf'
-  get cpf(): string {
-    return this.novaEntrega.consumidor?.cpf || '';
-  }
-
-  set cpf(value: string) {
-    if (this.novaEntrega.consumidor) {
-      this.novaEntrega.consumidor.cpf = value;
+  onConsumidorChange(): void {
+    console.log('Consumidor ID:', this.novaEntrega.consumidorId); // Verifique o consumidorId
+    if (this.novaEntrega.consumidorId != null && this.consumidores.length > 0) {
+      // Garantindo que a comparação de ID seja feita corretamente
+      this.selectedConsumidor = this.consumidores.find(c => c.id === Number(this.novaEntrega.consumidorId));
+      console.log('Consumidor selecionado:', this.selectedConsumidor); // Verifique o consumidor selecionado
+    } else {
+      this.selectedConsumidor = undefined;
     }
   }
 
-  // Getter e setter para 'endereco'
-  get endereco(): string {
-    return this.novaEntrega.consumidor?.endereco || '';
-  }
-
-  set endereco(value: string) {
-    if (this.novaEntrega.consumidor) {
-      this.novaEntrega.consumidor.endereco = value;
-    }
-  }
-
-  // Alterna a exibição da lista de entregas
   toggleList(): void {
     this.showList = !this.showList;
     if (this.showList) {
@@ -84,48 +116,43 @@ export class EntregasComponent implements OnInit {
     }
   }
 
-  // Alterna a exibição do formulário de adicionar
   toggleAddForm(): void {
     this.showAddForm = !this.showAddForm;
     if (!this.showAddForm) {
       this.clearMessages();
+      this.selectedProduto = undefined;
+      this.selectedConsumidor = undefined;
+      this.novaEntrega.produtoId = undefined;
+      this.novaEntrega.quantidade = 1;
+      this.novaEntrega.consumidorId = undefined;
+      this.novaEntrega.consumidor = { nome: '', cpf: '' };
     }
   }
 
-  // Busca as entregas do back-end com paginação
   fetchEntregas(page: number): void {
     this.entregasService.listarEntregas(page, this.pageSize).subscribe({
       next: (data: PageEntregaResponse) => {
-        // Formatar as datas ao receber os dados
         this.entregas = data.content.map((entrega) => {
-          let formattedDate: string = ''; // Deixar em branco caso seja inválido
-
+          let formattedDate = '';
           if (entrega.horarioEntrega) {
-            const horarioISO = new Date(entrega.horarioEntrega); // Cria a data a partir da string recebida
-
-            // Verifica se a data gerada é válida
+            const horarioISO = new Date(entrega.horarioEntrega);
             if (!isNaN(horarioISO.getTime())) {
-              // Formatar manualmente para 'dd/MM/yy HH:mm'
               const day = String(horarioISO.getDate()).padStart(2, '0');
-              const month = String(horarioISO.getMonth() + 1).padStart(2, '0'); // Meses começam do 0
-              const year = String(horarioISO.getFullYear()).slice(-2); // Pegando os dois últimos dígitos do ano
+              const month = String(horarioISO.getMonth() + 1).padStart(2, '0');
+              const year = String(horarioISO.getFullYear()).slice(-2);
               const hours = String(horarioISO.getHours()).padStart(2, '0');
               const minutes = String(horarioISO.getMinutes()).padStart(2, '0');
-              
-              // Monta a data no formato desejado
               formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
             } else {
               console.error('Formato de data inválido:', entrega.horarioEntrega);
-              formattedDate = 'Data inválida'; // Caso a data seja inválida
+              formattedDate = 'Data inválida';
             }
           }
-
           return {
             ...entrega,
-            horarioEntrega: formattedDate, // A data formatada ou a mensagem de erro
+            horarioEntrega: formattedDate,
           };
         });
-
         this.currentPage = data.number;
         this.totalPages = data.totalPages;
         this.applyFilter();
@@ -137,41 +164,61 @@ export class EntregasComponent implements OnInit {
     });
   }
 
-  // Envia os dados da nova entrega para o backend
   submitAddForm(): void {
-    if (
-      this.novaEntrega.produtoId == null ||
-      this.novaEntrega.quantidade == null ||
-      !this.novaEntrega.consumidor?.nome?.trim() ||
-      !this.novaEntrega.consumidor?.cpf?.trim() ||
-      !this.novaEntrega.consumidor?.endereco?.trim()
-    ) {
+    console.log('Produto ID:', this.novaEntrega.produtoId);
+    console.log('Consumidor ID:', this.novaEntrega.consumidorId);
+    console.log('Quantidade:', this.novaEntrega.quantidade);
+  
+    // Verificar se todos os campos obrigatórios foram preenchidos
+    if (!this.novaEntrega.produtoId || !this.novaEntrega.consumidorId || !this.novaEntrega.quantidade) {
       this.mensagemErro = 'Todos os campos são obrigatórios.';
       return;
     }
-
-    this.entregasService
-      .criarEntrega(this.novaEntrega as EntregaRequest)
-      .subscribe({
-        next: (res: Entrega) => {
-          this.mensagem = 'Entrega registrada com sucesso!';
-          this.novaEntrega = {
-            produtoId: undefined,
-            quantidade: undefined,
-            consumidor: { nome: '', cpf: '', endereco: '' },
-          };
-          this.showAddForm = false;
-          this.fetchEntregas(this.currentPage);
-          this.clearMessages(3000); // Limpa mensagens após 3 segundos
-        },
-        error: (err) => {
-          console.error('Erro ao registrar entrega:', err);
-          this.mensagemErro = 'Erro ao registrar entrega. Por favor, tente novamente.';
-        },
-      });
+  
+    // Verificar se o consumidor foi selecionado corretamente
+    if (!this.selectedConsumidor) {
+      this.mensagemErro = 'Consumidor selecionado não é válido.';
+      console.log('Erro: Nenhum consumidor foi selecionado');
+      return;
+    }
+  
+    // Garantir que o produtoId seja tratado como número
+    const produtoId = Number(this.novaEntrega.produtoId);
+  
+    // Ajustar o formato para enviar ao backend conforme o formato esperado
+    const entregaPayload = {
+      consumidor: {
+        id: this.novaEntrega.consumidorId,
+        nome: this.selectedConsumidor?.nome,
+        cpf: this.selectedConsumidor?.cpf,
+      },
+      produtoId: produtoId,
+      quantidade: this.novaEntrega.quantidade,
+    };
+  
+    console.log('Payload enviado para o servidor:', entregaPayload);
+  
+    // Envia a entrega ao backend
+    this.entregasService.criarEntrega(entregaPayload).subscribe({
+      next: (response) => {
+        // A resposta agora contém 'message' e 'data'
+        this.mensagem = response.message;  // Exibe a mensagem
+        this.novaEntrega = { produtoId: undefined, consumidorId: undefined, quantidade: undefined };
+        this.showAddForm = false;
+      },
+      error: (err) => {
+        console.error('Erro ao registrar entrega:', err);
+        this.mensagemErro = 'Erro ao registrar entrega.';
+      },
+    });
   }
+  
+  
+  
+  
+   
+   
 
-  // Aplica o filtro de busca
   applyFilter(): void {
     if (this.searchTerm.trim() === '') {
       this.filteredEntregas = this.entregas;
@@ -186,7 +233,6 @@ export class EntregasComponent implements OnInit {
     }
   }
 
-  // Deleta uma entrega pelo ID
   deleteEntrega(id: number): void {
     if (confirm('Tem certeza que deseja deletar esta entrega?')) {
       this.entregasService.deletarEntrega(id).subscribe({
@@ -203,7 +249,6 @@ export class EntregasComponent implements OnInit {
     }
   }
 
-  // Navegação de páginas
   proximaPagina(): void {
     if (this.currentPage < this.totalPages - 1) {
       this.fetchEntregas(this.currentPage + 1);
@@ -216,7 +261,6 @@ export class EntregasComponent implements OnInit {
     }
   }
 
-  // Limpa mensagens de erro e sucesso
   private clearMessages(delay: number = 0): void {
     setTimeout(() => {
       this.mensagem = '';

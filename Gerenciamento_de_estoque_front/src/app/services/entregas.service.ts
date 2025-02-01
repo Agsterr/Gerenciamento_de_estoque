@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { Entrega } from '../models/entrega.model';
 import { PageEntregaResponse } from '../models/PageEntregaResponse.model';
 import { EntregaRequest } from '../models/EntregaRequest.model';
+import { ApiResponse } from '../models/api-response.model';  // Certifique-se de que a interface ApiResponse está correta
 import { AuthService } from './auth.service'; // Serviço de autenticação
 
 @Injectable({
@@ -14,13 +15,18 @@ export class EntregasService {
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
-  // Gera os headers com o token JWT
-  private getAuthHeaders() {
+  /**
+   * Gera os headers com o token JWT
+   * @returns HttpHeaders
+   */
+  private getAuthHeaders(): HttpHeaders {
     const token = localStorage.getItem('jwtToken'); // Obtém o token do localStorage
     if (!token) {
       throw new Error('Token não encontrado. O usuário precisa estar autenticado.');
     }
-    return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return new HttpHeaders()
+      .set('Authorization', `Bearer ${token}`)
+      .set('Content-Type', 'application/json'); // Define o Content-Type como application/json
   }
 
   /**
@@ -43,10 +49,10 @@ export class EntregasService {
   /**
    * Cria uma nova entrega.
    * @param entrega Dados da nova entrega.
-   * @returns Observable<Entrega>
+   * @returns Observable<ApiResponse> - Agora retornando ApiResponse
    */
-  criarEntrega(entrega: Partial<EntregaRequest>): Observable<Entrega> {
-    return this.http.post<Entrega>(this.apiUrl, entrega, {
+  criarEntrega(entrega: Partial<EntregaRequest>): Observable<ApiResponse> {
+    return this.http.post<ApiResponse>(this.apiUrl, entrega, {
       headers: this.getAuthHeaders(),
       observe: 'body', // Para observar o corpo da resposta
     });
@@ -55,10 +61,10 @@ export class EntregasService {
   /**
    * Deleta uma entrega pelo ID.
    * @param id ID da entrega a ser deletada.
-   * @returns Observable<any>
+   * @returns Observable<ApiResponse> - Agora retornando ApiResponse
    */
-  deletarEntrega(id: number): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/${id}`, {
+  deletarEntrega(id: number): Observable<ApiResponse> {
+    return this.http.delete<ApiResponse>(`${this.apiUrl}/${id}`, {
       headers: this.getAuthHeaders(),
       observe: 'body', // Para observar o corpo da resposta
     });

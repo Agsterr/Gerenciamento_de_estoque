@@ -1,9 +1,14 @@
 
 
 
+
+// src/app/services/produto.service.ts
+
+
+
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable } from 'rxjs';
 import { Produto } from '../models/produto.model';
 
 @Injectable({
@@ -25,7 +30,7 @@ export class ProdutoService {
   }
 
   // Método para listar produtos (com paginação)
-  listarProdutos(page: number = 0, size: number = 10): Observable<any> {
+  listarProdutos(page: number = 0, size: number = 100): Observable<any> { // Aumentado para 100
     const headers = this.getAuthHeaders();
     return this.http.get<any>(`${this.apiUrl}?page=${page}&size=${size}`, { headers });
   }
@@ -42,13 +47,12 @@ export class ProdutoService {
     return this.http.post<Produto>(this.apiUrl, produto, { headers });
   }
 
-   // Método para atualizar a quantidade do produto via PATCH
-   atualizarProdutoQuantidade(produtoId: number, quantidade: number): Observable<Produto> {
+  // Método para atualizar a quantidade do produto via PATCH
+  atualizarProdutoQuantidade(produtoId: number, quantidade: number): Observable<Produto> {
     const headers = this.getAuthHeaders();
     // Atualiza a quantidade do produto adicionando a quantidade fornecida
     return this.http.patch<Produto>(`${this.apiUrl}/${produtoId}/quantidade`, { quantidade }, { headers });
   }
-
 
   // Método para deletar um produto pelo ID
   deletarProduto(produtoId: number): Observable<string> {
@@ -56,3 +60,4 @@ export class ProdutoService {
     return this.http.delete<string>(`${this.apiUrl}/${produtoId}`, { headers });
   }
 }
+

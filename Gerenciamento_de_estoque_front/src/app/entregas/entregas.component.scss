@@ -1,10 +1,9 @@
-/* src/app/entregas/entregas.component.scss */
-
 /* Estilos para o contêiner principal */
+
 .entrega-container {
   padding: 20px;
   font-family: Arial, sans-serif;
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   background-color: #ffffff;
   border-radius: 8px;
@@ -16,7 +15,7 @@
 .entrega-container h2 {
   text-align: center;
   color: #333;
-  margin-bottom: 20px; /* Adiciona um pequeno espaço abaixo do título */
+  margin-bottom: 20px;
 }
 
 /* Mensagens de Sucesso e Erro */
@@ -50,7 +49,7 @@
   cursor: pointer;
   border: none;
   border-radius: 4px;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, transform 0.3s;
 }
 
 .action-buttons .btn-primary {
@@ -64,7 +63,8 @@
 }
 
 .action-buttons .btn:hover {
-  background-color: #0056b3;
+  opacity: 0.9;
+  transform: scale(1.05);
 }
 
 /* Campo de Busca */
@@ -76,8 +76,13 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   display: block;
-  margin-bottom: 25px; /* Aumenta o espaço abaixo da busca */
+  margin-bottom: 25px;
   font-size: 14px;
+  transition: border-color 0.3s;
+}
+
+.search-input:focus {
+  border-color: #007bff;
 }
 
 /* Controle de Paginação */
@@ -89,23 +94,28 @@
 }
 
 .pagination-controls button {
-  padding: 5px 10px;
-  font-size: 14px;
+  padding: 8px 12px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
   cursor: pointer;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, transform 0.3s;
 }
 
 .pagination-controls button:disabled {
-  background-color: #ddd; /* Melhor contraste para desabilitado */
-  color: #aaa; /* Cor do texto desabilitado */
+  background-color: #6c757d;
   cursor: not-allowed;
 }
 
-.pagination-controls button:hover {
-  background-color: #007bff;
-  color: white;
+.pagination-controls button:hover:not(:disabled) {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+.pagination-controls span {
+  align-self: center;
+  font-size: 14px;
 }
 
 /* Tabela de Entregas */
@@ -113,6 +123,7 @@
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
+  transition: background-color 0.3s;
 }
 
 .entrega-table th,
@@ -128,6 +139,15 @@
 
 .entrega-table td {
   background-color: #ffffff;
+}
+
+.entrega-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.entrega-table tr:hover {
+  background-color: #f1f1f1;
+  transition: background-color 0.3s;
 }
 
 /* Botão de Deletar */
@@ -168,12 +188,29 @@
   font-weight: bold;
 }
 
+.add-form-section select.form-control,
 .add-form-section input.form-control {
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
+}
+
+/* Informações do Produto Selecionado */
+.produto-info,
+.consumidor-info {
+  margin-bottom: 15px;
+  padding: 10px;
+  border: 1px solid #007bff;
+  border-radius: 4px;
+  background-color: #e9f7fe;
+}
+
+.produto-info h4,
+.consumidor-info h4 {
+  margin-bottom: 10px;
+  color: #007bff;
 }
 
 /* Botão de Submissão */
@@ -193,7 +230,7 @@
 }
 
 .btn-success:disabled {
-  background-color: #b0e0b3; /* Cor mais visível para o botão desabilitado */
+  background-color: #b0e0b3;
   cursor: not-allowed;
 }
 
@@ -216,7 +253,62 @@
     font-size: 12px;
   }
 
-  .entrega-table th, .entrega-table td {
-    padding: 8px; /* Reduzindo o padding em telas menores */
+  .entrega-table th,
+  .entrega-table td {
+    padding: 8px;
+  }
+
+  .add-form-section {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .entrega-container {
+    padding: 10px;
+  }
+
+  .action-buttons .btn {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .search-input {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .pagination-controls button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .pagination-controls span {
+    font-size: 12px;
+  }
+
+  .entrega-table th,
+  .entrega-table td {
+    padding: 6px;
+    font-size: 12px;
+  }
+
+  .add-form-section h3 {
+    font-size: 1.2rem;
+  }
+
+  .add-form-section .form-group label {
+    font-size: 0.9rem;
+  }
+
+  .add-form-section select.form-control,
+  .add-form-section input.form-control {
+    font-size: 0.9rem;
+    padding: 8px;
+  }
+
+  .btn-success {
+    padding: 8px 12px;
+    font-size: 12px;
   }
 }
