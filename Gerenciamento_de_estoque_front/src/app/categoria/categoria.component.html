@@ -1,0 +1,36 @@
+
+<div class="categoria-container">
+    <h2>Gerenciar Categorias</h2>
+
+    <!-- Mensagens de feedback -->
+    <div *ngIf="mensagem" class="mensagem sucesso">{{ mensagem }}</div>
+    <div *ngIf="mensagemErro" class="mensagem erro">{{ mensagemErro }}</div>
+
+    <div class="menu">
+      <button (click)="toggleNovaCategoriaForm()">Criar Nova Categoria</button>
+    </div>
+
+    <!-- Lista de Categorias -->
+    <div *ngIf="categorias.length > 0" class="categoria-lista">
+      <h3>Lista de Categorias</h3>
+      <ul>
+        <li *ngFor="let categoria of categorias">{{ categoria.nome }}</li>
+      </ul>
+    </div>
+
+    <!-- Formulário de Criação -->
+    <div *ngIf="showNovaCategoriaInput" class="categoria-criar">
+      <h3>Criar Nova Categoria</h3>
+      <form [formGroup]="categoriaForm" (ngSubmit)="criarCategoria()">
+        <label for="nome">Nome da Categoria:</label>
+        <input id="nome" formControlName="nome" type="text" />
+
+        <!-- Exibição de mensagem de erro caso o campo seja inválido -->
+        <div *ngIf="categoriaForm.get('nome')?.hasError('required') && categoriaForm.get('nome')?.touched">
+          <small style="color: red;">Nome da categoria é obrigatório!</small>
+        </div>
+
+        <button type="submit" [disabled]="categoriaForm.invalid">Criar Categoria</button>
+      </form>
+    </div>
+</div>

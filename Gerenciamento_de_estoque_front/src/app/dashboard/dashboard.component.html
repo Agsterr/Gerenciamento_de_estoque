@@ -1,13 +1,15 @@
 
+<!-- dashboard.component.html -->
 <div class="dashboard-container">
   <h1>Bem-vindo ao Dashboard</h1>
-  <nav>
+  <nav class="menu">
     <a routerLink="produtos" routerLinkActive="active">Produtos</a> |
     <a routerLink="consumidores" routerLinkActive="active">Consumidores</a> |
-    <a routerLink="entregas" routerLinkActive="active">Entregas</a> <!-- Novo link para entregas -->
+    <a routerLink="entregas" routerLinkActive="active">Entregas</a> |
+    <a routerLink="categorias" routerLinkActive="active">Categorias</a>
   </nav>
-  <!-- Exibe as rotas filhas aqui -->
-  <router-outlet></router-outlet>
+
+  <router-outlet></router-outlet> <!-- A área de navegação dinâmica será exibida aqui -->
 </div>
 
  

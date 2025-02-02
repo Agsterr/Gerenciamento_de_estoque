@@ -2,10 +2,6 @@
 
 
 
-// src/app/services/produto.service.ts
-
-
-
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -50,7 +46,6 @@ export class ProdutoService {
   // Método para atualizar a quantidade do produto via PATCH
   atualizarProdutoQuantidade(produtoId: number, quantidade: number): Observable<Produto> {
     const headers = this.getAuthHeaders();
-    // Atualiza a quantidade do produto adicionando a quantidade fornecida
     return this.http.patch<Produto>(`${this.apiUrl}/${produtoId}/quantidade`, { quantidade }, { headers });
   }
 
@@ -60,4 +55,3 @@ export class ProdutoService {
     return this.http.delete<string>(`${this.apiUrl}/${produtoId}`, { headers });
   }
 }
-

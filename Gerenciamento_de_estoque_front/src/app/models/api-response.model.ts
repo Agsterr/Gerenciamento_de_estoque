@@ -1,6 +1,5 @@
-// api-response.model.ts
 export interface ApiResponse {
     message: string;  // Mensagem de sucesso ou erro
-    data: any;        // Dados adicionais da resposta, como um produto ou entrega
+    data: any;        // Aqui você pode ser mais específico se souber qual é a estrutura de 'data'
   }
   
