@@ -1,9 +1,10 @@
+
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { catchError, throwError } from 'rxjs';
 import { Categoria } from '../models/categoria.model';
-import { ApiResponse } from '../models/api-response.model'; // Adicionado para a resposta da criação
+import { ApiResponse } from '../models/api-response.model';
 
 @Injectable({
   providedIn: 'root',
@@ -33,17 +34,30 @@ export class CategoriaService {
     );
   }
 
+  // Método para criar uma nova categoria
   criarCategoria(nome: string): Observable<ApiResponse> {
     const headers = this.getAuthHeaders();
     const body = { nome };
-  
+
     return this.http.post<ApiResponse>(this.apiUrl, body, { headers }).pipe(
       catchError((error) => {
         console.error('Erro ao criar categoria:', error);
-        // Aqui você pode detalhar melhor o erro para o usuário
-        return throwError('Falha ao criar categoria, por favor, tente novamente mais tarde.');
+        return throwError('Falha ao criar categoria, tente novamente.');
       })
     );
   }
-   
+
+  // Método para deletar uma categoria (agora retorna a categoria deletada)
+  deletarCategoria(id: number): Observable<Categoria> {
+    const headers = this.getAuthHeaders();
+    return this.http.delete<Categoria>(`${this.apiUrl}/${id}`, { headers }).pipe(
+      catchError((error) => {
+        console.error('Erro ao deletar categoria:', error);
+        if (error.status === 404) {
+          return throwError('Categoria não encontrada.');
+        }
+        return throwError('Falha ao deletar categoria, tente novamente.');
+      })
+    );
+  }
 }
