@@ -2,12 +2,12 @@
 .produto-container {
   padding: 20px;
   max-width: 1200px;
-  margin: 20px auto; /* Adiciona margem ao redor do contêiner */
+  margin: 20px auto;
   font-family: Arial, sans-serif;
-  color: #000; /* Letras em preto */
-  background-color: #fff; /* Fundo branco */
-  border-radius: 8px; /* Cantos arredondados */
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); /* Sombra para destacar o contêiner */
+  color: #000;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 /* Mensagens de feedback */
@@ -34,23 +34,23 @@
 /* Menu de controle */
 .menu {
   display: flex;
-  gap: 10px; /* Espaçamento entre os botões */
+  gap: 10px;
   margin-bottom: 20px;
+}
 
-  button {
-    padding: 10px 15px;
-    background-color: #007bff; /* Azul */
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+.menu button {
+  padding: 10px 15px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
 
-    &:hover {
-      background-color: #0056b3;
-      transform: scale(1.05);
-    }
-  }
+.menu button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
 }
 
 /* Lista de produtos */
@@ -74,109 +74,119 @@
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   flex-wrap: wrap;
+}
 
-  .produto-detalhes {
-    flex: 1 1 60%;
-    strong {
-      font-size: 1.2rem;
-    }
+.produto-detalhes {
+  flex: 1 1 60%;
+}
 
-    p {
-      margin: 5px 0;
-      font-size: 0.95rem;
-    }
-  }
+.produto-detalhes strong {
+  font-size: 1.2rem;
+}
 
-  .produto-acoes {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-left: 20px;
+.produto-detalhes p {
+  margin: 5px 0;
+  font-size: 0.95rem;
+}
 
-    button {
-      padding: 8px 12px;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.2s ease;
-      border: none;
-      color: white;
-      font-size: 0.9rem;
-    }
+.produto-acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-left: 20px;
+}
 
-    .btn-deletar {
-      background-color: #dc3545; /* Vermelho */
+.produto-acoes button {
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  border: none;
+  color: white;
+  font-size: 0.9rem;
+}
 
-      &:hover {
-        background-color: #c82333;
-        transform: scale(1.05);
-      }
-    }
+.produto-acoes .btn-deletar {
+  background-color: #dc3545;
+}
 
-    .btn-detalhes {
-      background-color: #007bff; /* Azul */
+.produto-acoes .btn-deletar:hover {
+  background-color: #c82333;
+  transform: scale(1.05);
+}
 
-      &:hover {
-        background-color: #0056b3;
-        transform: scale(1.05);
-      }
-    }
+.produto-acoes .btn-detalhes {
+  background-color: #007bff;
+}
 
-    .btn-adicionar-mais {
-      background-color: #28a745; /* Verde */
+.produto-acoes .btn-detalhes:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
 
-      &:hover {
-        background-color: #218838;
-        transform: scale(1.05);
-      }
-    }
-  }
+.produto-acoes .btn-editar {
+  background-color: #28a745;
+}
 
-  /* Novo: Campo para adicionar quantidade */
-  .adicionar-quantidade {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    margin-top: 10px;
-    gap: 10px;
+.produto-acoes .btn-editar:hover {
+  background-color: #218838;
+  transform: scale(1.05);
+}
 
-    input[type="number"] {
-      width: 150px;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 1rem;
-    }
+.produto-acoes .btn-adicionar-mais {
+  background-color: #28a745;
+}
 
-    .btn-confirmar {
-      background-color: #28a745; /* Verde */
-      color: white;
-      padding: 8px 12px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.2s ease;
+.produto-acoes .btn-adicionar-mais:hover {
+  background-color: #218838;
+  transform: scale(1.05);
+}
 
-      &:hover {
-        background-color: #218838;
-        transform: scale(1.05);
-      }
-    }
+/* Campo para adicionar quantidade */
+.adicionar-quantidade {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+  gap: 10px;
+}
 
-    .btn-cancelar {
-      background-color: #6c757d; /* Cinza */
-      color: white;
-      padding: 8px 12px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.2s ease;
+.adicionar-quantidade input[type="number"] {
+  width: 150px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+}
 
-      &:hover {
-        background-color: #5a6268;
-        transform: scale(1.05);
-      }
-    }
-  }
+.adicionar-quantidade .btn-confirmar {
+  background-color: #28a745;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.adicionar-quantidade .btn-confirmar:hover {
+  background-color: #218838;
+  transform: scale(1.05);
+}
+
+.adicionar-quantidade .btn-cancelar {
+  background-color: #6c757d;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.adicionar-quantidade .btn-cancelar:hover {
+  background-color: #5a6268;
+  transform: scale(1.05);
 }
 
 /* Paginação */
@@ -186,87 +196,86 @@
   align-items: center;
   margin-top: 20px;
   gap: 10px;
-
-  button {
-    padding: 8px 12px;
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-
-    &:hover {
-      background-color: #0056b3;
-      transform: scale(1.05);
-    }
-
-    &:disabled {
-      background-color: #6c757d;
-      cursor: not-allowed;
-      transform: none;
-    }
-  }
-
-  p {
-    margin: 0 10px;
-    font-size: 0.9rem;
-  }
 }
 
-/* Formulário de criação */
-.produto-criar {
+.pagination button {
+  padding: 8px 12px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.pagination button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+.pagination button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pagination p {
+  margin: 0 10px;
+  font-size: 0.9rem;
+}
+
+/* Formulário de criação e edição */
+.produto-criar, .produto-editar {
   background: #fff;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
 
-  h2 {
-    margin-bottom: 15px;
-    font-size: 1.5rem;
-  }
+.produto-criar h2, .produto-editar h2 {
+  margin-bottom: 15px;
+  font-size: 1.5rem;
+}
 
-  form {
-    display: flex;
-    flex-direction: column;
+.produto-criar form, .produto-editar form {
+  display: grid;
+  grid-template-columns: 1fr 2fr; /* Duas colunas: uma para rótulos e outra para os campos */
+  gap: 15px;
+}
 
-    label {
-      margin-bottom: 5px;
-      font-size: 0.9rem;
-      font-weight: bold;
-    }
+.produto-criar label, .produto-editar label {
+  font-size: 0.9rem;
+  font-weight: bold;
+}
 
-    input,
-    select {
-      margin-bottom: 15px;
-      padding: 10px;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
+.produto-criar input, .produto-editar input,
+.produto-criar select, .produto-editar select {
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
 
-    button {
-      padding: 10px 15px;
-      background-color: #28a745;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: background-color 0.3s ease, transform 0.2s ease;
+.produto-criar button, .produto-editar button {
+  padding: 10px 15px;
+  background-color: #28a745; /* Verde */
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
 
-      &:hover {
-        background-color: #218838;
-        transform: scale(1.05);
-      }
+.produto-criar button:hover, .produto-editar button:hover {
+  background-color: #218838;
+  transform: scale(1.05);
+}
 
-      &:disabled {
-        background-color: #6c757d;
-        cursor: not-allowed;
-        transform: none;
-      }
-    }
-  }
+.produto-criar button:disabled, .produto-editar button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Detalhes do Produto */
@@ -276,32 +285,32 @@
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   margin-top: 20px;
+}
 
-  h2 {
-    font-size: 1.5rem;
-    margin-bottom: 20px;
-  }
+.produto-detalhado h2 {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+}
 
-  p {
-    font-size: 1rem;
-    margin: 5px 0;
-  }
+.produto-detalhado p {
+  font-size: 1rem;
+  margin: 5px 0;
+}
 
-  button {
-    background-color: #007bff;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+.produto-detalhado button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
 
-    &:hover {
-      background-color: #0056b3;
-      transform: scale(1.05);
-    }
-  }
+.produto-detalhado button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
 }
 
 /* Sem produtos */
@@ -314,15 +323,6 @@
 
 /* Estilos responsivos */
 @media (max-width: 768px) {
-  .menu {
-    flex-direction: column;
-    align-items: flex-start;
-
-    button {
-      width: 100%;
-    }
-  }
-
   .produto-item {
     flex-direction: column;
     align-items: flex-start;
@@ -331,7 +331,6 @@
       flex-direction: row;
       margin-left: 0;
       margin-top: 10px;
-
       button {
         flex: 1;
         text-align: center;
@@ -339,30 +338,20 @@
     }
   }
 
-  .adicionar-quantidade {
-    flex-direction: column;
-    align-items: flex-start;
-
-    input[type="number"] {
-      width: 100%;
-    }
-
-    .btn-confirmar,
-    .btn-cancelar {
-      width: 100%;
-    }
+  .produto-criar form, .produto-editar form {
+    grid-template-columns: 1fr; /* Coloca tudo em uma coluna para telas menores */
   }
 
-  .pagination {
-    flex-direction: column;
+  .produto-criar button, .produto-editar button {
+    width: 100%;
+  }
 
-    button {
-      width: 100%;
-    }
+  .produto-detalhado button {
+    width: 100%;
+  }
 
-    p {
-      margin: 10px 0;
-    }
+  .pagination button {
+    width: 100%;
   }
 }
 
@@ -439,6 +428,367 @@
 
   .produto-detalhado button {
     padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+}
+/* Contêiner principal */
+.produto-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 20px auto;
+  font-family: Arial, sans-serif;
+  color: #000;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Mensagens de feedback */
+.mensagem {
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.mensagem.sucesso {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.mensagem.erro {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* Menu de controle */
+.menu {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.menu button {
+  padding: 10px 15px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.menu button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+/* Lista de produtos */
+.produto-lista h2 {
+  margin-bottom: 15px;
+  font-size: 1.5rem;
+}
+
+.produto-lista ul {
+  list-style: none;
+  padding: 0;
+}
+
+.produto-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #f9f9f9;
+  margin-bottom: 15px;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
+}
+
+.produto-detalhes {
+  flex: 1 1 60%;
+}
+
+.produto-detalhes strong {
+  font-size: 1.2rem;
+}
+
+.produto-detalhes p {
+  margin: 5px 0;
+  font-size: 0.95rem;
+}
+
+.produto-acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-left: 20px;
+}
+
+.produto-acoes button {
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  border: none;
+  color: white;
+  font-size: 0.9rem;
+}
+
+.produto-acoes .btn-deletar {
+  background-color: #dc3545;
+}
+
+.produto-acoes .btn-deletar:hover {
+  background-color: #c82333;
+  transform: scale(1.05);
+}
+
+.produto-acoes .btn-detalhes {
+  background-color: #007bff;
+}
+
+.produto-acoes .btn-detalhes:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+.produto-acoes .btn-editar {
+  background-color: #28a745;
+}
+
+.produto-acoes .btn-editar:hover {
+  background-color: #218838;
+  transform: scale(1.05);
+}
+
+/* Campo para adicionar quantidade */
+.adicionar-quantidade {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+  gap: 10px;
+}
+
+.adicionar-quantidade input[type="number"] {
+  width: 150px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.adicionar-quantidade .btn-confirmar {
+  background-color: #28a745;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.adicionar-quantidade .btn-confirmar:hover {
+  background-color: #218838;
+  transform: scale(1.05);
+}
+
+.adicionar-quantidade .btn-cancelar {
+  background-color: #6c757d;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.adicionar-quantidade .btn-cancelar:hover {
+  background-color: #5a6268;
+  transform: scale(1.05);
+}
+
+/* Paginação */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  gap: 10px;
+}
+
+.pagination button {
+  padding: 8px 12px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.pagination button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+.pagination button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pagination p {
+  margin: 0 10px;
+  font-size: 0.9rem;
+}
+
+/* Formulário de criação e edição */
+.produto-criar, .produto-editar {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.produto-criar h2, .produto-editar h2 {
+  margin-bottom: 15px;
+  font-size: 1.5rem;
+}
+
+.produto-criar form, .produto-editar form {
+  display: grid;
+  grid-template-columns: 1fr 2fr; /* Duas colunas: uma para rótulos e outra para os campos */
+  gap: 15px;
+}
+
+.produto-criar label, .produto-editar label {
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.produto-criar input, .produto-editar input,
+.produto-criar select, .produto-editar select {
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.produto-criar button, .produto-editar button {
+  padding: 10px 15px;
+  background-color: #28a745; /* Verde */
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.produto-criar button:hover, .produto-editar button:hover {
+  background-color: #218838;
+  transform: scale(1.05);
+}
+
+.produto-criar button:disabled, .produto-editar button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Detalhes do Produto */
+.produto-detalhado {
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+.produto-detalhado h2 {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+}
+
+.produto-detalhado p {
+  font-size: 1rem;
+  margin: 5px 0;
+}
+
+.produto-detalhado button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.produto-detalhado button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+/* Sem produtos */
+.sem-produtos {
+  text-align: center;
+  font-size: 1rem;
+  color: #6c757d;
+  margin-top: 20px;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+  .produto-item {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .produto-acoes {
+      flex-direction: row;
+      margin-left: 0;
+      margin-top: 10px;
+      button {
+        flex: 1;
+        margin: 0 5px;
+      }
+    }
+  }
+
+  .produto-criar form, .produto-editar form {
+    grid-template-columns: 1fr; /* Coluna única para formulários */
+  }
+
+  .pagination button {
+    font-size: 0.9rem;
+    padding: 6px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .produto-item {
+    padding: 12px;
+  }
+
+  .menu button {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+
+  .produto-criar button, .produto-editar button {
+    width: 100%;
+    padding: 12px;
+  }
+
+  .pagination button {
+    padding: 6px 10px;
     font-size: 0.9rem;
   }
 }

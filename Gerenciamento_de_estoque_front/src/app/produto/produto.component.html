@@ -26,24 +26,10 @@
         <div class="produto-acoes">
           <button (click)="deletarProduto(produto.id)" class="btn-deletar">Deletar</button>
           <button (click)="verDetalhes(produto.id)" class="btn-detalhes">Ver Detalhes</button>
-          <button (click)="toggleAdicionar(produto.id)" class="btn-adicionar-mais">
-            Adicionar Mais
-          </button>
-        </div>
-        <!-- Novo: Campo para adicionar quantidade -->
-        <div *ngIf="quantidadesAdicionar[produto.id] !== undefined" class="adicionar-quantidade">
-          <input 
-            type="number" 
-            [(ngModel)]="quantidadesAdicionar[produto.id]" 
-            min="1" 
-            placeholder="Quantidade a adicionar"
-          />
-          <button (click)="confirmarAdicionar(produto.id)" class="btn-confirmar">Confirmar</button>
-          <button (click)="toggleAdicionar(produto.id)" class="btn-cancelar">Cancelar</button>
+          <button (click)="exibirEditarProduto(produto.id)" class="btn-editar">Editar</button>
         </div>
       </li>
     </ul>
-    <div *ngIf="produtos.length === 0" class="sem-produtos">Nenhum produto encontrado.</div>
 
     <!-- Paginação -->
     <div class="pagination">
@@ -51,6 +37,36 @@
       <button (click)="proximaPagina()" [disabled]="currentPage === totalPages - 1">Próxima</button>
       <p>Página {{ currentPage + 1 }} de {{ totalPages }}</p>
     </div>
+  </div>
+
+  <!-- Formulário de Edição -->
+  <div *ngIf="exibirEditar" class="produto-editar">
+    <h2>Editar Produto</h2>
+    <form [formGroup]="produtoForm" (ngSubmit)="atualizarProduto()">
+      <label for="nome">Nome:</label>
+      <input id="nome" formControlName="nome" type="text" />
+
+      <label for="descricao">Descrição:</label>
+      <input id="descricao" formControlName="descricao" type="text" />
+
+      <label for="preco">Preço:</label>
+      <input id="preco" formControlName="preco" type="number" />
+
+      <label for="quantidade">Quantidade:</label>
+      <input id="quantidade" formControlName="quantidade" type="number" />
+
+      <label for="quantidadeMinima">Quantidade Mínima:</label>
+      <input id="quantidadeMinima" formControlName="quantidadeMinima" type="number" />
+
+      <label for="categoriaId">Categoria:</label>
+      <select id="categoriaId" formControlName="categoriaId">
+        <option *ngFor="let categoria of categorias" [value]="categoria.id">
+          {{ categoria.nome }}
+        </option>
+      </select>
+
+      <button type="submit" [disabled]="produtoForm.invalid">Atualizar Produto</button>
+    </form>
   </div>
 
   <!-- Formulário de Criação -->
@@ -97,3 +113,4 @@
     <button (click)="fecharDetalhes()">Fechar</button>
   </div>
 </div>
+
