@@ -1,3 +1,4 @@
+
 // src/app/guards/auth.guard.ts
 import { Injectable } from '@angular/core';
 import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from '@angular/router';
@@ -22,7 +23,11 @@ export class AuthGuard implements CanActivate {
       if (isAdmin) {
         return true; // Permite o acesso
       } else {
-        this.router.navigate(['/dashboard']); // Redireciona para o dashboard caso não seja admin
+        // Armazenando a mensagem de erro no localStorage
+        localStorage.setItem('authErrorMessage', 'Usuário não autorizado. Somente administradores podem acessar esta página.');
+
+        // Redireciona para o dashboard caso não seja admin
+        this.router.navigate(['/dashboard']);
         return false;
       }
     } else {
