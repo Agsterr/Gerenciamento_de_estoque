@@ -24,18 +24,20 @@ export class LoginComponent {
     this.loginForm = this.fb.group({
       username: ['', Validators.required],
       senha: ['', Validators.required],
+      orgId: ['', Validators.required], // Campo para o ID da organização
     });
   }
 
   onSubmit(): void {
     if (this.loginForm.valid) {
-      const { username, senha } = this.loginForm.value;
-      this.authService.login(username, senha).subscribe({
+      const { username, senha, orgId } = this.loginForm.value;
+
+      // Chama o serviço de login com os parâmetros necessários
+      this.authService.login(username, senha, orgId).subscribe({
         next: (response) => {
-          // Se o login for bem-sucedido, armazena o token e redireciona para o dashboard
           if (response.token) {
-            localStorage.setItem('auth_token', response.token);  // Armazenando o token
-            this.router.navigate(['/dashboard']);  // Redireciona para o dashboard
+            localStorage.setItem('auth_token', response.token);
+            this.router.navigate(['/dashboard']); // Redireciona após o login bem-sucedido
           }
         },
         error: (err) => {

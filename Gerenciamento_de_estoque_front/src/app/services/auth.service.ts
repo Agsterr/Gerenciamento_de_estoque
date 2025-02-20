@@ -1,8 +1,9 @@
 
 
+// src/app/services/auth.service.ts
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
-import { Router } from '@angular/router'; // Importando o Router
+import { Router } from '@angular/router';
 import { Observable, tap, catchError } from 'rxjs';
 import { LoginResponse } from '../models/login-response.model'; // Importando a interface LoginResponse
 import { of } from 'rxjs';
@@ -13,21 +14,25 @@ import { of } from 'rxjs';
 export class AuthService {
   constructor(
     private apiService: ApiService,
-    private router: Router  // Injetando o Router
+    private router: Router
   ) {}
 
-  login(username: string, senha: string): Observable<LoginResponse> {
-    const loginData = { username, senha };
+  // Modificação para incluir orgId no login
+  login(username: string, senha: string, orgId: number): Observable<LoginResponse> {
+    const loginData = { username, senha, orgId }; // Enviando username, senha e orgId
 
     return this.apiService.post<LoginResponse>('/auth/login', loginData).pipe(
       tap((response: LoginResponse) => {
         if (response && response.token) {
           // Armazenando o token JWT no localStorage
           localStorage.setItem('jwtToken', response.token);
-          localStorage.setItem('loggedUser', JSON.stringify({ username }));
+          localStorage.setItem('loggedUser', JSON.stringify({
+            username: response.username,
+            roles: response.roles // Salvando as roles corretamente
+          }));
 
           // Redirecionando para o Dashboard
-          this.router.navigate(['/dashboard']); // Redirecionando para o Dashboard
+          this.router.navigate(['/dashboard']);
         }
       }),
       catchError((err) => {
@@ -45,7 +50,7 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem('jwtToken');
     localStorage.removeItem('loggedUser');
-    this.router.navigate(['/login']);  // Redireciona para a página de login
+    this.router.navigate(['/login']);
   }
 
   register(data: any): Observable<any> {

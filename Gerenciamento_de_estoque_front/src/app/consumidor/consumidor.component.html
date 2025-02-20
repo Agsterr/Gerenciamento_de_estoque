@@ -8,9 +8,9 @@
     <button id="botao-adicionar" (click)="toggleAddForm()">Adicionar Consumidor</button>
   </div>
 
-  <!-- Formulário para adicionar consumidor -->
+  <!-- Formulário para adicionar/editar consumidor -->
   <div id="form-adicionar-container" *ngIf="showAddForm">
-    <h2 id="titulo-form">Adicionar Consumidor</h2>
+    <h2 id="titulo-form">{{ editingConsumer ? 'Editar Consumidor' : 'Adicionar Consumidor' }}</h2>
     <form (ngSubmit)="submitAddForm()" id="form-adicionar">
       <label for="nome">Nome:</label>
       <input
@@ -30,7 +30,7 @@
         required
       />
 
-      <button type="submit" id="botao-salvar">Salvar</button>
+      <button type="submit" id="botao-salvar">{{ editingConsumer ? 'Salvar Alterações' : 'Salvar' }}</button>
     </form>
   </div>
 
@@ -48,11 +48,25 @@
   <!-- Lista de consumidores -->
   <div id="lista-container" *ngIf="showList">
     <h2 id="titulo-lista">Lista de Consumidores</h2>
-    <ul id="lista-consumidores">
-      <li id="item-consumidor" *ngFor="let consumer of filteredConsumers">
-        {{ consumer.nome }} - {{ consumer.cpf }}
-        <button id="botao-deletar" (click)="deleteConsumer(consumer.id)">Deletar</button>
-      </li>
-    </ul>
+    <table id="tabela-consumidores">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>CPF</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let consumer of filteredConsumers">
+          <td>{{ consumer.nome }}</td>
+          <td>{{ consumer.cpf }}</td>
+          <td>
+            <button id="botao-deletar" (click)="deleteConsumer(consumer.id)">Deletar</button>
+            <button id="botao-editar" (click)="editConsumer(consumer)">Editar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </div>
+

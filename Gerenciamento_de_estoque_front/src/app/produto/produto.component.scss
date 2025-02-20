@@ -1,4 +1,4 @@
-/* Contêiner principal */
+/* Estilos para o contêiner principal */
 .produto-container {
   padding: 20px;
   max-width: 1200px;
@@ -31,6 +31,73 @@
   border: 1px solid #f5c6cb;
 }
 
+/* Tabela de Produtos */
+.tabela-produtos {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.tabela-produtos th,
+.tabela-produtos td {
+  padding: 12px;
+  text-align: left;
+  border: 1px solid #ddd;
+}
+
+.tabela-produtos th {
+  background-color: #007bff;
+  color: white;
+}
+
+.tabela-produtos tbody tr:hover {
+  background-color: #f1f1f1; /* Destaca a linha ao passar o cursor */
+}
+
+.tabela-produtos .btn-deletar,
+.tabela-produtos .btn-editar,
+.tabela-produtos .btn-detalhes {
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.tabela-produtos .btn-deletar {
+  background-color: #dc3545;
+  color: white;
+}
+
+.tabela-produtos .btn-editar {
+  background-color: #007bff;
+  color: white;
+}
+
+.tabela-produtos .btn-detalhes {
+  background-color: #28a745;
+  color: white;
+}
+
+.tabela-produtos .btn-deletar:hover,
+.tabela-produtos .btn-editar:hover,
+.tabela-produtos .btn-detalhes:hover {
+  transform: scale(1.05);
+}
+
+.tabela-produtos .btn-deletar:hover {
+  background-color: #a71d2a;
+}
+
+.tabela-produtos .btn-editar:hover {
+  background-color: #0056b3;
+}
+
+.tabela-produtos .btn-detalhes:hover {
+  background-color: #218838;
+}
+
 /* Menu de controle */
 .menu {
   display: flex;
@@ -50,142 +117,6 @@
 
 .menu button:hover {
   background-color: #0056b3;
-  transform: scale(1.05);
-}
-
-/* Lista de produtos */
-.produto-lista h2 {
-  margin-bottom: 15px;
-  font-size: 1.5rem;
-}
-
-.produto-lista ul {
-  list-style: none;
-  padding: 0;
-}
-
-.produto-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  background: #f9f9f9;
-  margin-bottom: 15px;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  flex-wrap: wrap;
-}
-
-.produto-detalhes {
-  flex: 1 1 60%;
-}
-
-.produto-detalhes strong {
-  font-size: 1.2rem;
-}
-
-.produto-detalhes p {
-  margin: 5px 0;
-  font-size: 0.95rem;
-}
-
-.produto-acoes {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-left: 20px;
-}
-
-.produto-acoes button {
-  padding: 8px 12px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  border: none;
-  color: white;
-  font-size: 0.9rem;
-}
-
-.produto-acoes .btn-deletar {
-  background-color: #dc3545;
-}
-
-.produto-acoes .btn-deletar:hover {
-  background-color: #c82333;
-  transform: scale(1.05);
-}
-
-.produto-acoes .btn-detalhes {
-  background-color: #007bff;
-}
-
-.produto-acoes .btn-detalhes:hover {
-  background-color: #0056b3;
-  transform: scale(1.05);
-}
-
-.produto-acoes .btn-editar {
-  background-color: #28a745;
-}
-
-.produto-acoes .btn-editar:hover {
-  background-color: #218838;
-  transform: scale(1.05);
-}
-
-.produto-acoes .btn-adicionar-mais {
-  background-color: #28a745;
-}
-
-.produto-acoes .btn-adicionar-mais:hover {
-  background-color: #218838;
-  transform: scale(1.05);
-}
-
-/* Campo para adicionar quantidade */
-.adicionar-quantidade {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  margin-top: 10px;
-  gap: 10px;
-}
-
-.adicionar-quantidade input[type="number"] {
-  width: 150px;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 1rem;
-}
-
-.adicionar-quantidade .btn-confirmar {
-  background-color: #28a745;
-  color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.adicionar-quantidade .btn-confirmar:hover {
-  background-color: #218838;
-  transform: scale(1.05);
-}
-
-.adicionar-quantidade .btn-cancelar {
-  background-color: #6c757d;
-  color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.adicionar-quantidade .btn-cancelar:hover {
-  background-color: #5a6268;
   transform: scale(1.05);
 }
 
@@ -224,39 +155,88 @@
   font-size: 0.9rem;
 }
 
-/* Formulário de criação e edição */
-.produto-criar, .produto-editar {
+/* Responsividade */
+@media (max-width: 768px) {
+  .tabela-produtos td,
+  .tabela-produtos th {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+
+  .menu button {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+
+  .pagination button {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .produto-container {
+    padding: 10px;
+  }
+
+  .tabela-produtos td,
+  .tabela-produtos th {
+    font-size: 0.8rem;
+    padding: 8px;
+  }
+
+  .menu button {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+  }
+
+  .pagination button {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Estilos para o formulário de criação de produto */
+.produto-criar,
+.produto-editar {
   background: #fff;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  margin-top: 20px;
 }
 
-.produto-criar h2, .produto-editar h2 {
+.produto-criar h2,
+.produto-editar h2 {
   margin-bottom: 15px;
   font-size: 1.5rem;
 }
 
-.produto-criar form, .produto-editar form {
+.produto-criar form,
+.produto-editar form {
   display: grid;
   grid-template-columns: 1fr 2fr; /* Duas colunas: uma para rótulos e outra para os campos */
   gap: 15px;
 }
 
-.produto-criar label, .produto-editar label {
+.produto-criar label,
+.produto-editar label {
   font-size: 0.9rem;
   font-weight: bold;
 }
 
-.produto-criar input, .produto-editar input,
-.produto-criar select, .produto-editar select {
+.produto-criar input,
+.produto-editar input,
+.produto-criar select,
+.produto-editar select {
   padding: 10px;
   font-size: 1rem;
   border: 1px solid #ccc;
   border-radius: 5px;
 }
 
-.produto-criar button, .produto-editar button {
+.produto-criar button,
+.produto-editar button {
   padding: 10px 15px;
   background-color: #28a745; /* Verde */
   color: #fff;
@@ -267,90 +247,28 @@
   transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-.produto-criar button:hover, .produto-editar button:hover {
+.produto-criar button:hover,
+.produto-editar button:hover {
   background-color: #218838;
   transform: scale(1.05);
 }
 
-.produto-criar button:disabled, .produto-editar button:disabled {
+.produto-criar button:disabled,
+.produto-editar button:disabled {
   background-color: #6c757d;
   cursor: not-allowed;
   transform: none;
 }
 
-/* Detalhes do Produto */
-.produto-detalhado {
-  background-color: #f9f9f9;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  margin-top: 20px;
-}
-
-.produto-detalhado h2 {
-  font-size: 1.5rem;
-  margin-bottom: 20px;
-}
-
-.produto-detalhado p {
-  font-size: 1rem;
-  margin: 5px 0;
-}
-
-.produto-detalhado button {
-  background-color: #007bff;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.produto-detalhado button:hover {
-  background-color: #0056b3;
-  transform: scale(1.05);
-}
-
-/* Sem produtos */
-.sem-produtos {
-  text-align: center;
-  font-size: 1rem;
-  color: #6c757d;
-  margin-top: 20px;
-}
-
-/* Estilos responsivos */
+/* Responsividade para a criação de produto */
 @media (max-width: 768px) {
-  .produto-item {
-    flex-direction: column;
-    align-items: flex-start;
-
-    .produto-acoes {
-      flex-direction: row;
-      margin-left: 0;
-      margin-top: 10px;
-      button {
-        flex: 1;
-        text-align: center;
-      }
-    }
+  .produto-criar form,
+  .produto-editar form {
+    grid-template-columns: 1fr; /* Coluna única para formulários */
   }
 
-  .produto-criar form, .produto-editar form {
-    grid-template-columns: 1fr; /* Coloca tudo em uma coluna para telas menores */
-  }
-
-  .produto-criar button, .produto-editar button {
-    width: 100%;
-  }
-
-  .produto-detalhado button {
-    width: 100%;
-  }
-
-  .pagination button {
+  .produto-criar button,
+  .produto-editar button {
     width: 100%;
   }
 }
@@ -360,371 +278,40 @@
     padding: 10px;
   }
 
-  .menu button {
-    padding: 8px 10px;
-    font-size: 0.9rem;
+  .produto-criar form,
+  .produto-editar form {
+    grid-template-columns: 1fr; /* Coloca tudo em uma coluna para telas menores */
   }
 
-  .produto-item {
-    padding: 10px;
-
-    .produto-detalhes {
-      strong {
-        font-size: 1rem;
-      }
-
-      p {
-        font-size: 0.85rem;
-      }
-    }
-
-    .produto-acoes {
-      button {
-        padding: 6px 8px;
-        font-size: 0.8rem;
-      }
-    }
-
-    .adicionar-quantidade {
-      input[type="number"] {
-        padding: 6px;
-        font-size: 0.9rem;
-      }
-
-      .btn-confirmar,
-      .btn-cancelar {
-        padding: 6px 8px;
-        font-size: 0.9rem;
-      }
-    }
+  .produto-criar button,
+  .produto-editar button {
+    width: 100%;
+    padding: 12px;
   }
-
-  .produto-criar h2,
-  .produto-lista h2,
-  .produto-detalhado h2 {
-    font-size: 1.3rem;
-  }
-
-  .produto-criar form {
-    label {
-      font-size: 0.8rem;
-    }
-
-    input,
-    select {
-      font-size: 0.9rem;
-      padding: 8px;
-    }
-
-    button {
-      padding: 8px 12px;
-      font-size: 0.9rem;
-    }
-  }
-
-  .produto-detalhado p {
-    font-size: 0.9rem;
-  }
-
-  .produto-detalhado button {
-    padding: 8px 12px;
-    font-size: 0.9rem;
-  }
-}
-/* Contêiner principal */
-.produto-container {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 20px auto;
-  font-family: Arial, sans-serif;
-  color: #000;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-
-/* Mensagens de feedback */
-.mensagem {
-  margin-bottom: 15px;
-  padding: 10px;
-  border-radius: 5px;
-  text-align: center;
-  font-weight: bold;
-}
-
-.mensagem.sucesso {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.mensagem.erro {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-}
-
-/* Menu de controle */
-.menu {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.menu button {
-  padding: 10px 15px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.menu button:hover {
-  background-color: #0056b3;
-  transform: scale(1.05);
-}
-
-/* Lista de produtos */
-.produto-lista h2 {
-  margin-bottom: 15px;
-  font-size: 1.5rem;
-}
-
-.produto-lista ul {
-  list-style: none;
-  padding: 0;
-}
-
-.produto-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  background: #f9f9f9;
-  margin-bottom: 15px;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  flex-wrap: wrap;
-}
-
-.produto-detalhes {
-  flex: 1 1 60%;
-}
-
-.produto-detalhes strong {
-  font-size: 1.2rem;
-}
-
-.produto-detalhes p {
-  margin: 5px 0;
-  font-size: 0.95rem;
-}
-
-.produto-acoes {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-left: 20px;
-}
-
-.produto-acoes button {
-  padding: 8px 12px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  border: none;
-  color: white;
-  font-size: 0.9rem;
-}
-
-.produto-acoes .btn-deletar {
-  background-color: #dc3545;
-}
-
-.produto-acoes .btn-deletar:hover {
-  background-color: #c82333;
-  transform: scale(1.05);
-}
-
-.produto-acoes .btn-detalhes {
-  background-color: #007bff;
-}
-
-.produto-acoes .btn-detalhes:hover {
-  background-color: #0056b3;
-  transform: scale(1.05);
-}
-
-.produto-acoes .btn-editar {
-  background-color: #28a745;
-}
-
-.produto-acoes .btn-editar:hover {
-  background-color: #218838;
-  transform: scale(1.05);
-}
-
-/* Campo para adicionar quantidade */
-.adicionar-quantidade {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  margin-top: 10px;
-  gap: 10px;
-}
-
-.adicionar-quantidade input[type="number"] {
-  width: 150px;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 1rem;
-}
-
-.adicionar-quantidade .btn-confirmar {
-  background-color: #28a745;
-  color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.adicionar-quantidade .btn-confirmar:hover {
-  background-color: #218838;
-  transform: scale(1.05);
-}
-
-.adicionar-quantidade .btn-cancelar {
-  background-color: #6c757d;
-  color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.adicionar-quantidade .btn-cancelar:hover {
-  background-color: #5a6268;
-  transform: scale(1.05);
-}
-
-/* Paginação */
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 20px;
-  gap: 10px;
-}
-
-.pagination button {
-  padding: 8px 12px;
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.pagination button:hover {
-  background-color: #0056b3;
-  transform: scale(1.05);
-}
-
-.pagination button:disabled {
-  background-color: #6c757d;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.pagination p {
-  margin: 0 10px;
-  font-size: 0.9rem;
-}
-
-/* Formulário de criação e edição */
-.produto-criar, .produto-editar {
-  background: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-
-.produto-criar h2, .produto-editar h2 {
-  margin-bottom: 15px;
-  font-size: 1.5rem;
-}
-
-.produto-criar form, .produto-editar form {
-  display: grid;
-  grid-template-columns: 1fr 2fr; /* Duas colunas: uma para rótulos e outra para os campos */
-  gap: 15px;
-}
-
-.produto-criar label, .produto-editar label {
-  font-size: 0.9rem;
-  font-weight: bold;
-}
-
-.produto-criar input, .produto-editar input,
-.produto-criar select, .produto-editar select {
-  padding: 10px;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
-.produto-criar button, .produto-editar button {
-  padding: 10px 15px;
-  background-color: #28a745; /* Verde */
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.produto-criar button:hover, .produto-editar button:hover {
-  background-color: #218838;
-  transform: scale(1.05);
-}
-
-.produto-criar button:disabled, .produto-editar button:disabled {
-  background-color: #6c757d;
-  cursor: not-allowed;
-  transform: none;
 }
 
 /* Detalhes do Produto */
 .produto-detalhado {
-  background-color: #f9f9f9;
+  background: #fff;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   margin-top: 20px;
 }
 
 .produto-detalhado h2 {
+  margin-bottom: 15px;
   font-size: 1.5rem;
-  margin-bottom: 20px;
 }
 
 .produto-detalhado p {
   font-size: 1rem;
-  margin: 5px 0;
 }
 
 .produto-detalhado button {
-  background-color: #007bff;
-  color: white;
-  padding: 10px 20px;
+  padding: 10px 15px;
+  background-color: #dc3545; /* Vermelho */
+  color: #fff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -733,62 +320,6 @@
 }
 
 .produto-detalhado button:hover {
-  background-color: #0056b3;
+  background-color: #a71d2a;
   transform: scale(1.05);
-}
-
-/* Sem produtos */
-.sem-produtos {
-  text-align: center;
-  font-size: 1rem;
-  color: #6c757d;
-  margin-top: 20px;
-}
-
-/* Estilos responsivos */
-@media (max-width: 768px) {
-  .produto-item {
-    flex-direction: column;
-    align-items: flex-start;
-
-    .produto-acoes {
-      flex-direction: row;
-      margin-left: 0;
-      margin-top: 10px;
-      button {
-        flex: 1;
-        margin: 0 5px;
-      }
-    }
-  }
-
-  .produto-criar form, .produto-editar form {
-    grid-template-columns: 1fr; /* Coluna única para formulários */
-  }
-
-  .pagination button {
-    font-size: 0.9rem;
-    padding: 6px 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .produto-item {
-    padding: 12px;
-  }
-
-  .menu button {
-    padding: 8px 12px;
-    font-size: 0.9rem;
-  }
-
-  .produto-criar button, .produto-editar button {
-    width: 100%;
-    padding: 12px;
-  }
-
-  .pagination button {
-    padding: 6px 10px;
-    font-size: 0.9rem;
-  }
 }

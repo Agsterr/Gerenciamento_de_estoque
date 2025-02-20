@@ -1,113 +1,175 @@
-/* Centraliza o contêiner na tela */
+/* Estilo do contêiner principal */
 .container {
-    max-width: 400px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #4a90e2; /* Fundo azul */
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    text-align: center;
-    color: white; /* Texto branco para contraste */
-    box-sizing: border-box;
+  max-width: 900px; /* Largura máxima do contêiner */
+  margin: 0 auto; /* Centraliza o contêiner */
+  padding: 20px;
+  background-color: #f4f4f9; /* Cor de fundo suave */
+  border-radius: 8px; /* Borda arredondada */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Sombras suaves */
+  color: #333; /* Cor do texto */
+  box-sizing: border-box;
+}
+
+/* Estilo do título */
+h2 {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 20px;
+  color: #2c3e50; /* Cor do título */
+}
+
+/* Mensagens de sucesso e erro */
+.alert {
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.alert-success {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.alert-danger {
+  background-color: #e74c3c;
+  color: white;
+}
+
+/* Formulário */
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  font-weight: bold;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+input, select, button {
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Estilo para o campo select (roles) */
+select {
+  height: auto; /* Ajusta o tamanho da caixa de seleção */
+}
+
+.error {
+  color: #e74c3c;
+  font-size: 0.875rem;
+  margin-top: 5px;
+}
+
+/* Botões */
+button {
+  padding: 12px;
+  background-color: #3498db; /* Cor azul */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #2980b9; /* Cor mais escura ao passar o mouse */
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Estilo de sucesso e erro */
+.success-message {
+  color: #2ecc71;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.error-message {
+  color: #e74c3c;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* Responsividade: Estilos para telas menores */
+@media (max-width: 768px) {
+  .container {
+    padding: 15px;
+    max-width: 95%; /* Ajusta o contêiner para caber em telas menores */
   }
-  
-  /* Título */
+
   h2 {
-    margin-bottom: 20px;
-    font-size: 1.8rem;
+    font-size: 1.5rem;
   }
-  
-  /* Formulário */
-  form {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  label {
-    font-weight: bold;
-    margin-bottom: 5px;
-    text-align: left;
-  }
-  
-  input {
+
+  input, select, button {
+    font-size: 0.9rem;
     padding: 10px;
-    margin-bottom: 15px;
-    border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-    width: 100%; /* Ocupa toda a largura */
-    box-sizing: border-box;
   }
-  
-  /* Botão */
-  button {
+}
+
+@media (max-width: 480px) {
+  .container {
     padding: 10px;
-    background-color: #357ab8; /* Azul mais escuro para o botão */
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 1rem;
+    max-width: 100%;
   }
-  
-  button:disabled {
-    background-color: #ccc; /* Cinza para botão desabilitado */
-    cursor: not-allowed;
+
+  h2 {
+    font-size: 1.2rem;
   }
-  
-  /* Mensagens */
-  .success-message {
-    color: #2ecc71; /* Verde para sucesso */
-    margin-top: 10px;
+
+  input, select, button {
+    font-size: 0.85rem;
+    padding: 8px;
   }
-  
-  .error-message {
-    color: #e74c3c; /* Vermelho para erro */
-    margin-top: 10px;
-  }
-  
-  /* Responsividade */
-  @media (max-width: 768px) {
-    /* Para tablets e celulares */
-    .container {
-      padding: 15px;
-      max-width: 90%; /* O contêiner ocupa 90% da largura */
-    }
-  
-    h2 {
-      font-size: 1.5rem;
-    }
-  
-    input {
-      font-size: 0.9rem;
-      padding: 8px;
-    }
-  
-    button {
-      font-size: 0.9rem;
-      padding: 8px;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    /* Para celulares pequenos */
-    .container {
-      padding: 10px;
-    }
-  
-    h2 {
-      font-size: 1.2rem;
-    }
-  
-    input {
-      font-size: 0.8rem;
-      padding: 6px;
-    }
-  
-    button {
-      font-size: 0.8rem;
-      padding: 6px;
-    }
-  }
-  
+}
+
+/* Mensagens de erro e sucesso */
+.error {
+  color: red;
+  font-size: 0.875rem;
+}
+
+.success-message {
+  color: green;
+  font-size: 1rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.error-message {
+  color: red;
+  font-size: 1rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* Alertas de sucesso e erro */
+.alert {
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.alert-success {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.alert-danger {
+  background-color: #e74c3c;
+  color: white;
+}
+

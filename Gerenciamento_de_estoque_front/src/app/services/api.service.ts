@@ -46,4 +46,15 @@ export class ApiService {
       headers: this.getHeaders(),
     });
   }
+
+  // Função de login, enviando o username, senha e orgId
+  login(username: string, senha: string, orgId: number): Observable<any> {
+    const body = {
+      username: username,
+      senha: senha,
+      orgId: orgId, // Adiciona o orgId aqui
+    };
+
+    return this.http.post<any>(`${this.apiUrl}/login`, body);
+  }
 }

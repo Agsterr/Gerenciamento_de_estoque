@@ -1,54 +1,52 @@
 /* Estilo do contêiner de login */
 .container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  width: 100%; /* Ocupa toda a largura disponível */
-  max-width: 600px; /* Limite de largura maior para telas maiores */
-  min-height: 60vh; /* Altura mínima: 60% da altura da tela */
-  background-color: #ffffff; /* Fundo branco para contraste */
-  padding: 40px; /* Espaço interno maior */
-  border-radius: 10px; /* Bordas arredondadas */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra leve */
+  max-width: 900px; /* A largura máxima do contêiner */
+  margin: 0 auto; /* Centraliza o contêiner */
+  padding: 40px;
+  background-color: #ffffff; /* Fundo branco */
+  border-radius: 8px; /* Bordas arredondadas */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Sombra suave */
+  color: #333; /* Cor de texto escura */
   box-sizing: border-box;
-  margin: auto; /* Centraliza vertical e horizontalmente */
-  text-align: center;
+  text-align: center; /* Centraliza o texto dentro do contêiner */
 }
 
 /* Estilo do título */
 h2 {
   margin-bottom: 20px;
-  color: #333; /* Texto escuro */
+  color: #333; /* Cor do texto */
+  font-size: 2rem; /* Tamanho do título maior */
 }
 
 /* Estilo do formulário */
 form {
-  width: 100%; /* Largura total do contêiner */
+  width: 100%; /* Largura total */
 }
 
+/* Estilo dos campos de entrada */
 label {
   display: block;
   margin-bottom: 10px;
   font-weight: bold;
-  color: #333; /* Texto escuro */
+  color: #333;
 }
 
 input {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   margin-bottom: 20px;
   border: 1px solid #ccc;
   border-radius: 5px;
   background-color: #f9f9f9; /* Fundo claro */
-  color: #333; /* Texto escuro */
+  color: #333;
   font-size: 1rem;
   box-sizing: border-box;
 }
 
+/* Estilo do botão */
 button {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   background-color: #4a90e2; /* Azul claro */
   color: #ffffff; /* Texto branco */
   border: none;
@@ -56,22 +54,72 @@ button {
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s ease;
 }
 
 button:hover {
   background-color: #357ab8; /* Azul mais escuro */
 }
 
+/* Estilo de erro */
+.error-message {
+  color: #e74c3c;
+  margin-top: 10px;
+}
+
 /* Responsividade */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .container {
-    max-width: 90%; /* Ajusta a largura para quase preencher a tela */
-    padding: 20px; /* Reduz o espaço interno */
-    min-height: auto; /* Remove a altura mínima */
+    padding: 30px; /* Reduz o espaçamento interno para telas menores */
   }
 
   h2 {
-    font-size: 1.5rem; /* Reduz o tamanho do título */
+    font-size: 1.6rem; /* Tamanho do título ajustado */
+  }
+
+  input {
+    font-size: 1rem; /* Ajuste da fonte */
+  }
+
+  button {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    max-width: 85%; /* Reduz a largura para telas pequenas */
+    padding: 20px;
+  }
+
+  h2 {
+    font-size: 1.4rem; /* Título um pouco menor */
+  }
+
+  input {
+    font-size: 0.95rem; /* Ajuste para inputs em telas pequenas */
+  }
+
+  button {
+    font-size: 1rem; /* Ajuste no tamanho da fonte do botão */
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    max-width: 95%; /* Largura quase total da tela */
+    padding: 15px;
+  }
+
+  h2 {
+    font-size: 1.2rem; /* Ajuste no tamanho do título */
+  }
+
+  input {
+    font-size: 0.9rem; /* Ajuste no tamanho da fonte */
+  }
+
+  button {
+    font-size: 0.9rem; /* Ajuste no tamanho da fonte do botão */
   }
 }

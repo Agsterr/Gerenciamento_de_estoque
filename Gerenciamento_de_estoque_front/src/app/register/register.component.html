@@ -1,5 +1,11 @@
 <div class="container">
-  <h2>Registro</h2>
+  <h2>Registro de Usuário</h2>
+
+  <!-- Mensagens de Sucesso e Erro -->
+  <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+  <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+
+  <!-- Formulário de Registro -->
   <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
     <!-- Campo Username -->
     <div>
@@ -18,7 +24,7 @@
         Senha é obrigatória.
       </div>
       <div *ngIf="registerForm.get('senha')?.hasError('minlength') && registerForm.get('senha')?.touched" class="error">
-        Senha deve ter no mínimo 6 caracteres.
+        A senha deve ter pelo menos 6 caracteres.
       </div>
     </div>
 
@@ -34,6 +40,28 @@
       </div>
     </div>
 
+    <!-- Campo ID da Organização -->
+    <div>
+      <label for="orgId">ID da Organização:</label>
+      <input id="orgId" formControlName="orgId" type="text" />
+      <div *ngIf="registerForm.get('orgId')?.invalid && registerForm.get('orgId')?.touched" class="error">
+        ID da organização é obrigatório.
+      </div>
+    </div>
+
+    <!-- Campo Roles (select múltiplo) -->
+    <div class="form-group">
+      <label for="roles">Roles:</label>
+      <select id="roles" formControlName="roles" multiple>
+        <option *ngFor="let role of roles" [value]="role.nome">
+          {{ role.nome }}
+        </option>
+      </select>
+      <div *ngIf="registerForm.get('roles')?.invalid && registerForm.get('roles')?.touched" class="error">
+        Você precisa selecionar pelo menos uma role.
+      </div>
+    </div>
+
     <!-- Botões -->
     <button type="submit" [disabled]="registerForm.invalid">Registrar</button>
     <button type="button" (click)="cancel()">Cancelar</button>
@@ -43,5 +71,3 @@
     <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
   </form>
 </div>
-
-  

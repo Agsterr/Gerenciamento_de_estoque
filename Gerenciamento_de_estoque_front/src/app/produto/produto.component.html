@@ -14,22 +14,32 @@
   <!-- Lista de Produtos -->
   <div *ngIf="exibirLista" class="produto-lista">
     <h2>Lista de Produtos</h2>
-    <ul>
-      <li *ngFor="let produto of produtos" class="produto-item">
-        <div class="produto-detalhes">
-          <strong>{{ produto.nome }}</strong>
-          <p>{{ produto.descricao }}</p>
-          <p><strong>Preço:</strong> {{ produto.preco | currency }}</p>
-          <p><strong>Quantidade:</strong> {{ produto.quantidade }}</p>
-          <p><strong>Categoria:</strong> {{ produto.categoria.nome }}</p>
-        </div>
-        <div class="produto-acoes">
-          <button (click)="deletarProduto(produto.id)" class="btn-deletar">Deletar</button>
-          <button (click)="verDetalhes(produto.id)" class="btn-detalhes">Ver Detalhes</button>
-          <button (click)="exibirEditarProduto(produto.id)" class="btn-editar">Editar</button>
-        </div>
-      </li>
-    </ul>
+    <table class="tabela-produtos">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Descrição</th>
+          <th>Preço</th>
+          <th>Quantidade</th>
+          <th>Categoria</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let produto of produtos">
+          <td>{{ produto.nome }}</td>
+          <td>{{ produto.descricao }}</td>
+          <td>{{ produto.preco | currency }}</td>
+          <td>{{ produto.quantidade }}</td>
+          <td>{{ produto.categoria.nome }}</td>
+          <td>
+            <button (click)="deletarProduto(produto.id)" class="btn-deletar">Deletar</button>
+            <button (click)="verDetalhes(produto.id)" class="btn-detalhes">Ver Detalhes</button>
+            <button (click)="exibirEditarProduto(produto.id)" class="btn-editar">Editar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
 
     <!-- Paginação -->
     <div class="pagination">
@@ -113,4 +123,3 @@
     <button (click)="fecharDetalhes()">Fechar</button>
   </div>
 </div>
-

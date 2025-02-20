@@ -1,6 +1,4 @@
 
-
-
 <div class="container">
   <h2>Login</h2>
   <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
@@ -32,10 +30,25 @@
       </div>
     </div>
 
+    <div>
+      <label for="orgId">ID da Organização:</label>
+      <input
+        id="orgId"
+        formControlName="orgId"
+        type="text"
+        placeholder="Enter your organization ID"
+        required
+      />
+      <div *ngIf="loginForm.get('orgId')?.invalid && loginForm.get('orgId')?.touched" class="error">
+        ID da organização é obrigatório
+      </div>
+    </div>
+
     <button type="submit" [disabled]="loginForm.invalid">Login</button>
 
     <!-- Exibição de Mensagem de Erro -->
     <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
   </form>
-
 </div>
+
+
