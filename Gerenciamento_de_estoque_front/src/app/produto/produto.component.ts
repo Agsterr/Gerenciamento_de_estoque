@@ -160,31 +160,39 @@ private decodeJwt(token: string): any {
   
  
 
-  // Carrega a lista de produtos
+  
 
 // Método para carregar a lista de produtos
+
 carregarProdutos(page: number = 0): void {
-  this.produtoService.listarProdutos(page).subscribe(
-    (data) => {
+  this.produtoService.listarProdutos(page).subscribe({
+    next: (data) => {
       // Acessando a lista de produtos a partir de 'data.content'
       this.produtos = data.content; // Conteúdo dos produtos
 
-      // Acessando as propriedades de paginação corretamente
-      this.currentPage = data.pageable.pageNumber; // Página atual
-      this.totalPages = data.pageable.totalPages; // Total de páginas
+      // Verificando se o valor de 'data' e 'pageable' existe antes de tentar acessar
+      if (data.pageable) {
+        this.currentPage = data.pageable.pageNumber; // Página atual
+      } else {
+        this.currentPage = 0; // Se não tiver um valor, inicialize como 0
+      }
+
+      this.totalPages = data.totalPages || 1; // Se totalPages não estiver presente, define como 1
 
       console.log('Produtos carregados:', this.produtos);
       console.log('Página atual:', this.currentPage);
       console.log('Total de páginas:', this.totalPages);
     },
-    (error) => {
+    error: (error) => {
       this.mensagemErro = 'Erro ao carregar produtos.';
       console.error('Erro ao carregar produtos:', error);
     }
-  );
+  });
 }
 
- 
+
+
+
    
    
    

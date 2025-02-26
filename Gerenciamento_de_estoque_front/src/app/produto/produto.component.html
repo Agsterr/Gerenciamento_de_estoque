@@ -44,8 +44,8 @@
     <!-- Paginação -->
     <div class="pagination">
       <button (click)="paginaAnterior()" [disabled]="currentPage === 0">Anterior</button>
-      <button (click)="proximaPagina()" [disabled]="currentPage === totalPages - 1">Próxima</button>
-      <p>Página {{ currentPage + 1 }} de {{ totalPages }}</p>
+      <button (click)="proximaPagina()" [disabled]="currentPage === totalPages - 1 || totalPages === 0">Próxima</button>
+      <p>Página {{ currentPage + 1 }} de {{ totalPages > 0 ? totalPages : 1 }}</p> <!-- Corrige o display de totalPages -->
     </div>
   </div>
 
@@ -119,7 +119,7 @@
     <p><strong>Quantidade:</strong> {{ produtoDetalhado.quantidade }}</p>
     <p><strong>Quantidade Mínima:</strong> {{ produtoDetalhado.quantidadeMinima }}</p>
     <p><strong>Categoria:</strong> {{ produtoDetalhado.categoriaNome }}</p>
-    <p><strong>Data de Criação:</strong> {{ produtoDetalhado.criadoEm| date:'dd/MM/yy HH:mm' }}</p>
+    <p><strong>Data de Criação:</strong> {{ produtoDetalhado.criadoEm | date: 'dd/MM/yy HH:mm' }}</p>
     <button (click)="fecharDetalhes()">Fechar</button>
   </div>
 </div>
