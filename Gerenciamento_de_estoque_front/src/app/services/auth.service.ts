@@ -4,9 +4,8 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { Router } from '@angular/router';
-import { Observable, tap, catchError } from 'rxjs';
-import { LoginResponse } from '../models/login-response.model'; // Importando a interface LoginResponse
-import { of } from 'rxjs';
+import { Observable, tap, catchError, of } from 'rxjs';
+import { LoginResponse } from '../models/login-response.model';
 
 @Injectable({
   providedIn: 'root',
@@ -17,7 +16,6 @@ export class AuthService {
     private router: Router
   ) {}
 
-  // Modificação para incluir orgId no login
   login(username: string, senha: string, orgId: number): Observable<LoginResponse> {
     const loginData = { username, senha, orgId }; // Enviando username, senha e orgId
 
@@ -37,7 +35,9 @@ export class AuthService {
       }),
       catchError((err) => {
         console.error('Erro ao fazer login', err);
-        return of(err); // Retorna um Observable vazio em caso de erro
+        window.alert('Erro ao tentar fazer login. Verifique suas credenciais e tente novamente.'); // Exibe um alert com a mensagem de erro
+        this.router.navigate(['/login']); // Redireciona o usuário de volta para a página de login em caso de erro
+        return of({} as LoginResponse); // Retorna um objeto vazio ou uma resposta de erro com um tipo válido
       })
     );
   }
