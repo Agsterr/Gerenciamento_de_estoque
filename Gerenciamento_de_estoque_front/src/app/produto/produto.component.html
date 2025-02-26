@@ -31,7 +31,7 @@
           <td>{{ produto.descricao }}</td>
           <td>{{ produto.preco | currency }}</td>
           <td>{{ produto.quantidade }}</td>
-          <td>{{ produto.categoria.nome }}</td>
+          <td>{{ produto.categoriaNome }}</td>
           <td>
             <button (click)="deletarProduto(produto.id)" class="btn-deletar">Deletar</button>
             <button (click)="verDetalhes(produto.id)" class="btn-detalhes">Ver Detalhes</button>
@@ -118,8 +118,8 @@
     <p><strong>Preço:</strong> {{ produtoDetalhado.preco | currency }}</p>
     <p><strong>Quantidade:</strong> {{ produtoDetalhado.quantidade }}</p>
     <p><strong>Quantidade Mínima:</strong> {{ produtoDetalhado.quantidadeMinima }}</p>
-    <p><strong>Categoria:</strong> {{ produtoDetalhado.categoria.nome }}</p>
-    <p><strong>Data de Criação:</strong> {{ produtoDetalhado.dateTime | date:'dd/MM/yy HH:mm' }}</p>
+    <p><strong>Categoria:</strong> {{ produtoDetalhado.categoriaNome }}</p>
+    <p><strong>Data de Criação:</strong> {{ produtoDetalhado.criadoEm| date:'dd/MM/yy HH:mm' }}</p>
     <button (click)="fecharDetalhes()">Fechar</button>
   </div>
 </div>

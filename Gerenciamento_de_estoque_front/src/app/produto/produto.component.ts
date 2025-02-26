@@ -91,7 +91,7 @@ exibirEditarProduto(produtoId: number): void {
         preco: produto.preco,
         quantidade: produto.quantidade,
         quantidadeMinima: produto.quantidadeMinima,
-        categoriaId: produto.categoria.id,
+        categoriaId: produto.id,
       });
 
       // Aqui, você garante que o produtoDetalhado está sendo preenchido com o produto completo, incluindo o id.
@@ -112,7 +112,10 @@ atualizarProduto(): void {
       id: this.produtoDetalhado?.id // Garantir que o id seja o do produto que estamos editando
     };
 
-    this.produtoService.atualizarProduto(produtoAtualizado).subscribe(
+    const orgId = this.getOrgId(); // Método para extrair o orgId do token JWT
+    produtoAtualizado.orgId = Number(orgId); // Adicionando o orgId ao objeto produto
+
+    this.produtoService.atualizarProduto(produtoAtualizado, produtoAtualizado.id).subscribe(
       (produto) => {
         this.mensagem = 'Produto atualizado com sucesso!'; // Mensagem de sucesso
         this.carregarProdutos(); // Atualiza a lista automaticamente
@@ -127,24 +130,64 @@ atualizarProduto(): void {
   }
 }
 
+// Método para obter o orgId do token JWT
+private getOrgId(): string {
+  const token = localStorage.getItem('jwtToken');
+  if (!token) {
+    throw new Error('Token não encontrado. O usuário precisa estar autenticado.');
+  }
+
+  const payload = this.decodeJwt(token);
+  if (payload && payload.org_id) {
+    return payload.org_id;  // Retorna o orgId extraído do token
+  }
+
+  throw new Error('OrgId não encontrado no token.');
+}
+
+// Função para decodificar o JWT
+private decodeJwt(token: string): any {
+  const parts = token.split('.');
+  if (parts.length !== 3) {
+    throw new Error('Token JWT inválido.');
+  }
+  const payload = atob(parts[1]);
+  return JSON.parse(payload);
+}
+
+
 
   
  
 
   // Carrega a lista de produtos
-  carregarProdutos(page: number = 0): void {
-    this.produtoService.listarProdutos(page).subscribe(
-      (data) => {
-        this.produtos = data.content;
-        this.currentPage = data.number;
-        this.totalPages = data.totalPages;
-      },
-      (error) => {
-        this.mensagemErro = 'Erro ao carregar produtos.';
-        console.error('Erro ao carregar produtos:', error);
-      }
-    );
-  }
+
+// Método para carregar a lista de produtos
+carregarProdutos(page: number = 0): void {
+  this.produtoService.listarProdutos(page).subscribe(
+    (data) => {
+      // Acessando a lista de produtos a partir de 'data.content'
+      this.produtos = data.content; // Conteúdo dos produtos
+
+      // Acessando as propriedades de paginação corretamente
+      this.currentPage = data.pageable.pageNumber; // Página atual
+      this.totalPages = data.pageable.totalPages; // Total de páginas
+
+      console.log('Produtos carregados:', this.produtos);
+      console.log('Página atual:', this.currentPage);
+      console.log('Total de páginas:', this.totalPages);
+    },
+    (error) => {
+      this.mensagemErro = 'Erro ao carregar produtos.';
+      console.error('Erro ao carregar produtos:', error);
+    }
+  );
+}
+
+ 
+   
+   
+   
 
   // Método para adicionar a quantidade de um produto
   toggleAdicionar(produtoId: number): void {

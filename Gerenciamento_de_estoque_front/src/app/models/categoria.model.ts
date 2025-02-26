@@ -3,7 +3,8 @@ export class Categoria {
       public id: number,
       public nome: string,
       public descricao: string | null,
-      public criadoEm: string
+      public criadoEm: string,
+      public orgId: number
     ) {}
   }
   

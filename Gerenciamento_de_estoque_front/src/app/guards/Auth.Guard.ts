@@ -23,8 +23,8 @@ export class AuthGuard implements CanActivate {
       if (isAdmin) {
         return true; // Permite o acesso
       } else {
-        // Armazenando a mensagem de erro no localStorage
-        localStorage.setItem('authErrorMessage', 'Usuário não autorizado. Somente administradores podem acessar esta página.');
+        // Exibe um alert para o usuário informando que ele não tem permissão
+        alert('Você não tem permissão para acessar esta página. Somente administradores podem acessar.');
 
         // Redireciona para o dashboard caso não seja admin
         this.router.navigate(['/dashboard']);

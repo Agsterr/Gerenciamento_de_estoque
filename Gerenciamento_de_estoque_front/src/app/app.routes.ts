@@ -7,14 +7,15 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { ProdutoComponent } from './produto/produto.component';
 import { ConsumersComponent } from './consumidor/consumidor.component';
 import { EntregasComponent } from './entregas/entregas.component';
-import { CategoriaComponent } from './categoria/categoria.component'; // Importando o CategoriaComponent
-import { AuthGuard } from './guards/Auth.Guard'; // Importando o AuthGuard
+import { CategoriaComponent } from './categoria/categoria.component';
+import { HomeComponent } from './home/home.component'; // Importe o HomeComponent
+import { AuthGuard } from './guards/Auth.Guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
-  { path: 'login', component: LoginComponent },
+  { path: '', redirectTo: 'home', pathMatch: 'full' }, // Redireciona para home por padrão
+  { path: 'home', component: HomeComponent }, // Rota para o componente Home
   
-  // Protegendo a rota de 'register' com AuthGuard
+  { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent, canActivate: [AuthGuard] },
 
   {
@@ -22,11 +23,9 @@ export const routes: Routes = [
     component: DashboardComponent,
     children: [
       { path: 'produtos', component: ProdutoComponent },
-      { path: 'categorias', component: CategoriaComponent }, // Rota para as Categorias
+      { path: 'categorias', component: CategoriaComponent },
       { path: 'consumidores', component: ConsumersComponent },
       { path: 'entregas', component: EntregasComponent },
     ],
   },
 ];
-
-

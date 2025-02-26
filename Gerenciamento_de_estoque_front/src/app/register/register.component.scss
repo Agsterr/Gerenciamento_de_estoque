@@ -18,35 +18,20 @@ h2 {
   color: #2c3e50; /* Cor do título */
 }
 
-/* Mensagens de sucesso e erro */
-.alert {
-  padding: 10px;
-  border-radius: 5px;
-  margin-bottom: 15px;
-}
-
-.alert-success {
-  background-color: #2ecc71;
-  color: white;
-}
-
-.alert-danger {
-  background-color: #e74c3c;
-  color: white;
-}
-
 /* Formulário */
 form {
   display: flex;
   flex-direction: column;
 }
 
+/* Estilo para o label */
 label {
   font-weight: bold;
   margin-bottom: 8px;
   text-align: left;
 }
 
+/* Estilo para campos de input, select e button */
 input, select, button {
   padding: 12px;
   margin-bottom: 15px;
@@ -62,10 +47,31 @@ select {
   height: auto; /* Ajusta o tamanho da caixa de seleção */
 }
 
-.error {
-  color: #e74c3c;
+/* Mensagens de erro e sucesso no formulário */
+.error, .success-message, .error-message {
   font-size: 0.875rem;
   margin-top: 5px;
+  text-align: left;
+}
+
+/* Mensagem de erro */
+.error {
+  color: #e74c3c;
+}
+
+/* Mensagem de sucesso */
+.success-message {
+  color: #28a745;
+  font-size: 1rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 1rem;
+  margin-top: 10px;
+  text-align: center;
 }
 
 /* Botões */
@@ -90,20 +96,24 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* Estilo de sucesso e erro */
-.success-message {
-  color: #2ecc71;
-  margin-top: 10px;
-  text-align: center;
+/* Alertas de sucesso e erro */
+.alert {
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 5px;
 }
 
-.error-message {
-  color: #e74c3c;
-  margin-top: 10px;
-  text-align: center;
+.alert-success {
+  background-color: #2ecc71;
+  color: white;
 }
 
-/* Responsividade: Estilos para telas menores */
+.alert-danger {
+  background-color: #e74c3c;
+  color: white;
+}
+
+/* Responsividade: Ajustes para telas menores */
 @media (max-width: 768px) {
   .container {
     padding: 15px;
@@ -135,41 +145,3 @@ button:disabled {
     padding: 8px;
   }
 }
-
-/* Mensagens de erro e sucesso */
-.error {
-  color: red;
-  font-size: 0.875rem;
-}
-
-.success-message {
-  color: green;
-  font-size: 1rem;
-  margin-top: 10px;
-  text-align: center;
-}
-
-.error-message {
-  color: red;
-  font-size: 1rem;
-  margin-top: 10px;
-  text-align: center;
-}
-
-/* Alertas de sucesso e erro */
-.alert {
-  padding: 10px;
-  border-radius: 5px;
-  margin-bottom: 15px;
-}
-
-.alert-success {
-  background-color: #2ecc71;
-  color: white;
-}
-
-.alert-danger {
-  background-color: #e74c3c;
-  color: white;
-}
-

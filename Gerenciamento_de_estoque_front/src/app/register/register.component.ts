@@ -2,14 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-import { RoleService } from '../services/role.service'; // Importando o RoleService
-import { HttpErrorResponse } from '@angular/common/http'; // Importando para tratamento de erros
-import { CommonModule } from '@angular/common'; // Importando o CommonModule
-import { ReactiveFormsModule } from '@angular/forms'; // Para o uso do ReactiveFormsModule
+import { RoleService } from '../services/role.service';
+import { HttpErrorResponse } from '@angular/common/http';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-register',
-  standalone: true, // Definindo como componente standalone
+  standalone: true,
   imports: [ReactiveFormsModule, CommonModule], // Importando módulos necessários
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss'],
@@ -24,7 +24,7 @@ export class RegisterComponent implements OnInit {
     private fb: FormBuilder,
     private router: Router,
     private authService: AuthService,
-    private roleService: RoleService // Injeção do RoleService
+    private roleService: RoleService
   ) {
     this.registerForm = this.fb.group({
       username: ['', Validators.required],
@@ -36,6 +36,13 @@ export class RegisterComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Verifica se há uma mensagem de erro armazenada no localStorage
+    const errorMessage = localStorage.getItem('authErrorMessage');
+    if (errorMessage) {
+      this.errorMessage = errorMessage;
+      localStorage.removeItem('authErrorMessage'); // Limpa a mensagem após exibir
+    }
+
     // Carregar as roles do backend
     this.roleService.listarRoles().subscribe({
       next: (roles: any[]) => {

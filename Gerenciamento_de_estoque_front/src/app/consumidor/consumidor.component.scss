@@ -138,6 +138,8 @@
   border: 1px solid #ddd;
   border-radius: 5px;
   font-size: 1rem;
+  width: 100%; /* Garantir que os inputs ocupem toda a largura */
+  box-sizing: border-box; /* Garantir que o padding não quebre o layout */
 }
 
 #botao-salvar {

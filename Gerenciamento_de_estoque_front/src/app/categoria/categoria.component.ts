@@ -6,6 +6,7 @@ import { ApiResponse } from '../models/api-response.model';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-categoria',
@@ -21,10 +22,12 @@ export class CategoriaComponent implements OnInit {
   mensagemErro: string = '';
   mensagemTipo: string = ''; // Para definir se a mensagem é de sucesso ou erro
   showNovaCategoriaInput: boolean = false; // Controla a exibição do formulário de criação
+  orgId: string = '';  // Variável para armazenar o orgId
 
   constructor(
     private categoriaService: CategoriaService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private router: Router
   ) {
     this.categoriaForm = this.fb.group({
       nome: ['', Validators.required],
@@ -32,20 +35,26 @@ export class CategoriaComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.carregarCategorias();
+    try {
+      // Tenta obter o orgId usando o método do serviço
+      this.orgId = this.categoriaService.getOrgId();
+      this.carregarCategorias();  // Carrega as categorias somente se o orgId for válido
+    } catch (error) {
+      console.error('Erro ao obter orgId:', error);
+      this.mensagemErro = 'OrgId não encontrado. O usuário precisa estar autenticado.';
+  
+      // Redireciona o usuário para a tela de login caso o orgId não esteja presente
+      this.router.navigate(['/login']);  // Certifique-se de ter injetado o Router no componente
+    }
   }
-
+  
   // Método para carregar as categorias da API
   carregarCategorias(): void {
     this.categoriaService.listarCategorias().subscribe(
-      (data) => {
-        if (Array.isArray(data)) {
-          this.categorias = data;
-        } else {
-          this.mensagemErro = 'Erro ao carregar categorias.';
-        }
+      (categorias: Categoria[]) => {  // A resposta agora é do tipo Categoria[]
+        this.categorias = categorias;  // Agora usa diretamente a lista de objetos Categoria
       },
-      (error) => {
+      (error: HttpErrorResponse) => {
         this.mensagemErro = 'Erro ao carregar categorias.';
         console.error('Erro ao carregar categorias:', error);
       }
@@ -73,15 +82,14 @@ export class CategoriaComponent implements OnInit {
 
       // Se não existir, então cria a categoria
       this.categoriaService.criarCategoria(nomeCategoria).subscribe(
-        (response: ApiResponse) => {
-          const categoria = response.data;
+        (categoria: Categoria) => {  // Agora tratamos a resposta como uma Categoria
           this.mensagem = 'Categoria criada com sucesso!';
           this.mensagemTipo = 'sucesso';  // Define que a mensagem é de sucesso
           this.categoriaForm.reset();
           this.showNovaCategoriaInput = false;
-          this.carregarCategorias();  // Atualiza a lista de categorias
+          this.carregarCategorias();  // Atualiza a lista de categorias após criação
         },
-        (error) => {
+        (error: HttpErrorResponse) => {
           this.mensagemErro = 'Erro ao criar categoria.';
           console.error('Erro ao criar categoria:', error);
           this.mensagemTipo = 'erro';  // Define que a mensagem é de erro
@@ -92,23 +100,22 @@ export class CategoriaComponent implements OnInit {
     }
   }
 
+  // Método para deletar uma categoria
   deletarCategoria(id: number): void {
     if (confirm('Tem certeza que deseja deletar esta categoria?')) {
       this.categoriaService.deletarCategoria(id).subscribe(
-        (categoriaDeletada) => {
-          // Exibe mensagem de sucesso
-          this.mensagem = `Categoria "${categoriaDeletada.nome}" deletada com sucesso!`;
+        () => {
+          this.mensagem = `Categoria deletada com sucesso!`;
   
           // Atualiza a lista de categorias removendo a categoria deletada
-          this.categorias = this.categorias.filter(categoria => categoria.id !== categoriaDeletada.id);
+          this.categorias = this.categorias.filter(categoria => categoria.id !== id);
         },
-        (error) => {
+        (error: HttpErrorResponse) => {
           this.mensagemErro = 'Erro ao deletar categoria!';
           console.error('Erro ao deletar categoria:', error);
         }
       );
     }
   }
-  
   
 }

@@ -1,10 +1,12 @@
 
+
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { catchError, throwError } from 'rxjs';
 import { Categoria } from '../models/categoria.model';
 import { ApiResponse } from '../models/api-response.model';
+import { catchError, map } from 'rxjs/operators'; // Importando 'catchError' e 'map' corretamente
+import { throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -14,50 +16,96 @@ export class CategoriaService {
 
   constructor(private http: HttpClient) {}
 
-  // Gera os headers com o token JWT
   private getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem('jwtToken'); // Obtém o token do localStorage
+    const token = localStorage.getItem('jwtToken');
     if (!token) {
       throw new Error('Token não encontrado. O usuário precisa estar autenticado.');
     }
     return new HttpHeaders().set('Authorization', `Bearer ${token}`);
   }
 
-  // Método para listar categorias
+  // Método para obter o orgId
+  public getOrgId(): string {
+    const token = localStorage.getItem('jwtToken');
+    if (!token) {
+      console.error('Token não encontrado. O usuário precisa estar autenticado.');
+      throw new Error('Token não encontrado. O usuário precisa estar autenticado.');
+    }
+
+    // Decode o token para extrair o orgId
+    const payload = this.decodeJwt(token);
+    if (payload && payload.org_id) {
+      return payload.org_id;  // Retorna o orgId extraído do token
+    }
+
+    throw new Error('OrgId não encontrado no token.');
+  }
+
+  // Função para decodificar o JWT
+  private decodeJwt(token: string): any {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      throw new Error('Token JWT inválido.');
+    }
+
+    const payload = atob(parts[1]);
+    return JSON.parse(payload);
+  }
+
   listarCategorias(): Observable<Categoria[]> {
-    const headers = this.getAuthHeaders();
-    return this.http.get<Categoria[]>(this.apiUrl, { headers }).pipe(
-      catchError((error) => {
-        console.error('Erro ao listar categorias:', error);
-        return throwError('Falha ao carregar categorias, por favor, tente novamente.');
-      })
-    );
-  }
+  const orgId = this.getOrgId();  // Obtém o orgId do localStorage ou do token
+  const headers = this.getAuthHeaders();
 
-  // Método para criar uma nova categoria
-  criarCategoria(nome: string): Observable<ApiResponse> {
-    const headers = this.getAuthHeaders();
-    const body = { nome };
+  // A URL agora inclui o 'orgId' como parte do caminho da URL
+  return this.http.get<Categoria[]>(`${this.apiUrl}/${orgId}`, { headers }).pipe(
+    catchError((error) => {
+      console.error('Erro ao listar categorias:', error);
+      return throwError(() => new Error('Falha ao carregar categorias, tente novamente.'));
+    })
+  );
+}
 
-    return this.http.post<ApiResponse>(this.apiUrl, body, { headers }).pipe(
-      catchError((error) => {
-        console.error('Erro ao criar categoria:', error);
-        return throwError('Falha ao criar categoria, tente novamente.');
-      })
-    );
-  }
+criarCategoria(nome: string): Observable<Categoria> {
+  const orgId = this.getOrgId();  // Obtém o orgId do localStorage
+  const headers = this.getAuthHeaders();
 
-  // Método para deletar uma categoria (agora retorna a categoria deletada)
-  deletarCategoria(id: number): Observable<Categoria> {
-    const headers = this.getAuthHeaders();
-    return this.http.delete<Categoria>(`${this.apiUrl}/${id}`, { headers }).pipe(
-      catchError((error) => {
-        console.error('Erro ao deletar categoria:', error);
-        if (error.status === 404) {
-          return throwError('Categoria não encontrada.');
-        }
-        return throwError('Falha ao deletar categoria, tente novamente.');
-      })
-    );
-  }
+  const body = { 
+    nome,
+    orgId
+  };
+
+  return this.http.post<Categoria>(`${this.apiUrl}`, body, { headers }).pipe(
+    catchError((error) => {
+      console.error('Erro ao criar categoria:', error);
+      return throwError(() => new Error('Falha ao criar categoria, tente novamente.'));
+    }),
+    map((response: Categoria) => {
+      // Agora, a resposta é diretamente um objeto Categoria
+      return new Categoria(
+        response.id, 
+        response.nome, 
+        response.descricao,  // Certifique-se de que `descricao` está presente na resposta
+        response.criadoEm,   // Se a resposta incluir isso, ou modifique para sua estrutura
+        response.orgId       // Certifique-se de que `orgId` está na resposta ou remova
+      );
+    })
+  );
+}
+
+
+ 
+deletarCategoria(id: number): Observable<void> {
+  const orgId = this.getOrgId(); // Obtém o orgId do localStorage ou de onde você estiver armazenando
+  const headers = this.getAuthHeaders(); // Obtém os headers de autenticação
+
+  // Passando o orgId como parte da URL no caminho, conforme definido no backend
+  return this.http.delete<void>(`${this.apiUrl}/${id}/${orgId}`, { headers }).pipe(
+    catchError((error) => {
+      console.error('Erro ao deletar categoria:', error);
+      return throwError(() => new Error('Falha ao deletar categoria, tente novamente.'));
+    })
+  );
+}
+
+ 
 }

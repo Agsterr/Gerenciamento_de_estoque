@@ -7,9 +7,9 @@ import { ProdutoService } from '../services/produto.service';
 import { ConsumidorService } from '../services/consumidor.service';
 import { Entrega } from '../models/entrega.model';
 import { PageEntregaResponse } from '../models/PageEntregaResponse.model';
-import { EntregaRequest } from '../models/EntregaRequest.model';
 import { Produto } from '../models/produto.model';
 import { Consumer } from '../models/consumer.model';
+import { EntregaRequest } from '../models/EntregaRequest.model'; 
 
 @Component({
   selector: 'app-entregas',
@@ -48,6 +48,7 @@ export class EntregasComponent implements OnInit {
   mensagem: string = '';
   mensagemErro: string = '';
 
+  // Remover a definição do orgId manual e obter ele diretamente do ConsumidorService
   constructor(
     private entregasService: EntregasService,
     private produtoService: ProdutoService,
@@ -64,7 +65,7 @@ export class EntregasComponent implements OnInit {
       next: (data) => {
         this.produtos = data.content;
         console.log('Produtos carregados:', this.produtos);
-        this.onProdutoChange(); // Chama a função de seleção após os produtos serem carregados
+        this.onProdutoChange();
       },
       error: (err) => {
         console.error('Erro ao carregar produtos:', err);
@@ -74,11 +75,17 @@ export class EntregasComponent implements OnInit {
   }
 
   carregarConsumidores(): void {
-    this.consumidorService.listarConsumidores().subscribe({
+    // Agora o orgId já está sendo gerenciado no ConsumidorService, então basta chamar a função
+    this.consumidorService.listarConsumidoresPorOrg().subscribe({
       next: (data) => {
-        this.consumidores = data;
-        console.log('Consumidores carregados:', this.consumidores);
-        this.onConsumidorChange(); // Chama a função de seleção após os consumidores serem carregados
+        if (data && data.consumidores) {
+          this.consumidores = data.consumidores;  // Atribui a lista de consumidores
+          console.log('Consumidores carregados:', this.consumidores);
+          this.mensagem = data.message;  // Exibe a mensagem de sucesso (caso não tenha consumidores, ela será uma mensagem informativa)
+          this.onConsumidorChange();  // Chama um método que faz o processamento após a carga dos consumidores
+        } else {
+          this.mensagemErro = 'Nenhum consumidor encontrado.';  // Caso não haja consumidores
+        }
       },
       error: (err) => {
         console.error('Erro ao carregar consumidores:', err);
@@ -86,24 +93,21 @@ export class EntregasComponent implements OnInit {
       },
     });
   }
+  
 
   onProdutoChange(): void {
-    console.log('Produto ID:', this.novaEntrega.produtoId); // Verifique o produtoId
     if (this.novaEntrega.produtoId != null && this.produtos.length > 0) {
-      // Garantindo que a comparação de ID seja feita corretamente
       this.selectedProduto = this.produtos.find(p => p.id === Number(this.novaEntrega.produtoId));
-      console.log('Produto selecionado:', this.selectedProduto); // Verifique o produto selecionado
+      console.log('Produto selecionado:', this.selectedProduto);
     } else {
       this.selectedProduto = undefined;
     }
   }
 
   onConsumidorChange(): void {
-    console.log('Consumidor ID:', this.novaEntrega.consumidorId); // Verifique o consumidorId
     if (this.novaEntrega.consumidorId != null && this.consumidores.length > 0) {
-      // Garantindo que a comparação de ID seja feita corretamente
       this.selectedConsumidor = this.consumidores.find(c => c.id === Number(this.novaEntrega.consumidorId));
-      console.log('Consumidor selecionado:', this.selectedConsumidor); // Verifique o consumidor selecionado
+      console.log('Consumidor selecionado:', this.selectedConsumidor);
     } else {
       this.selectedConsumidor = undefined;
     }
@@ -165,27 +169,18 @@ export class EntregasComponent implements OnInit {
   }
 
   submitAddForm(): void {
-    console.log('Produto ID:', this.novaEntrega.produtoId);
-    console.log('Consumidor ID:', this.novaEntrega.consumidorId);
-    console.log('Quantidade:', this.novaEntrega.quantidade);
-  
-    // Verificar se todos os campos obrigatórios foram preenchidos
     if (!this.novaEntrega.produtoId || !this.novaEntrega.consumidorId || !this.novaEntrega.quantidade) {
       this.mensagemErro = 'Todos os campos são obrigatórios.';
       return;
     }
-  
-    // Verificar se o consumidor foi selecionado corretamente
+
     if (!this.selectedConsumidor) {
       this.mensagemErro = 'Consumidor selecionado não é válido.';
-      console.log('Erro: Nenhum consumidor foi selecionado');
       return;
     }
-  
-    // Garantir que o produtoId seja tratado como número
+
     const produtoId = Number(this.novaEntrega.produtoId);
-  
-    // Ajustar o formato para enviar ao backend conforme o formato esperado
+
     const entregaPayload = {
       consumidor: {
         id: this.novaEntrega.consumidorId,
@@ -195,14 +190,10 @@ export class EntregasComponent implements OnInit {
       produtoId: produtoId,
       quantidade: this.novaEntrega.quantidade,
     };
-  
-    console.log('Payload enviado para o servidor:', entregaPayload);
-  
-    // Envia a entrega ao backend
+
     this.entregasService.criarEntrega(entregaPayload).subscribe({
       next: (response) => {
-        // A resposta agora contém 'message' e 'data'
-        this.mensagem = response.message;  // Exibe a mensagem
+        this.mensagem = response.message;
         this.novaEntrega = { produtoId: undefined, consumidorId: undefined, quantidade: undefined };
         this.showAddForm = false;
       },
@@ -212,12 +203,6 @@ export class EntregasComponent implements OnInit {
       },
     });
   }
-  
-  
-  
-  
-   
-   
 
   applyFilter(): void {
     if (this.searchTerm.trim() === '') {
