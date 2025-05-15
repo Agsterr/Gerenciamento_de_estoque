@@ -21,8 +21,12 @@ public class Categoria {
     @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm = LocalDateTime.now();
 
-    // Getters e Setters
+    // Relacionamento com a entidade Org (Organização)
+    @ManyToOne
+    @JoinColumn(name = "org_id", nullable = false) // Chave estrangeira
+    private Org org;
 
+    // Getters e Setters
 
     public String getNome() {
         return nome;
@@ -38,6 +42,30 @@ public class Categoria {
 
     public void setDescricao(String descricao) {
         this.descricao = descricao;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public LocalDateTime getCriadoEm() {
+        return criadoEm;
+    }
+
+    public void setCriadoEm(LocalDateTime criadoEm) {
+        this.criadoEm = criadoEm;
+    }
+
+    public Org getOrg() {
+        return org;
+    }
+
+    public void setOrg(Org org) {
+        this.org = org;
     }
 
     @Override
@@ -59,22 +87,7 @@ public class Categoria {
                 ", nome='" + nome + '\'' +
                 ", descricao='" + descricao + '\'' +
                 ", criadoEm=" + criadoEm +
+                ", org=" + org.getNome() + // Mostra o nome da organização associada
                 '}';
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public LocalDateTime getCriadoEm() {
-        return criadoEm;
-    }
-
-    public void setCriadoEm(LocalDateTime criadoEm) {
-        this.criadoEm = criadoEm;
     }
 }

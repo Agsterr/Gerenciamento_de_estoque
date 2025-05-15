@@ -19,6 +19,10 @@ public class Role {
     @Column(nullable = false, unique = true)
     private String nome;
 
+    // Relacionamento com a entidade Org (Organização)
+    @ManyToOne
+    @JoinColumn(name = "org_id", nullable = false) // Chave estrangeira para a organização
+    private Org org;
 
     @JsonIgnore
     @ManyToMany(mappedBy = "roles")
@@ -29,7 +33,6 @@ public class Role {
     public Role(String nome) {
         this.nome = nome;
     }
-
 
     // Getters e Setters
     public Long getId() {
@@ -48,6 +51,14 @@ public class Role {
         this.nome = nome;
     }
 
+    public Org getOrg() {
+        return org;
+    }
+
+    public void setOrg(Org org) {
+        this.org = org;
+    }
+
     public List<Usuario> getUsuarios() {
         return usuarios;
     }
@@ -55,6 +66,4 @@ public class Role {
     public void setUsuarios(List<Usuario> usuarios) {
         this.usuarios = usuarios;
     }
-
-
 }

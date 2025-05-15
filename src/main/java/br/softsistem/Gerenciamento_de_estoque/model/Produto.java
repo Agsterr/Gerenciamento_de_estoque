@@ -28,8 +28,13 @@ public class Produto {
     private Integer quantidadeMinima; // Quantidade mínima para aviso de estoque baixo
 
     @ManyToOne
-    @JoinColumn(name = "categoria_id")
+    @JoinColumn(name = "categoria_id") // Chave estrangeira para a categoria
     private Categoria categoria;
+
+    // Relacionamento com a entidade Org (Organização)
+    @ManyToOne
+    @JoinColumn(name = "org_id", nullable = false) // Chave estrangeira para a organização
+    private Org org;
 
     @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm = LocalDateTime.now();
@@ -92,6 +97,14 @@ public class Produto {
 
     public void setCategoria(Categoria categoria) {
         this.categoria = categoria;
+    }
+
+    public Org getOrg() {
+        return org;
+    }
+
+    public void setOrg(Org org) {
+        this.org = org;
     }
 
     public LocalDateTime getCriadoEm() {

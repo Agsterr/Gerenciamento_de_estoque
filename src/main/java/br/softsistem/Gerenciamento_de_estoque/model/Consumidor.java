@@ -1,6 +1,5 @@
 package br.softsistem.Gerenciamento_de_estoque.model;
 
-
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -19,6 +18,11 @@ public class Consumidor {
 
     @Column(nullable = false)
     private String endereco;
+
+    // Relacionamento com a entidade Org (Organização)
+    @ManyToOne
+    @JoinColumn(name = "org_id", nullable = false) // Chave estrangeira para a organização
+    private Org org;
 
     @OneToMany(mappedBy = "consumidor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Entrega> entregas;
@@ -57,6 +61,14 @@ public class Consumidor {
         this.endereco = endereco;
     }
 
+    public Org getOrg() {
+        return org;
+    }
+
+    public void setOrg(Org org) {
+        this.org = org;
+    }
+
     public List<Entrega> getEntregas() {
         return entregas;
     }
@@ -65,4 +77,3 @@ public class Consumidor {
         this.entregas = entregas;
     }
 }
-

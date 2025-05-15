@@ -15,7 +15,6 @@ import java.util.*;
 @Table(name = "usuarios")
 public class Usuario implements UserDetails {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -50,17 +49,17 @@ public class Usuario implements UserDetails {
             joinColumns = @JoinColumn(name = "usuario_id"), // Coluna para a entidade Usuario
             inverseJoinColumns = @JoinColumn(name = "role_id") // Coluna para a entidade Role
     )
-    private List<Role>roles; // Lista de roles associadas ao usuário
+    private List<Role> roles; // Lista de roles associadas ao usuário
 
-
-
+    // Relacionamento com a entidade Org (Organização)
+    @ManyToOne
+    @JoinColumn(name = "org_id", nullable = false) // Chave estrangeira para a organização
+    private Org org;
 
     // Métodos de UserDetails
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-
-
         // Aqui você pode adicionar as permissões do usuário (roles)
         return Collections.emptyList();
     }
@@ -149,6 +148,13 @@ public class Usuario implements UserDetails {
         this.roles = roles;
     }
 
+    public Org getOrg() {
+        return org;
+    }
+
+    public void setOrg(Org org) {
+        this.org = org;
+    }
 
     // equals, hashCode e toString
 
@@ -175,8 +181,7 @@ public class Usuario implements UserDetails {
                 ", email='" + email + '\'' +
                 ", criadoEm=" + criadoEm +
                 ", ativo=" + ativo +
+                ", org=" + org.getNome() + // Mostra o nome da organização associada
                 '}';
     }
-
-
 }

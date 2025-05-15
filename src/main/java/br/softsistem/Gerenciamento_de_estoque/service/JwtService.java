@@ -21,6 +21,10 @@ public class JwtService {
         return extractClaim(token, Claims::getSubject);
     }
 
+    public Long extractOrgId(String token) {
+        return extractClaim(token, claims -> claims.get("org_id", Long.class));  // Extraímos o org_id
+    }
+
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
@@ -30,8 +34,10 @@ public class JwtService {
         return Jwts.parserBuilder().setSigningKey(SECRET_KEY).build().parseClaimsJws(token).getBody();
     }
 
-    public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+    public String generateToken(UserDetails userDetails, Long orgId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("org_id", orgId);  // Adicionamos o org_id aos claims
+        return generateToken(claims, userDetails);
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {

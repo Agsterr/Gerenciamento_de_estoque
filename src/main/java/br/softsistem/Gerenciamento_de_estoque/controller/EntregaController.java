@@ -2,82 +2,126 @@ package br.softsistem.Gerenciamento_de_estoque.controller;
 
 import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaRequestDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaResponseDto;
+import br.softsistem.Gerenciamento_de_estoque.exception.ResourceNotFoundException;
 import br.softsistem.Gerenciamento_de_estoque.model.Entrega;
-import br.softsistem.Gerenciamento_de_estoque.model.Produto;
-import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
-import br.softsistem.Gerenciamento_de_estoque.repository.EntregaRepository;
-import br.softsistem.Gerenciamento_de_estoque.repository.ProdutoRepository;
-import br.softsistem.Gerenciamento_de_estoque.repository.UsuarioRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import br.softsistem.Gerenciamento_de_estoque.service.EntregaService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/entregas")
 public class EntregaController {
 
-    private final EntregaRepository entregaRepository;
-    private final ProdutoRepository produtoRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final EntregaService entregaService;
 
-    public EntregaController(EntregaRepository entregaRepository, ProdutoRepository produtoRepository, UsuarioRepository usuarioRepository) {
-        this.entregaRepository = entregaRepository;
-        this.produtoRepository = produtoRepository;
-        this.usuarioRepository = usuarioRepository;
+    // Constructor Injection
+    public EntregaController(EntregaService entregaService) {
+        this.entregaService = entregaService;
     }
 
+    // Criar uma nova entrega
     @PostMapping
-    public ResponseEntity<String> registrarEntrega(@RequestBody EntregaRequestDto request) {
-        String username = getLoggedUserUsername();
+    public ResponseEntity<EntregaResponseDto> criarEntrega(@RequestBody @Valid EntregaRequestDto request) {
+        // O orgId é recuperado no serviço, não no controlador.
+        Entrega entrega = entregaService.criarEntrega(request);
 
-        Usuario entregador = usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado."));
+        // Retornar a resposta com os dados da entrega criada
+        EntregaResponseDto responseDto = EntregaResponseDto.fromEntity(entrega);
+        return new ResponseEntity<>(responseDto, HttpStatus.CREATED);  // Retorna com código 201 (Criado)
+    }
 
-        Produto produto = produtoRepository.findById(request.getProdutoId())
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado."));
+    // Editar uma entrega existente
+    @PutMapping("/{id}")
+    public ResponseEntity<EntregaResponseDto> editarEntrega(@PathVariable Long id, @RequestBody @Valid EntregaRequestDto request) {
+        Entrega entregaAtualizada = entregaService.editarEntrega(id, request);
 
-        if (produto.getQuantidade() < request.getQuantidade()) {
-            return ResponseEntity.badRequest().body("Quantidade insuficiente no estoque.");
+        if (entregaAtualizada == null) {
+            throw new ResourceNotFoundException("Entrega não encontrada ou não pertence à organização.");
         }
 
-        produto.setQuantidade(produto.getQuantidade() - request.getQuantidade());
-        produtoRepository.save(produto);
-
-        Entrega entrega = criarEntrega(request, entregador, produto);
-        entregaRepository.save(entrega);
-
-        return ResponseEntity.ok("Entrega registrada com sucesso.");
+        // Retornar os dados da entrega editada
+        EntregaResponseDto responseDto = EntregaResponseDto.fromEntity(entregaAtualizada);
+        return ResponseEntity.ok(responseDto);
     }
 
-    private String getLoggedUserUsername() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal instanceof UserDetails) {
-            return ((UserDetails) principal).getUsername();
-        } else {
-            return principal.toString();
-        }
+    // Deletar uma entrega existente
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletarEntrega(@PathVariable Long id) {
+        entregaService.deletarEntrega(id);
+        return ResponseEntity.noContent().build();  // Retorna 204 No Content
     }
 
-    private Entrega criarEntrega(EntregaRequestDto request, Usuario entregador, Produto produto) {
-        Entrega entrega = new Entrega();
-        entrega.setConsumidor(request.getConsumidor());
-        entrega.setProduto(produto);
-        entrega.setEntregador(entregador);
-        entrega.setQuantidade(request.getQuantidade());
-        entrega.setHorarioEntrega(LocalDateTime.now());
-        return entrega;
-    }
-
+    // Listar todas as entregas de uma organização
     @GetMapping
-    public ResponseEntity<Page<EntregaResponseDto>> listarEntregas(Pageable pageable) {
-        Page<Entrega> entregas = entregaRepository.findAll(pageable);
-        Page<EntregaResponseDto> entregaResponses = entregas.map(EntregaResponseDto::fromEntity);
+    public ResponseEntity<List<EntregaResponseDto>> listarEntregas() {
+        List<EntregaResponseDto> responseDtos = entregaService.listarEntregas()
+                .stream()
+                .map(EntregaResponseDto::fromEntity)
+                .toList();
+        return ResponseEntity.ok(responseDtos);
+    }
 
-        return ResponseEntity.ok(entregaResponses);
+    // Consultar total de entregas por dia
+    @GetMapping("/total-por-dia")
+    public ResponseEntity<BigDecimal> totalPorDia(@RequestParam LocalDate dia) {
+        BigDecimal total = entregaService.getTotalPorDia(dia);
+        return ResponseEntity.ok(total);
+    }
+
+    // Consultar total de entregas por semana
+    @GetMapping("/total-semanal")
+    public ResponseEntity<BigDecimal> totalSemanal(@RequestParam LocalDate inicioSemana, @RequestParam LocalDate fimSemana) {
+        BigDecimal total = entregaService.getTotalSemanal(inicioSemana, fimSemana);
+        return ResponseEntity.ok(total);
+    }
+
+    // Consultar total de entregas por mês
+    @GetMapping("/total-mensal")
+    public ResponseEntity<BigDecimal> totalMensal(@RequestParam int mes, @RequestParam int ano) {
+        BigDecimal total = entregaService.getTotalMensal(mes, ano);
+        return ResponseEntity.ok(total);
+    }
+
+    // Consultar total de entregas feitas por um consumidor
+    @GetMapping("/total-por-consumidor/{consumidorId}")
+    public ResponseEntity<BigDecimal> totalPorConsumidor(@PathVariable Long consumidorId) {
+        BigDecimal total = entregaService.getTotalPorConsumidor(consumidorId);
+        return ResponseEntity.ok(total);
+    }
+
+    // Consultar total de entregas feitas no mês atual
+    @GetMapping("/total-do-mes")
+    public ResponseEntity<BigDecimal> totalDoMesAtual() {
+        BigDecimal total = entregaService.getTotalDoMesAtual();
+        return ResponseEntity.ok(total);
+    }
+
+    // Consultar total semanal de entregas por consumidor
+    @GetMapping("/total-semanal-por-consumidor/{consumidorId}")
+    public ResponseEntity<BigDecimal> totalSemanalPorConsumidor(@PathVariable Long consumidorId,
+                                                                @RequestParam LocalDate inicioSemana,
+                                                                @RequestParam LocalDate fimSemana) {
+        BigDecimal total = entregaService.getTotalSemanalPorConsumidor(consumidorId, inicioSemana, fimSemana);
+        return ResponseEntity.ok(total);
+    }
+
+    // Consultar total anual de entregas
+    @GetMapping("/total-anual")
+    public ResponseEntity<BigDecimal> totalAnual(@RequestParam int ano) {
+        BigDecimal total = entregaService.getTotalAnual(ano);
+        return ResponseEntity.ok(total);
+    }
+
+    // Consultar total anual de entregas por consumidor
+    @GetMapping("/total-anual-por-consumidor/{consumidorId}")
+    public ResponseEntity<BigDecimal> totalAnualPorConsumidor(@PathVariable Long consumidorId, @RequestParam int ano) {
+        BigDecimal total = entregaService.getTotalAnualPorConsumidor(consumidorId, ano);
+        return ResponseEntity.ok(total);
     }
 }

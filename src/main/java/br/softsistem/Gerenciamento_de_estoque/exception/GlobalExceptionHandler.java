@@ -30,16 +30,15 @@ public class GlobalExceptionHandler {
                 .body("Erro interno: " + e.getMessage());
     }
 
+    @ExceptionHandler(UsuarioDesativadoException.class)
+    public ResponseEntity<String> handleUsuarioDesativadoException(UsuarioDesativadoException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+    }
 
-        @ExceptionHandler(UsuarioDesativadoException.class)
-        public ResponseEntity<String> handleUsuarioDesativadoException(UsuarioDesativadoException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
-        }
-
-        @ExceptionHandler(RuntimeException.class)
-        public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-        }
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
 
     @ExceptionHandler(AccessDeniedException.class)
     public Map<String, String> handleAccessDeniedException(AccessDeniedException ex) {
@@ -47,10 +46,22 @@ public class GlobalExceptionHandler {
         response.put("error", "Você não tem autorização suficiente para essa ação!!!");
         return response;
     }
+
+    // Tratamento para a exceção personalizada "Consumidor não encontrado"
+    @ExceptionHandler(ConsumidorNaoEncontradoException.class)
+    public ResponseEntity<String> handleConsumidorNaoEncontradoException(ConsumidorNaoEncontradoException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    // Tratamento para a exceção personalizada "Organização não encontrada"
+    @ExceptionHandler(OrganizacaoNaoEncontradaException.class)
+    public ResponseEntity<String> handleOrganizacaoNaoEncontradaException(OrganizacaoNaoEncontradaException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    // Tratamento para a exceção personalizada "Resource Not Found"
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<String> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
 }
-
-
-
-
-
-
