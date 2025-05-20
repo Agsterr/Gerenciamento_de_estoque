@@ -1,6 +1,5 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
-
 import br.softsistem.Gerenciamento_de_estoque.dto.login.LoginRequestDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.login.LoginResponseDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioDto;
@@ -33,14 +32,13 @@ public class AuthController {
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
-
     }
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto request) {
-        // Buscar o usuário pelo nome de usuário
-        var usuario = usuarioRepository.findByUsername(request.username())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        // Buscar o usuário pelo nome de usuário e pela organização
+        var usuario = usuarioRepository.findByUsernameAndOrgId(request.username(), request.orgId())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado ou não pertence à organização"));
 
         // Verificar se o usuário está ativo
         if (!usuario.getAtivo()) {
@@ -53,17 +51,21 @@ public class AuthController {
         }
 
         // Gerar o token JWT
-        String token = jwtService.generateToken((UserDetails) usuario);
+        String token = jwtService.generateToken((UserDetails) usuario, request.orgId());  // Passa o orgId para o JWT
 
         // Retornar o token em um objeto JSON
         LoginResponseDto responseDto = new LoginResponseDto(token);
         return ResponseEntity.ok(responseDto);  // Retornando a resposta como um JSON
     }
 
-
-
     @PostMapping("/register")
     public UsuarioDto register(@RequestBody @Valid UsuarioRequestDto usuarioRequestDto) {
+        // Recupera o orgId do DTO
+        Long orgId = usuarioRequestDto.orgId();
+
+        // Verificar se a organização com o orgId existe
+        var org = usuarioRepository.findById(orgId)
+                .orElseThrow(() -> new RuntimeException("Organização não encontrada"));
 
         // Processar as roles recebidas no payload (convertendo de nomes para entidades persistidas)
         List<Role> rolesPersistidas = usuarioRequestDto.roles().stream()
@@ -78,6 +80,7 @@ public class AuthController {
         usuario.setEmail(usuarioRequestDto.email());
         usuario.setRoles(rolesPersistidas);
         usuario.setAtivo(true);
+        usuario.setOrg(org.getOrg());  // Associa o usuário à organização
 
         // Salvar o usuário no banco
         usuario = usuarioRepository.save(usuario);
@@ -86,4 +89,3 @@ public class AuthController {
         return new UsuarioDto(usuario);
     }
 }
-

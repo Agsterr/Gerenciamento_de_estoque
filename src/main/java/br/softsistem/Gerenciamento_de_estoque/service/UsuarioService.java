@@ -2,6 +2,7 @@ package br.softsistem.Gerenciamento_de_estoque.service;
 
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
 import br.softsistem.Gerenciamento_de_estoque.repository.UsuarioRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,21 +12,42 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
 
+    @Autowired
     public UsuarioService(UsuarioRepository usuarioRepository) {
         this.usuarioRepository = usuarioRepository;
     }
 
-    public void ativarUsuario(Long id) {
-        usuarioRepository.atualizarAtivo(id, true);
+    // Ativar usuário pela organização
+    public void ativarUsuario(Long id, Long orgId) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .filter(u -> u.getOrg().getId().equals(orgId))
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado ou não pertence à organização"));
+        usuario.setAtivo(true);
+        usuarioRepository.save(usuario);
     }
 
-    public void desativarUsuario(Long id) {
-        usuarioRepository.atualizarAtivo(id, false);
+    // Reativar usuário pela organização
+    public void reativarUsuario(String username, Long orgId) {
+        Usuario usuario = usuarioRepository.findByUsernameAndOrgId(username, orgId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado ou não pertence à organização"));
+
+        if (!usuario.getAtivo()) {
+            usuario.setAtivo(true);
+            usuarioRepository.save(usuario);
+        }
     }
 
-    public List<Usuario> listarUsuariosAtivos() {
-        return usuarioRepository.findByAtivoTrue();
+    // Desativar usuário pela organização
+    public void desativarUsuario(Long id, Long orgId) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .filter(u -> u.getOrg().getId().equals(orgId))
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado ou não pertence à organização"));
+        usuario.setAtivo(false);
+        usuarioRepository.save(usuario);
+    }
 
-
+    // Listar usuários ativos pela organização
+    public List<Usuario> listarUsuariosAtivos(Long orgId) {
+        return usuarioRepository.findByAtivoTrueAndOrgId(orgId);
     }
 }

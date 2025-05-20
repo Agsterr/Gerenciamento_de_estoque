@@ -28,6 +28,19 @@ public class ProdutoRequest {
     @NotNull(message = "A categoria vinculada é obrigatória.")
     private Long categoriaId;
 
+    @NotNull(message = "O ID da organização é obrigatório.")
+    private Long orgId;
+
+    // getters / setters existentes …
+
+    public Long getOrgId() {
+        return orgId;
+    }
+
+    public void setOrgId(Long orgId) {
+        this.orgId = orgId;
+    }
+
     // Getters e Setters
     public String getNome() {
         return nome;

@@ -9,7 +9,10 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "usuarios")
@@ -57,7 +60,6 @@ public class Usuario implements UserDetails {
     private Org org;
 
     // Métodos de UserDetails
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // Aqui você pode adicionar as permissões do usuário (roles)
@@ -80,26 +82,25 @@ public class Usuario implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return true; // Customize se necessário
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true; // Customize se necessário
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true; // Customize se necessário
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return ativo; // Utiliza o campo "ativo" para verificar se o usuário está habilitado
+        return ativo;
     }
 
     // Getters e Setters
-
     public Long getId() {
         return id;
     }
@@ -156,8 +157,6 @@ public class Usuario implements UserDetails {
         this.org = org;
     }
 
-    // equals, hashCode e toString
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -181,7 +180,7 @@ public class Usuario implements UserDetails {
                 ", email='" + email + '\'' +
                 ", criadoEm=" + criadoEm +
                 ", ativo=" + ativo +
-                ", org=" + org.getNome() + // Mostra o nome da organização associada
+                ", org=" + org.getNome() +
                 '}';
     }
 }
