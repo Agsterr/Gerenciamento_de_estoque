@@ -34,6 +34,12 @@ public class Role {
         this.nome = nome;
     }
 
+    public Role(String nome, Org org) {
+        this.nome = nome;
+        this.org = org;
+    }
+
+
     // Getters e Setters
     public Long getId() {
         return id;

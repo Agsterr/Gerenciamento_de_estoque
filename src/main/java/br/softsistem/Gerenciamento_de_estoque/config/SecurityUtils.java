@@ -1,15 +1,25 @@
 package br.softsistem.Gerenciamento_de_estoque.config;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import br.softsistem.Gerenciamento_de_estoque.config.CustomAuthenticationToken;
 
+/**
+ * Utilitário de segurança para acessar dados do usuário autenticado.
+ */
 public class SecurityUtils {
 
+    /**
+     * Retorna o orgId do usuário autenticado, se disponível.
+     *
+     * @return orgId ou null se não estiver autenticado com CustomAuthenticationToken.
+     */
     public static Long getCurrentOrgId() {
-        Object authentication = SecurityContextHolder.getContext().getAuthentication();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         if (authentication instanceof CustomAuthenticationToken) {
-            return ((CustomAuthenticationToken) authentication).getOrgId();  // Retorna o org_id do contexto de segurança
+            return ((CustomAuthenticationToken) authentication).getOrgId();
         }
-        return null;
+
+        return null; // orgId não disponível ou autenticação não é do tipo esperado
     }
 }
