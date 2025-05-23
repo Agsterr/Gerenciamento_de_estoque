@@ -26,40 +26,48 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain chain) throws ServletException, IOException {
+
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String username;
         final Long orgId;
 
+        // Se o cabeçalho Authorization estiver ausente ou não começar com "Bearer ", ignora o filtro
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             chain.doFilter(request, response);
             return;
         }
 
+        // Extrai o token JWT
         jwt = authHeader.substring(7);
-        username = jwtService.extractUsername(jwt); // Extrai o username do token
-        orgId = jwtService.extractOrgId(jwt);  // Extraímos o org_id
+        username = jwtService.extractUsername(jwt);
+        orgId = jwtService.extractOrgId(jwt); // Extração de um campo adicional (ex: organização)
 
-        // Log para verificar o token, o nome de usuário e o org_id
-        System.out.println("Token JWT: " + jwt);  // Log do token
-        System.out.println("Username extraído: " + username);  // Log do username extraído
-        System.out.println("Org ID extraído: " + orgId);  // Log do org_id extraído
+        // Debug logs (remova ou use logger para produção)
+        System.out.println("Token JWT: " + jwt);
+        System.out.println("Username extraído: " + username);
+        System.out.println("Org ID extraído: " + orgId);
 
+        // Se o usuário ainda não está autenticado
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
             if (jwtService.isTokenValid(jwt, userDetails)) {
-                // Usando a classe CustomAuthenticationToken para armazenar org_id
+                // Cria um token de autenticação personalizado que inclui o orgId
                 var authToken = new CustomAuthenticationToken(userDetails, orgId);
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                // Definindo o CustomAuthenticationToken no contexto de segurança
+                // Define a autenticação no contexto de segurança
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             } else {
                 System.out.println("Token JWT inválido.");
             }
         }
+
+        // Continua a execução da cadeia de filtros
         chain.doFilter(request, response);
     }
 }

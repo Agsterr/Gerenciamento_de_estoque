@@ -12,5 +12,7 @@ public interface OrgRepository extends JpaRepository<Org, Long> {
     // Encontrar organização por ID
     Optional<Org> findById(Long id);
 
-    // Outros métodos personalizados podem ser adicionados aqui, se necessário
+    // --- Adicione este método para buscar uma organização pelo nome ---
+    Optional<Org> findByNome(String nome);
 }
+
