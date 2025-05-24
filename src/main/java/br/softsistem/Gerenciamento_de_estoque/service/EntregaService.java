@@ -2,6 +2,7 @@ package br.softsistem.Gerenciamento_de_estoque.service;
 
 import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
 import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaRequestDto;
+import br.softsistem.Gerenciamento_de_estoque.enumeracao.TipoMovimentacao;
 import br.softsistem.Gerenciamento_de_estoque.exception.OrganizacaoNaoEncontradaException;
 import br.softsistem.Gerenciamento_de_estoque.exception.ResourceNotFoundException;
 import br.softsistem.Gerenciamento_de_estoque.model.*;
@@ -13,7 +14,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 public class EntregaService {
@@ -22,12 +22,14 @@ public class EntregaService {
     private final ConsumidorRepository consumidorRepository;
     private final ProdutoRepository produtoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final MovimentacaoProdutoRepository movimentacaoProdutoRepository;
 
-    public EntregaService(EntregaRepository entregaRepository, ConsumidorRepository consumidorRepository, ProdutoRepository produtoRepository, UsuarioRepository usuarioRepository) {
+    public EntregaService(EntregaRepository entregaRepository, ConsumidorRepository consumidorRepository, ProdutoRepository produtoRepository, UsuarioRepository usuarioRepository, MovimentacaoProdutoRepository movimentacaoProdutoRepository) {
         this.entregaRepository = entregaRepository;
         this.consumidorRepository = consumidorRepository;
         this.produtoRepository = produtoRepository;
         this.usuarioRepository = usuarioRepository;
+        this.movimentacaoProdutoRepository = movimentacaoProdutoRepository;
     }
 
     public Entrega criarEntrega(EntregaRequestDto entregaRequest) {
@@ -37,14 +39,32 @@ public class EntregaService {
         Produto produto = buscarProdutoPorId(entregaRequest.getProdutoId(), orgId);
         Usuario entregador = buscarEntregadorPorId(entregaRequest.getEntregadorId(), orgId);
 
+        if (produto.getQuantidade() < entregaRequest.getQuantidade()) {
+            throw new IllegalArgumentException("Estoque insuficiente para a entrega.");
+        }
+
+        produto.setQuantidade(produto.getQuantidade() - entregaRequest.getQuantidade());
+        produtoRepository.save(produto);
+
         Entrega entrega = new Entrega();
         entrega.setConsumidor(consumidor);
         entrega.setProduto(produto);
         entrega.setEntregador(entregador);
         entrega.setQuantidade(entregaRequest.getQuantidade());
         entrega.setHorarioEntrega(entregaRequest.getHorarioEntrega() != null ? entregaRequest.getHorarioEntrega() : LocalDateTime.now());
+        entrega.setOrg(produto.getOrg());
+        entrega.calcularValor();
+        Entrega entregaSalva = entregaRepository.save(entrega);
 
-        return entregaRepository.save(entrega);
+        MovimentacaoProduto movimentacao = new MovimentacaoProduto();
+        movimentacao.setProduto(produto);
+        movimentacao.setQuantidade(entrega.getQuantidade());
+        movimentacao.setDataHora(LocalDateTime.now());
+        movimentacao.setTipo(TipoMovimentacao.SAIDA);
+        movimentacao.setOrg(produto.getOrg());
+        movimentacaoProdutoRepository.save(movimentacao);
+
+        return entregaSalva;
     }
 
     public Entrega editarEntrega(Long id, EntregaRequestDto entregaRequest) {
