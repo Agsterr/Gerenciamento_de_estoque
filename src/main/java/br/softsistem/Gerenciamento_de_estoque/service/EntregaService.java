@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
+
 
 @Service
 public class EntregaService {
@@ -33,121 +33,125 @@ public class EntregaService {
 
     // Criar uma nova entrega, associada ao orgId
     public Entrega criarEntrega(EntregaRequestDto entregaRequest) {
-        // O orgId é passado através do contexto de segurança (ex: usuário logado ou algum contexto)
-        Long orgId = SecurityUtils.getCurrentOrgId();  // Ou utilize qualquer outro método para obter o orgId
+        Long orgId = SecurityUtils.getCurrentOrgId();
 
-        // Buscar as entidades relacionadas
         Consumidor consumidor = buscarConsumidorPorId(entregaRequest.getConsumidorId());
         Produto produto = buscarProdutoPorId(entregaRequest.getProdutoId());
         Usuario entregador = buscarEntregadorPorId(entregaRequest.getEntregadorId());
 
-        // Criar a entrega
+        if (produto.getQuantidade() < entregaRequest.getQuantidade()) {
+            throw new IllegalArgumentException("Quantidade insuficiente de produto em estoque.");
+        }
+
+        produto.setQuantidade(produto.getQuantidade() - entregaRequest.getQuantidade());
+        produto.setQuantidadeSaida(produto.getQuantidadeSaida() != null ? produto.getQuantidadeSaida() + entregaRequest.getQuantidade() : entregaRequest.getQuantidade());
+        produto.setDataSaida(LocalDateTime.now());
+        produtoRepository.save(produto);
+
         Entrega entrega = new Entrega();
         entrega.setConsumidor(consumidor);
         entrega.setProduto(produto);
         entrega.setEntregador(entregador);
         entrega.setQuantidade(entregaRequest.getQuantidade());
-        entrega.setHorarioEntrega(entregaRequest.getHorarioEntrega() != null ? entregaRequest.getHorarioEntrega() : LocalDateTime.now());
+        entrega.setHorarioEntrega(LocalDateTime.now());
 
-        return entregaRepository.save(entrega);  // Salva a entrega no banco de dados
+        return entregaRepository.save(entrega);
     }
 
-    // Editar uma entrega existente
     public Entrega editarEntrega(Long id, EntregaRequestDto entregaRequest) {
-        // O orgId é passado através do contexto de segurança
         Long orgId = SecurityUtils.getCurrentOrgId();
 
-        // Busca a entrega existente
         Entrega entregaExistente = entregaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Entrega não encontrada"));
 
-        // Verifica se a entrega pertence à organização correta
         if (!entregaExistente.getOrg().getId().equals(orgId)) {
             throw new ResourceNotFoundException("Entrega não pertence à organização.");
         }
 
-        // Atualiza as entidades relacionadas
         Consumidor consumidor = buscarConsumidorPorId(entregaRequest.getConsumidorId());
         Produto produto = buscarProdutoPorId(entregaRequest.getProdutoId());
         Usuario entregador = buscarEntregadorPorId(entregaRequest.getEntregadorId());
 
+        int quantidadeAnterior = entregaExistente.getQuantidade();
+        int novaQuantidade = entregaRequest.getQuantidade();
+        int diferenca = novaQuantidade - quantidadeAnterior;
+
+        if (produto.getQuantidade() < diferenca) {
+            throw new IllegalArgumentException("Quantidade insuficiente de produto em estoque para atualização.");
+        }
+
+        produto.setQuantidade(produto.getQuantidade() - diferenca);
+        produto.setQuantidadeSaida(produto.getQuantidadeSaida() != null ? produto.getQuantidadeSaida() + diferenca : diferenca);
+        produto.setDataSaida(LocalDateTime.now());
+        produtoRepository.save(produto);
+
         entregaExistente.setConsumidor(consumidor);
         entregaExistente.setProduto(produto);
         entregaExistente.setEntregador(entregador);
-        entregaExistente.setQuantidade(entregaRequest.getQuantidade());
-        entregaExistente.setHorarioEntrega(entregaRequest.getHorarioEntrega() != null ? entregaRequest.getHorarioEntrega() : LocalDateTime.now());
+        entregaExistente.setQuantidade(novaQuantidade);
+        entregaExistente.setHorarioEntrega(LocalDateTime.now());
+        entregaExistente.calcularValor();
 
-        entregaExistente.calcularValor();  // Recalcula o valor da entrega
-
-        return entregaRepository.save(entregaExistente);  // Salva a entrega atualizada
+        return entregaRepository.save(entregaExistente);
     }
 
-    // Deletar uma entrega existente
     public void deletarEntrega(Long id) {
-        // O orgId é passado através do contexto de segurança
         Long orgId = SecurityUtils.getCurrentOrgId();
-
-        // Verifica se a entrega existe
         Entrega entrega = entregaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Entrega não encontrada"));
 
-        // Verifica se a entrega pertence à organização correta
         if (!entrega.getOrg().getId().equals(orgId)) {
             throw new ResourceNotFoundException("Você não pode excluir uma entrega de outra organização.");
         }
 
-        entregaRepository.delete(entrega);  // Deleta a entrega
+        Produto produto = entrega.getProduto();
+        produto.setQuantidade(produto.getQuantidade() + entrega.getQuantidade());
+        produto.setQuantidadeSaida(produto.getQuantidadeSaida() != null ? produto.getQuantidadeSaida() - entrega.getQuantidade() : 0);
+        produtoRepository.save(produto);
+
+        entregaRepository.delete(entrega);
     }
 
-    // Total de entregas por dia (soma dos valores) filtrando pela organização
     public BigDecimal getTotalPorDia(LocalDate dia) {
         Long orgId = SecurityUtils.getCurrentOrgId();
         return entregaRepository.totalPorDia(dia, orgId);
     }
 
-    // Total de entregas por semana (soma dos valores) filtrando pela organização
     public BigDecimal getTotalSemanal(LocalDate inicioSemana, LocalDate fimSemana) {
         Long orgId = SecurityUtils.getCurrentOrgId();
         return entregaRepository.totalSemanal(inicioSemana, fimSemana, orgId);
     }
 
-    // Total de entregas por mês (soma dos valores) filtrando pela organização
     public BigDecimal getTotalMensal(int mes, int ano) {
         Long orgId = SecurityUtils.getCurrentOrgId();
         return entregaRepository.totalMensal(mes, ano, orgId);
     }
 
-    // Total de entregas feitas por um consumidor específico filtrando pela organização
     public BigDecimal getTotalPorConsumidor(Long consumidorId) {
         Long orgId = SecurityUtils.getCurrentOrgId();
         return entregaRepository.totalPorConsumidor(consumidorId, orgId);
     }
 
-    // Total de entregas no mês atual filtrando pela organização
     public BigDecimal getTotalDoMesAtual() {
         Long orgId = SecurityUtils.getCurrentOrgId();
         return entregaRepository.totalDoMesAtual(orgId);
     }
 
-    // Total de entregas semanais por consumidor filtrando pela organização
     public BigDecimal getTotalSemanalPorConsumidor(Long consumidorId, LocalDate inicioSemana, LocalDate fimSemana) {
         Long orgId = SecurityUtils.getCurrentOrgId();
         return entregaRepository.totalSemanalPorConsumidor(consumidorId, inicioSemana, fimSemana, orgId);
     }
 
-    // Consultar total anual de entregas
     public BigDecimal getTotalAnual(int ano) {
         Long orgId = SecurityUtils.getCurrentOrgId();
         return entregaRepository.totalAnual(ano, orgId);
     }
 
-    // Consultar total anual de entregas feitas por consumidor
     public BigDecimal getTotalAnualPorConsumidor(Long consumidorId, int ano) {
         Long orgId = SecurityUtils.getCurrentOrgId();
         return entregaRepository.totalAnualPorConsumidor(consumidorId, ano, orgId);
     }
 
-    // Métodos de busca por ID
     private Consumidor buscarConsumidorPorId(Long consumidorId) {
         return consumidorRepository.findById(consumidorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Consumidor não encontrado."));
@@ -163,12 +167,11 @@ public class EntregaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Entregador não encontrado."));
     }
 
-    // Listar todas as entregas de uma organização com paginação
     public Page<Entrega> listarEntregas(Pageable pageable) {
-        Long orgId = SecurityUtils.getCurrentOrgId();  // Obtém o org_id do contexto de segurança
+        Long orgId = SecurityUtils.getCurrentOrgId();
         if (orgId == null) {
             throw new OrganizacaoNaoEncontradaException("Organização não encontrada no contexto de segurança");
         }
-        return entregaRepository.findByOrgId(orgId, pageable);  // Retorna as entregas com paginação
+        return entregaRepository.findByOrgId(orgId, pageable);
     }
 }
