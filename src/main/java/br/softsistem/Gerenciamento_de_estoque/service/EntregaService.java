@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-
+import java.util.List;
 
 @Service
 public class EntregaService {
@@ -23,7 +23,6 @@ public class EntregaService {
     private final ProdutoRepository produtoRepository;
     private final UsuarioRepository usuarioRepository;
 
-    // Constructor Injection
     public EntregaService(EntregaRepository entregaRepository, ConsumidorRepository consumidorRepository, ProdutoRepository produtoRepository, UsuarioRepository usuarioRepository) {
         this.entregaRepository = entregaRepository;
         this.consumidorRepository = consumidorRepository;
@@ -31,29 +30,19 @@ public class EntregaService {
         this.usuarioRepository = usuarioRepository;
     }
 
-    // Criar uma nova entrega, associada ao orgId
     public Entrega criarEntrega(EntregaRequestDto entregaRequest) {
         Long orgId = SecurityUtils.getCurrentOrgId();
 
-        Consumidor consumidor = buscarConsumidorPorId(entregaRequest.getConsumidorId());
-        Produto produto = buscarProdutoPorId(entregaRequest.getProdutoId());
-        Usuario entregador = buscarEntregadorPorId(entregaRequest.getEntregadorId());
-
-        if (produto.getQuantidade() < entregaRequest.getQuantidade()) {
-            throw new IllegalArgumentException("Quantidade insuficiente de produto em estoque.");
-        }
-
-        produto.setQuantidade(produto.getQuantidade() - entregaRequest.getQuantidade());
-        produto.setQuantidadeSaida(produto.getQuantidadeSaida() != null ? produto.getQuantidadeSaida() + entregaRequest.getQuantidade() : entregaRequest.getQuantidade());
-        produto.setDataSaida(LocalDateTime.now());
-        produtoRepository.save(produto);
+        Consumidor consumidor = buscarConsumidorPorId(entregaRequest.getConsumidorId(), orgId);
+        Produto produto = buscarProdutoPorId(entregaRequest.getProdutoId(), orgId);
+        Usuario entregador = buscarEntregadorPorId(entregaRequest.getEntregadorId(), orgId);
 
         Entrega entrega = new Entrega();
         entrega.setConsumidor(consumidor);
         entrega.setProduto(produto);
         entrega.setEntregador(entregador);
         entrega.setQuantidade(entregaRequest.getQuantidade());
-        entrega.setHorarioEntrega(LocalDateTime.now());
+        entrega.setHorarioEntrega(entregaRequest.getHorarioEntrega() != null ? entregaRequest.getHorarioEntrega() : LocalDateTime.now());
 
         return entregaRepository.save(entrega);
     }
@@ -68,28 +57,16 @@ public class EntregaService {
             throw new ResourceNotFoundException("Entrega não pertence à organização.");
         }
 
-        Consumidor consumidor = buscarConsumidorPorId(entregaRequest.getConsumidorId());
-        Produto produto = buscarProdutoPorId(entregaRequest.getProdutoId());
-        Usuario entregador = buscarEntregadorPorId(entregaRequest.getEntregadorId());
-
-        int quantidadeAnterior = entregaExistente.getQuantidade();
-        int novaQuantidade = entregaRequest.getQuantidade();
-        int diferenca = novaQuantidade - quantidadeAnterior;
-
-        if (produto.getQuantidade() < diferenca) {
-            throw new IllegalArgumentException("Quantidade insuficiente de produto em estoque para atualização.");
-        }
-
-        produto.setQuantidade(produto.getQuantidade() - diferenca);
-        produto.setQuantidadeSaida(produto.getQuantidadeSaida() != null ? produto.getQuantidadeSaida() + diferenca : diferenca);
-        produto.setDataSaida(LocalDateTime.now());
-        produtoRepository.save(produto);
+        Consumidor consumidor = buscarConsumidorPorId(entregaRequest.getConsumidorId(), orgId);
+        Produto produto = buscarProdutoPorId(entregaRequest.getProdutoId(), orgId);
+        Usuario entregador = buscarEntregadorPorId(entregaRequest.getEntregadorId(), orgId);
 
         entregaExistente.setConsumidor(consumidor);
         entregaExistente.setProduto(produto);
         entregaExistente.setEntregador(entregador);
-        entregaExistente.setQuantidade(novaQuantidade);
-        entregaExistente.setHorarioEntrega(LocalDateTime.now());
+        entregaExistente.setQuantidade(entregaRequest.getQuantidade());
+        entregaExistente.setHorarioEntrega(entregaRequest.getHorarioEntrega() != null ? entregaRequest.getHorarioEntrega() : LocalDateTime.now());
+
         entregaExistente.calcularValor();
 
         return entregaRepository.save(entregaExistente);
@@ -97,17 +74,13 @@ public class EntregaService {
 
     public void deletarEntrega(Long id) {
         Long orgId = SecurityUtils.getCurrentOrgId();
+
         Entrega entrega = entregaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Entrega não encontrada"));
 
         if (!entrega.getOrg().getId().equals(orgId)) {
             throw new ResourceNotFoundException("Você não pode excluir uma entrega de outra organização.");
         }
-
-        Produto produto = entrega.getProduto();
-        produto.setQuantidade(produto.getQuantidade() + entrega.getQuantidade());
-        produto.setQuantidadeSaida(produto.getQuantidadeSaida() != null ? produto.getQuantidadeSaida() - entrega.getQuantidade() : 0);
-        produtoRepository.save(produto);
 
         entregaRepository.delete(entrega);
     }
@@ -152,19 +125,19 @@ public class EntregaService {
         return entregaRepository.totalAnualPorConsumidor(consumidorId, ano, orgId);
     }
 
-    private Consumidor buscarConsumidorPorId(Long consumidorId) {
-        return consumidorRepository.findById(consumidorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Consumidor não encontrado."));
+    private Consumidor buscarConsumidorPorId(Long consumidorId, Long orgId) {
+        return consumidorRepository.findByIdAndOrgId(consumidorId, orgId)
+                .orElseThrow(() -> new ResourceNotFoundException("Consumidor não encontrado ou não pertence à organização."));
     }
 
-    private Produto buscarProdutoPorId(Long produtoId) {
-        return produtoRepository.findById(produtoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado."));
+    private Produto buscarProdutoPorId(Long produtoId, Long orgId) {
+        return produtoRepository.findByIdAndOrgId(produtoId, orgId)
+                .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado ou não pertence à organização."));
     }
 
-    private Usuario buscarEntregadorPorId(Long entregadorId) {
-        return usuarioRepository.findById(entregadorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Entregador não encontrado."));
+    private Usuario buscarEntregadorPorId(Long entregadorId, Long orgId) {
+        return usuarioRepository.findByIdAndOrgId(entregadorId, orgId)
+                .orElseThrow(() -> new ResourceNotFoundException("Entregador não encontrado ou não pertence à organização."));
     }
 
     public Page<Entrega> listarEntregas(Pageable pageable) {

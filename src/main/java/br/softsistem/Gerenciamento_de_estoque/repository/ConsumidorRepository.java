@@ -11,11 +11,12 @@ import java.util.Optional;
 @Repository
 public interface ConsumidorRepository extends JpaRepository<Consumidor, Long> {
 
-    // Método para buscar todos os consumidores de uma organização específica com paginação
+    // Buscar todos os consumidores de uma organização com paginação
     Page<Consumidor> findByOrg_Id(Long orgId, Pageable pageable);
 
-    // Método para buscar um consumidor específico por nome e org_id
+    // Buscar consumidor por nome e organização
     Optional<Consumidor> findByNomeAndOrg_Id(String nome, Long orgId);
 
-    // Outros métodos personalizados podem ser adicionados aqui, se necessário
+    // Buscar consumidor por ID e organização (segurança multi-tenant)
+    Optional<Consumidor> findByIdAndOrgId(Long id, Long orgId);
 }

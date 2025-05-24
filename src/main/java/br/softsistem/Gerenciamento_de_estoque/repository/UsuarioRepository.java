@@ -30,4 +30,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     // Buscar usuários por e-mail e organização
     @Query("SELECT u FROM Usuario u WHERE u.email = :email AND u.org.id = :orgId")
     Optional<Usuario> findByEmailAndOrgId(@Param("email") String email, @Param("orgId") Long orgId);
+
+
+    // Buscar usuário por ID e organização
+    Optional<Usuario> findByIdAndOrgId(Long id, Long orgId);
+
 }
