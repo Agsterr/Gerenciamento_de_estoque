@@ -6,6 +6,8 @@ import br.softsistem.Gerenciamento_de_estoque.exception.ResourceNotFoundExceptio
 import br.softsistem.Gerenciamento_de_estoque.model.Entrega;
 import br.softsistem.Gerenciamento_de_estoque.service.EntregaService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -57,13 +59,13 @@ public class EntregaController {
         return ResponseEntity.noContent().build();  // Retorna 204 No Content
     }
 
-    // Listar todas as entregas de uma organização
+
+    // Listar todas as entregas de uma organização com paginação
     @GetMapping
-    public ResponseEntity<List<EntregaResponseDto>> listarEntregas() {
-        List<EntregaResponseDto> responseDtos = entregaService.listarEntregas()
-                .stream()
-                .map(EntregaResponseDto::fromEntity)
-                .toList();
+    public ResponseEntity<Page<EntregaResponseDto>> listarEntregas(Pageable pageable) {
+        // Obtém as entregas paginadas do serviço
+        Page<EntregaResponseDto> responseDtos = entregaService.listarEntregas(pageable)
+                .map(EntregaResponseDto::fromEntity);  // Converte Entrega para EntregaResponseDto
         return ResponseEntity.ok(responseDtos);
     }
 

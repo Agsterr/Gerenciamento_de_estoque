@@ -3,6 +3,8 @@ package br.softsistem.Gerenciamento_de_estoque.service;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
 import br.softsistem.Gerenciamento_de_estoque.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -46,8 +48,8 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
     }
 
-    // Listar usuários ativos pela organização
-    public List<Usuario> listarUsuariosAtivos(Long orgId) {
-        return usuarioRepository.findByAtivoTrueAndOrgId(orgId);
+    // Listar usuários ativos pela organização com paginação
+    public Page<Usuario> listarUsuariosAtivos(Long orgId, Pageable pageable) {
+        return usuarioRepository.findByAtivoTrueAndOrgId(orgId, pageable);
     }
 }

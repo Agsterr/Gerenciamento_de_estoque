@@ -4,6 +4,8 @@ import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.ReativarUsuarioRequ
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
 import br.softsistem.Gerenciamento_de_estoque.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -43,7 +45,7 @@ public class UsuarioController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/ativos")
-    public List<Usuario> listarUsuariosAtivos(@RequestParam Long orgId) {
-        return usuarioService.listarUsuariosAtivos(orgId);
+    public Page<Usuario> listarUsuariosAtivos(@RequestParam Long orgId, Pageable pageable) {
+        return usuarioService.listarUsuariosAtivos(orgId, pageable);
     }
 }

@@ -7,6 +7,8 @@ import br.softsistem.Gerenciamento_de_estoque.repository.OrgRepository;
 import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
 import br.softsistem.Gerenciamento_de_estoque.exception.ConsumidorNaoEncontradoException;
 import br.softsistem.Gerenciamento_de_estoque.exception.OrganizacaoNaoEncontradaException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,13 +26,13 @@ public class ConsumidorService {
         this.orgRepository = orgRepository;
     }
 
-    // Listar todos os consumidores de uma organização
-    public List<Consumidor> listarTodos() {
+    // Listar todos os consumidores de uma organização com paginação
+    public Page<Consumidor> listarTodos(Pageable pageable) {
         Long orgId = SecurityUtils.getCurrentOrgId();  // Obtém o org_id do contexto de segurança
         if (orgId == null) {
             throw new OrganizacaoNaoEncontradaException("Organização não encontrada no contexto de segurança");
         }
-        return consumidorRepository.findByOrg_Id(orgId);  // Filtra consumidores pela organização
+        return consumidorRepository.findByOrg_Id(orgId, pageable);  // Filtra consumidores pela organização com paginação
     }
 
     // Buscar um consumidor por nome e organização

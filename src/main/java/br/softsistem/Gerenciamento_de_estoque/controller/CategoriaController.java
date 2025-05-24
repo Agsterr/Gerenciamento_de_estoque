@@ -4,6 +4,8 @@ import br.softsistem.Gerenciamento_de_estoque.dto.CategoriaDto.CategoriaRequest;
 import br.softsistem.Gerenciamento_de_estoque.dto.CategoriaDto.CategoriaResponse;
 import br.softsistem.Gerenciamento_de_estoque.model.Categoria;
 import br.softsistem.Gerenciamento_de_estoque.service.CategoriaService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,13 +25,11 @@ public class CategoriaController {
         this.service = service;
     }
 
-    // Listar todas as categorias de uma organização
+    // Listar todas as categorias de uma organização com paginação
     @GetMapping("/{orgId}")
-    public ResponseEntity<List<CategoriaResponse>> listarTodos(@PathVariable Long orgId) {
-        List<CategoriaResponse> categorias = service.listarTodos(orgId)
-                .stream()
-                .map(categoria -> new CategoriaResponse(categoria.getId(), categoria.getNome()))
-                .toList();
+    public ResponseEntity<Page<CategoriaResponse>> listarTodos(@PathVariable Long orgId, Pageable pageable) {
+        Page<CategoriaResponse> categorias = service.listarTodos(orgId, pageable)
+                .map(categoria -> new CategoriaResponse(categoria.getId(), categoria.getNome()));
         return ResponseEntity.ok(categorias);
     }
 
@@ -44,13 +44,11 @@ public class CategoriaController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();  // Retorna 404 se não encontrar
     }
 
-    // Buscar categorias cujo nome contenha uma parte do nome
+    // Buscar categorias cujo nome contenha uma parte do nome com paginação
     @GetMapping("/{orgId}/parteDoNome/{parteDoNome}")
-    public ResponseEntity<List<CategoriaResponse>> buscarPorParteDoNome(@PathVariable Long orgId, @PathVariable String parteDoNome) {
-        List<CategoriaResponse> categorias = service.buscarPorParteDoNomeEOrgId(parteDoNome, orgId)
-                .stream()
-                .map(categoria -> new CategoriaResponse(categoria.getId(), categoria.getNome()))
-                .toList();
+    public ResponseEntity<Page<CategoriaResponse>> buscarPorParteDoNome(@PathVariable Long orgId, @PathVariable String parteDoNome, Pageable pageable) {
+        Page<CategoriaResponse> categorias = service.buscarPorParteDoNomeEOrgId(parteDoNome, orgId, pageable)
+                .map(categoria -> new CategoriaResponse(categoria.getId(), categoria.getNome()));
         return ResponseEntity.ok(categorias);
     }
 
