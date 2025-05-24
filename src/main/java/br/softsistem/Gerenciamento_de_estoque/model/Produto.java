@@ -25,27 +25,14 @@ public class Produto {
     private Integer quantidade;
 
     @Column(nullable = false)
-    private Integer quantidadeMinima; // Quantidade mínima para aviso de estoque baixo
-
-    @Column(name = "quantidade_entrada")
-    private Integer quantidadeEntrada; // Quantidade de entrada do produto
-
-    @Column(name = "quantidade_saida")
-    private Integer quantidadeSaida; // Quantidade de saída do produto
-
-    @Column(name = "data_entrada")
-    private LocalDateTime dataEntrada; // Data da entrada do produto
-
-    @Column(name = "data_saida")
-    private LocalDateTime dataSaida; // Data da saída do produto
+    private Integer quantidadeMinima;
 
     @ManyToOne
-    @JoinColumn(name = "categoria_id") // Chave estrangeira para a categoria
+    @JoinColumn(name = "categoria_id")
     private Categoria categoria;
 
-    // Relacionamento com a entidade Org (Organização)
     @ManyToOne
-    @JoinColumn(name = "org_id", nullable = false) // Chave estrangeira para a organização
+    @JoinColumn(name = "org_id", nullable = false)
     private Org org;
 
     @Column(name = "criado_em", nullable = false, updatable = false)
@@ -55,6 +42,7 @@ public class Produto {
     private Boolean ativo = true;
 
     // Getters e Setters
+
     public Long getId() {
         return id;
     }
@@ -101,38 +89,6 @@ public class Produto {
 
     public void setQuantidadeMinima(Integer quantidadeMinima) {
         this.quantidadeMinima = quantidadeMinima;
-    }
-
-    public Integer getQuantidadeEntrada() {
-        return quantidadeEntrada;
-    }
-
-    public void setQuantidadeEntrada(Integer quantidadeEntrada) {
-        this.quantidadeEntrada = quantidadeEntrada;
-    }
-
-    public Integer getQuantidadeSaida() {
-        return quantidadeSaida;
-    }
-
-    public void setQuantidadeSaida(Integer quantidadeSaida) {
-        this.quantidadeSaida = quantidadeSaida;
-    }
-
-    public LocalDateTime getDataEntrada() {
-        return dataEntrada;
-    }
-
-    public void setDataEntrada(LocalDateTime dataEntrada) {
-        this.dataEntrada = dataEntrada;
-    }
-
-    public LocalDateTime getDataSaida() {
-        return dataSaida;
-    }
-
-    public void setDataSaida(LocalDateTime dataSaida) {
-        this.dataSaida = dataSaida;
     }
 
     public Categoria getCategoria() {

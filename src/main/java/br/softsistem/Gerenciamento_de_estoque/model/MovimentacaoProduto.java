@@ -2,6 +2,8 @@ package br.softsistem.Gerenciamento_de_estoque.model;
 
 import br.softsistem.Gerenciamento_de_estoque.enumeracao.TipoMovimentacao;
 import jakarta.persistence.*;
+import org.springframework.data.annotation.CreatedDate;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,6 +21,7 @@ public class MovimentacaoProduto {
     @Column(nullable = false)
     private Integer quantidade;
 
+    @CreatedDate
     @Column(name = "data_hora", nullable = false)
     private LocalDateTime dataHora;
 

@@ -16,8 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Service
@@ -36,7 +34,6 @@ public class ProdutoService {
         this.movimentacaoProdutoRepository = movimentacaoProdutoRepository;
     }
 
-    // Criar ou atualizar um produto
     public Produto salvar(ProdutoRequest produtoRequest, Long orgId) {
         Categoria categoria = categoriaRepository.findById(produtoRequest.getCategoriaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada."));
@@ -57,10 +54,6 @@ public class ProdutoService {
                         produto.getQuantidade() + produtoRequest.getQuantidade()
         );
         produto.setQuantidadeMinima(produtoRequest.getQuantidadeMinima());
-        produto.setQuantidadeEntrada(produtoRequest.getQuantidadeEntrada());
-        produto.setQuantidadeSaida(produtoRequest.getQuantidadeSaida());
-        produto.setDataEntrada(LocalDateTime.now());
-        produto.setDataSaida(LocalDateTime.now());
         produto.setCategoria(categoria);
         produto.setOrg(org);
 
@@ -79,6 +72,7 @@ public class ProdutoService {
         return salvo;
     }
 
+
     public Page<Produto> listarTodos(Long orgId, Pageable pageable) {
         return repository.findByAtivoTrueAndOrgId(orgId, pageable);
     }
@@ -88,38 +82,6 @@ public class ProdutoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado com o ID fornecido ou não pertence à organização."));
         produto.setAtivo(false);
         repository.save(produto);
-    }
-
-    public BigDecimal getTotalEntradasPorAno(Long orgId, int ano) {
-        return repository.totalEntradasPorAno(orgId, ano);
-    }
-
-    public BigDecimal getTotalEntradasPorMes(Long orgId, int ano, int mes) {
-        return repository.totalEntradasPorMes(orgId, ano, mes);
-    }
-
-    public BigDecimal getTotalEntradasPorSemana(Long orgId, LocalDate inicioSemana, LocalDate fimSemana) {
-        return repository.totalEntradasPorSemana(orgId, inicioSemana, fimSemana);
-    }
-
-    public BigDecimal getTotalEntradasPorDia(Long orgId, LocalDate dia) {
-        return repository.totalEntradasPorDia(orgId, dia);
-    }
-
-    public BigDecimal getTotalSaidasPorAno(Long orgId, int ano) {
-        return repository.totalSaidasPorAno(orgId, ano);
-    }
-
-    public BigDecimal getTotalSaidasPorMes(Long orgId, int ano, int mes) {
-        return repository.totalSaidasPorMes(orgId, ano, mes);
-    }
-
-    public BigDecimal getTotalSaidasPorSemana(Long orgId, LocalDate inicioSemana, LocalDate fimSemana) {
-        return repository.totalSaidasPorSemana(orgId, inicioSemana, fimSemana);
-    }
-
-    public BigDecimal getTotalSaidasPorDia(Long orgId, LocalDate dia) {
-        return repository.totalSaidasPorDia(orgId, dia);
     }
 
     public Produto buscarPorId(Long id, Long orgId) {
