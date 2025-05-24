@@ -36,9 +36,14 @@ public record ProdutoDto(
 
         @NotNull(message = "A quantidade mínima é obrigatória.")
         @Min(value = 0, message = "A quantidade mínima não pode ser negativa.")
-        Integer quantidadeMinima
-) {
+        Integer quantidadeMinima,
 
+        Integer quantidadeEntrada,
+        Integer quantidadeSaida,
+        LocalDateTime dataEntrada,
+        LocalDateTime dataSaida,
+        Boolean ativo
+) {
     public ProdutoDto(Produto produto) {
         this(
                 produto.getId(),
@@ -49,7 +54,12 @@ public record ProdutoDto(
                 produto.getOrg().getId(),
                 produto.getCriadoEm(),
                 produto.getQuantidade(),
-                produto.getQuantidadeMinima()
+                produto.getQuantidadeMinima(),
+                produto.getQuantidadeEntrada(),
+                produto.getQuantidadeSaida(),
+                produto.getDataEntrada(),
+                produto.getDataSaida(),
+                produto.getAtivo()
         );
     }
 }

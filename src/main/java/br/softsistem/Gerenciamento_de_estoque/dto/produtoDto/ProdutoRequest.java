@@ -1,7 +1,9 @@
 package br.softsistem.Gerenciamento_de_estoque.dto.produtoDto;
 
 import jakarta.validation.constraints.*;
+
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 public class ProdutoRequest {
 
@@ -25,23 +27,26 @@ public class ProdutoRequest {
     @Min(value = 0, message = "A quantidade mínima não pode ser negativa.")
     private Integer quantidadeMinima;
 
+    @NotNull(message = "A quantidade de entrada é obrigatória.")
+    @Min(value = 0, message = "A quantidade de entrada não pode ser negativa.")
+    private Integer quantidadeEntrada;
+
+    @NotNull(message = "A quantidade de saída é obrigatória.")
+    @Min(value = 0, message = "A quantidade de saída não pode ser negativa.")
+    private Integer quantidadeSaida;
+
+    private LocalDateTime dataEntrada;
+
+    private LocalDateTime dataSaida;
+
     @NotNull(message = "A categoria vinculada é obrigatória.")
     private Long categoriaId;
 
     @NotNull(message = "O ID da organização é obrigatório.")
     private Long orgId;
 
-    // getters / setters existentes …
-
-    public Long getOrgId() {
-        return orgId;
-    }
-
-    public void setOrgId(Long orgId) {
-        this.orgId = orgId;
-    }
-
     // Getters e Setters
+
     public String getNome() {
         return nome;
     }
@@ -82,11 +87,51 @@ public class ProdutoRequest {
         this.quantidadeMinima = quantidadeMinima;
     }
 
+    public Integer getQuantidadeEntrada() {
+        return quantidadeEntrada;
+    }
+
+    public void setQuantidadeEntrada(Integer quantidadeEntrada) {
+        this.quantidadeEntrada = quantidadeEntrada;
+    }
+
+    public Integer getQuantidadeSaida() {
+        return quantidadeSaida;
+    }
+
+    public void setQuantidadeSaida(Integer quantidadeSaida) {
+        this.quantidadeSaida = quantidadeSaida;
+    }
+
+    public LocalDateTime getDataEntrada() {
+        return dataEntrada;
+    }
+
+    public void setDataEntrada(LocalDateTime dataEntrada) {
+        this.dataEntrada = dataEntrada;
+    }
+
+    public LocalDateTime getDataSaida() {
+        return dataSaida;
+    }
+
+    public void setDataSaida(LocalDateTime dataSaida) {
+        this.dataSaida = dataSaida;
+    }
+
     public Long getCategoriaId() {
         return categoriaId;
     }
 
     public void setCategoriaId(Long categoriaId) {
         this.categoriaId = categoriaId;
+    }
+
+    public Long getOrgId() {
+        return orgId;
+    }
+
+    public void setOrgId(Long orgId) {
+        this.orgId = orgId;
     }
 }

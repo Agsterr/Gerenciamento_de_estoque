@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @RestController
@@ -35,6 +36,10 @@ public class ProdutoController {
     // Criar ou atualizar um novo produto
     @PostMapping
     public ResponseEntity<Map<String, String>> criarProduto(@RequestBody ProdutoRequest produtoRequest) {
+        // Definir datas automaticamente
+        produtoRequest.setDataEntrada(LocalDateTime.now());
+        produtoRequest.setDataSaida(LocalDateTime.now());
+
         // Delegando a criação ou atualização para o serviço
         service.salvar(produtoRequest, produtoRequest.getOrgId());
 
