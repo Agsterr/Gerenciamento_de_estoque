@@ -1,11 +1,14 @@
 package br.softsistem.Gerenciamento_de_estoque.service;
 
 import br.softsistem.Gerenciamento_de_estoque.dto.produtoDto.ProdutoRequest;
+import br.softsistem.Gerenciamento_de_estoque.enumeracao.TipoMovimentacao;
 import br.softsistem.Gerenciamento_de_estoque.exception.ResourceNotFoundException;
 import br.softsistem.Gerenciamento_de_estoque.model.Categoria;
+import br.softsistem.Gerenciamento_de_estoque.model.MovimentacaoProduto;
 import br.softsistem.Gerenciamento_de_estoque.model.Org;
 import br.softsistem.Gerenciamento_de_estoque.model.Produto;
 import br.softsistem.Gerenciamento_de_estoque.repository.CategoriaRepository;
+import br.softsistem.Gerenciamento_de_estoque.repository.MovimentacaoProdutoRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.OrgRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.ProdutoRepository;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Service
 public class ProdutoService {
@@ -22,12 +26,14 @@ public class ProdutoService {
     private final ProdutoRepository repository;
     private final CategoriaRepository categoriaRepository;
     private final OrgRepository orgRepository;
+    private final MovimentacaoProdutoRepository movimentacaoProdutoRepository;
 
     @Autowired
-    public ProdutoService(ProdutoRepository repository, CategoriaRepository categoriaRepository, OrgRepository orgRepository) {
+    public ProdutoService(ProdutoRepository repository, MovimentacaoProdutoRepository movimentacaoProdutoRepository, CategoriaRepository categoriaRepository, OrgRepository orgRepository) {
         this.repository = repository;
         this.categoriaRepository = categoriaRepository;
         this.orgRepository = orgRepository;
+        this.movimentacaoProdutoRepository = movimentacaoProdutoRepository;
     }
 
     // Criar ou atualizar um produto
@@ -35,29 +41,42 @@ public class ProdutoService {
         Categoria categoria = categoriaRepository.findById(produtoRequest.getCategoriaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada."));
 
-        Produto produto = new Produto();
+        Org org = orgRepository.findById(orgId)
+                .orElseThrow(() -> new ResourceNotFoundException("Organização não encontrada."));
+
+        Produto produtoExistente = repository.findByNomeAndOrgId(produtoRequest.getNome(), orgId);
+
+        Produto produto = (produtoExistente != null) ? produtoExistente : new Produto();
+        boolean isNovo = produto.getId() == null;
+
         produto.setNome(produtoRequest.getNome());
         produto.setDescricao(produtoRequest.getDescricao());
         produto.setPreco(produtoRequest.getPreco());
-        produto.setQuantidade(produtoRequest.getQuantidade());
+        produto.setQuantidade(
+                isNovo ? produtoRequest.getQuantidade() :
+                        produto.getQuantidade() + produtoRequest.getQuantidade()
+        );
         produto.setQuantidadeMinima(produtoRequest.getQuantidadeMinima());
-        produto.setCategoria(categoria);
         produto.setQuantidadeEntrada(produtoRequest.getQuantidadeEntrada());
         produto.setQuantidadeSaida(produtoRequest.getQuantidadeSaida());
-        produto.setDataEntrada(produtoRequest.getDataEntrada());
-        produto.setDataSaida(produtoRequest.getDataSaida());
-
-        Org org = orgRepository.findById(orgId)
-                .orElseThrow(() -> new ResourceNotFoundException("Organização não encontrada."));
+        produto.setDataEntrada(LocalDateTime.now());
+        produto.setDataSaida(LocalDateTime.now());
+        produto.setCategoria(categoria);
         produto.setOrg(org);
 
-        Produto produtoExistente = repository.findByNomeAndOrgId(produto.getNome(), orgId);
-        if (produtoExistente != null) {
-            produtoExistente.setQuantidade(produtoExistente.getQuantidade() + produto.getQuantidade());
-            return repository.save(produtoExistente);
-        }
+        Produto salvo = repository.save(produto);
 
-        return repository.save(produto);
+        // Registrar movimentação de ENTRADA
+        MovimentacaoProduto movimentacao = new MovimentacaoProduto();
+        movimentacao.setProduto(salvo);
+        movimentacao.setQuantidade(produtoRequest.getQuantidade());
+        movimentacao.setDataHora(LocalDateTime.now());
+        movimentacao.setTipo(TipoMovimentacao.ENTRADA);
+        movimentacao.setOrg(org);
+
+        movimentacaoProdutoRepository.save(movimentacao);
+
+        return salvo;
     }
 
     public Page<Produto> listarTodos(Long orgId, Pageable pageable) {
