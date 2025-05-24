@@ -54,7 +54,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/favicon.ico"
                         ).permitAll()
-                        .requestMatchers("/auth/login", "/auth/register").permitAll()
+                        .requestMatchers("/register").hasAuthority("ADMIN")
+                        .requestMatchers("/auth/login").permitAll()
                         .requestMatchers("/usuarios/reativar-usuario").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/usuarios/{id}/desativar").hasRole("ADMIN")
                         .anyRequest().authenticated()

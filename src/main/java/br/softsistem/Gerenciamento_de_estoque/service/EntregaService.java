@@ -2,9 +2,12 @@ package br.softsistem.Gerenciamento_de_estoque.service;
 
 import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
 import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaRequestDto;
+import br.softsistem.Gerenciamento_de_estoque.exception.OrganizacaoNaoEncontradaException;
 import br.softsistem.Gerenciamento_de_estoque.exception.ResourceNotFoundException;
 import br.softsistem.Gerenciamento_de_estoque.model.*;
 import br.softsistem.Gerenciamento_de_estoque.repository.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -160,9 +163,12 @@ public class EntregaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Entregador não encontrado."));
     }
 
-    // Listar todas as entregas de uma organização
-    public List<Entrega> listarEntregas() {
-        Long orgId = SecurityUtils.getCurrentOrgId();
-        return entregaRepository.findByOrgId(orgId);
+    // Listar todas as entregas de uma organização com paginação
+    public Page<Entrega> listarEntregas(Pageable pageable) {
+        Long orgId = SecurityUtils.getCurrentOrgId();  // Obtém o org_id do contexto de segurança
+        if (orgId == null) {
+            throw new OrganizacaoNaoEncontradaException("Organização não encontrada no contexto de segurança");
+        }
+        return entregaRepository.findByOrgId(orgId, pageable);  // Retorna as entregas com paginação
     }
 }

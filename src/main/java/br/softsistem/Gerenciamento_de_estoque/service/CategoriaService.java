@@ -6,6 +6,8 @@ import br.softsistem.Gerenciamento_de_estoque.model.Org;
 import br.softsistem.Gerenciamento_de_estoque.repository.CategoriaRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.OrgRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,9 +22,9 @@ public class CategoriaService {
     @Autowired
     private OrgRepository orgRepository;
 
-    // Listar todas as categorias de uma organização
-    public List<Categoria> listarTodos(Long orgId) {
-        return categoriaRepository.findByOrg_Id(orgId);  // Filtra por orgId
+    // Listar todas as categorias de uma organização com paginação
+    public Page<Categoria> listarTodos(Long orgId, Pageable pageable) {
+        return categoriaRepository.findByOrg_Id(orgId, pageable);  // Filtra por orgId e pagina
     }
 
     // Buscar uma categoria pelo nome e orgId
@@ -31,8 +33,8 @@ public class CategoriaService {
     }
 
     // Buscar categorias cujo nome contenha uma parte do nome e que pertençam a uma organização específica
-    public List<Categoria> buscarPorParteDoNomeEOrgId(String parteDoNome, Long orgId) {
-        return categoriaRepository.findByNomeContainingAndOrg_Id(parteDoNome, orgId);  // Busca por parte do nome e orgId
+    public Page<Categoria> buscarPorParteDoNomeEOrgId(String parteDoNome, Long orgId, Pageable pageable) {
+        return categoriaRepository.findByNomeContainingAndOrg_Id(parteDoNome, orgId, pageable);  // Busca por parte do nome e orgId com paginação
     }
 
     // Salvar uma nova categoria associada à organização

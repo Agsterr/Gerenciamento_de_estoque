@@ -1,13 +1,14 @@
 package br.softsistem.Gerenciamento_de_estoque.repository;
 
 import br.softsistem.Gerenciamento_de_estoque.model.Entrega;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 
 @Repository
 public interface EntregaRepository extends JpaRepository<Entrega, Long> {
@@ -36,9 +37,9 @@ public interface EntregaRepository extends JpaRepository<Entrega, Long> {
     @Query("SELECT SUM(e.valor) FROM Entrega e WHERE e.consumidor.id = :consumidorId AND e.horarioEntrega BETWEEN :inicioSemana AND :fimSemana AND e.org.id = :orgId")
     BigDecimal totalSemanalPorConsumidor(Long consumidorId, LocalDate inicioSemana, LocalDate fimSemana, Long orgId);
 
-    // Listar todas as entregas de uma organização específica
+    // Listar todas as entregas de uma organização específica com paginação
     @Query("SELECT e FROM Entrega e WHERE e.org.id = :orgId")
-    List<Entrega> findByOrgId(Long orgId);
+    Page<Entrega> findByOrgId(Long orgId, Pageable pageable);
 
     // Total anual (soma dos valores) para o ano fornecido, filtrando pela organização
     @Query("SELECT SUM(e.valor) FROM Entrega e WHERE FUNCTION('YEAR', e.horarioEntrega) = :ano AND e.org.id = :orgId")
@@ -47,5 +48,4 @@ public interface EntregaRepository extends JpaRepository<Entrega, Long> {
     // Total anual de entregas feitas por um consumidor específico, filtrando pela organização
     @Query("SELECT SUM(e.valor) FROM Entrega e WHERE e.consumidor.id = :consumidorId AND FUNCTION('YEAR', e.horarioEntrega) = :ano AND e.org.id = :orgId")
     BigDecimal totalAnualPorConsumidor(Long consumidorId, int ano, Long orgId);
-
 }
