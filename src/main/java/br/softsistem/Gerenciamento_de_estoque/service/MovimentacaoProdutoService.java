@@ -3,14 +3,17 @@ package br.softsistem.Gerenciamento_de_estoque.service;
 import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
 import br.softsistem.Gerenciamento_de_estoque.enumeracao.TipoMovimentacao;
 import br.softsistem.Gerenciamento_de_estoque.exception.ResourceNotFoundException;
-import br.softsistem.Gerenciamento_de_estoque.model.*;
+import br.softsistem.Gerenciamento_de_estoque.model.MovimentacaoProduto;
+import br.softsistem.Gerenciamento_de_estoque.model.Produto;
 import br.softsistem.Gerenciamento_de_estoque.repository.MovimentacaoProdutoRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.ProdutoRepository;
 import br.softsistem.Gerenciamento_de_estoque.dto.movimentacaoDto.MovimentacaoProdutoDto;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class MovimentacaoProdutoService {
@@ -24,8 +27,10 @@ public class MovimentacaoProdutoService {
         this.produtoRepository = produtoRepository;
     }
 
-    // Registrar movimentação
-    public MovimentacaoProduto registrarMovimentacao(MovimentacaoProdutoDto dto) {
+    /**
+     * Registra uma movimentação (entrada ou saída). Retorna o DTO correspondente.
+     */
+    public MovimentacaoProdutoDto registrarMovimentacao(MovimentacaoProdutoDto dto) {
         Long orgId = SecurityUtils.getCurrentOrgId();
 
         Produto produto = produtoRepository.findByIdAndOrgId(dto.getProdutoId(), orgId)
@@ -49,66 +54,70 @@ public class MovimentacaoProdutoService {
         }
 
         produtoRepository.save(produto);
-        return movimentacaoRepository.save(mov);
+        MovimentacaoProduto salvo = movimentacaoRepository.save(mov);
+        return new MovimentacaoProdutoDto(salvo);
     }
 
-    public List<MovimentacaoProduto> listarPorProduto(Long produtoId) {
+    /**
+     * Busca todas as movimentações detalhadas de um mês e ano.
+     */
+    public List<MovimentacaoProdutoDto> listarDetalhadoPorMes(int ano, int mes) {
         Long orgId = SecurityUtils.getCurrentOrgId();
-        return movimentacaoRepository.findByProdutoIdAndOrgId(produtoId, orgId);
+        LocalDateTime inicio = LocalDateTime.of(ano, mes, 1, 0, 0);
+        LocalDateTime fim    = inicio.plusMonths(1);
+
+        return movimentacaoRepository
+                .findMovimentacoesPorIntervalo(inicio, fim, orgId)
+                .stream()
+                .map(MovimentacaoProdutoDto::new)
+                .collect(Collectors.toList());
     }
 
-    public List<MovimentacaoProduto> listarPorDia(LocalDate dia) {
+    /**
+     * Busca todas as movimentações detalhadas de um ano inteiro.
+     */
+    public List<MovimentacaoProdutoDto> listarDetalhadoPorAno(int ano) {
         Long orgId = SecurityUtils.getCurrentOrgId();
-        return movimentacaoRepository.findByDataHoraBetweenAndOrgId(
-                dia.atStartOfDay(),
-                dia.atTime(23, 59, 59),
-                orgId);
+        LocalDateTime inicio = LocalDateTime.of(ano, 1, 1, 0, 0);
+        LocalDateTime fim    = inicio.plusYears(1);
+
+        return movimentacaoRepository
+                .findMovimentacoesPorIntervalo(inicio, fim, orgId)
+                .stream()
+                .map(MovimentacaoProdutoDto::new)
+                .collect(Collectors.toList());
     }
 
-    public List<MovimentacaoProduto> listarPorPeriodo(LocalDate inicio, LocalDate fim) {
-        Long orgId = SecurityUtils.getCurrentOrgId();
-        return movimentacaoRepository.findByDataHoraBetweenAndOrgId(
-                inicio.atStartOfDay(),
-                fim.atTime(23, 59, 59),
-                orgId);
-    }
-
-    public List<MovimentacaoProduto> listarPorAno(int ano) {
-        Long orgId = SecurityUtils.getCurrentOrgId();
-        return movimentacaoRepository.findByAnoAndOrgId(ano, orgId);
-    }
-
-    public List<MovimentacaoProduto> listarPorMes(int ano, int mes) {
-        Long orgId = SecurityUtils.getCurrentOrgId();
-        return movimentacaoRepository.findByAnoAndMesAndOrgId(ano, mes, orgId);
-    }
-
+    /**
+     * Busca todas as movimentações de um tipo (ENTRADA/SAIDA) em um dia específico.
+     */
     public List<MovimentacaoProdutoDto> buscarPorData(TipoMovimentacao tipo, LocalDate data) {
         Long orgId = SecurityUtils.getCurrentOrgId();
         LocalDateTime inicio = data.atStartOfDay();
-        LocalDateTime fim = data.atTime(23, 59, 59);
-        return movimentacaoRepository.findByTipoAndDataHoraBetweenAndOrgId(tipo, inicio, fim, orgId)
+        LocalDateTime fim    = data.atTime(23, 59, 59);
+
+        return movimentacaoRepository
+                .findByTipoAndDataHoraBetweenAndOrgId(tipo, inicio, fim, orgId)
                 .stream()
                 .map(MovimentacaoProdutoDto::new)
-                .toList();
+                .collect(Collectors.toList());
     }
 
+    /**
+     * Busca todas as movimentações de um tipo (ENTRADA/SAIDA) em um intervalo de data/hora.
+     */
     public List<MovimentacaoProdutoDto> buscarPorPeriodo(TipoMovimentacao tipo, LocalDateTime inicio, LocalDateTime fim) {
         Long orgId = SecurityUtils.getCurrentOrgId();
-        return movimentacaoRepository.findByTipoAndDataHoraBetweenAndOrgId(tipo, inicio, fim, orgId)
+
+        return movimentacaoRepository
+                .findByTipoAndDataHoraBetweenAndOrgId(tipo, inicio, fim, orgId)
                 .stream()
                 .map(MovimentacaoProdutoDto::new)
-                .toList();
+                .collect(Collectors.toList());
     }
 
-    public Integer totalPorAno(TipoMovimentacao tipo, int ano) {
-        Long orgId = SecurityUtils.getCurrentOrgId();
-        return movimentacaoRepository.totalPorAno(tipo, ano, orgId);
-    }
-
-    public Integer totalPorMes(TipoMovimentacao tipo, int ano, int mes) {
-        Long orgId = SecurityUtils.getCurrentOrgId();
-        return movimentacaoRepository.totalPorMes(tipo, ano, mes, orgId);
-    }
+    // Se ainda quiser manter os métodos de total, mas transformá-los em detalhamento (lista),
+    // você pode simplesmente chamar os métodos detalhados acima e, no cliente, calcular soma ou filtrar.
+    // Por enquanto, como foi pedido “resposta detalhada”, removemos/ignora-se endpoints que retornavam Integer.
 
 }

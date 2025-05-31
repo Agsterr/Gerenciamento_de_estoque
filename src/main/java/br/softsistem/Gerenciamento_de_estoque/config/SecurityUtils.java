@@ -22,4 +22,19 @@ public class SecurityUtils {
 
         return null; // orgId não disponível ou autenticação não é do tipo esperado
     }
+
+    /**
+     * Retorna o userId do usuário autenticado, se disponível.
+     *
+     * @return userId ou null se não estiver autenticado com CustomAuthenticationToken.
+     */
+    public static Long getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication instanceof CustomAuthenticationToken) {
+            return ((CustomAuthenticationToken) authentication).getUserId();
+        }
+
+        return null; // userId não disponível ou autenticação não é do tipo esperado
+    }
 }

@@ -4,40 +4,112 @@ import br.softsistem.Gerenciamento_de_estoque.enumeracao.TipoMovimentacao;
 import br.softsistem.Gerenciamento_de_estoque.model.MovimentacaoProduto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
 public interface MovimentacaoProdutoRepository extends JpaRepository<MovimentacaoProduto, Long> {
 
+    /**
+     * Busca todas as movimentações de uma organização.
+     */
     List<MovimentacaoProduto> findByOrgId(Long orgId);
 
+    /**
+     * Busca todas as movimentações por tipo (ENTRADA/SAIDA) e organização.
+     */
     List<MovimentacaoProduto> findByTipoAndOrgId(TipoMovimentacao tipo, Long orgId);
 
+    /**
+     * Busca todas as movimentações de um produto específico dentro de uma organização.
+     */
     List<MovimentacaoProduto> findByProdutoIdAndOrgId(Long produtoId, Long orgId);
 
+    /**
+     * Busca todas as movimentações de um produto e tipo específicos dentro de uma organização.
+     */
     List<MovimentacaoProduto> findByProdutoIdAndTipoAndOrgId(Long produtoId, TipoMovimentacao tipo, Long orgId);
 
+    /**
+     * Busca todas as movimentações de uma organização entre duas datas (intervalo de LocalDateTime).
+     */
     List<MovimentacaoProduto> findByDataHoraBetweenAndOrgId(LocalDateTime inicio, LocalDateTime fim, Long orgId);
 
+    /**
+     * Busca todas as movimentações de um tipo específico (ENTRADA/SAIDA) dentro de uma organização e intervalo de datas.
+     */
     List<MovimentacaoProduto> findByTipoAndDataHoraBetweenAndOrgId(TipoMovimentacao tipo, LocalDateTime inicio, LocalDateTime fim, Long orgId);
 
-    // Buscar por ano
-    @Query("SELECT m FROM MovimentacaoProduto m WHERE FUNCTION('YEAR', m.dataHora) = :ano AND m.org.id = :orgId")
-    List<MovimentacaoProduto> findByAnoAndOrgId(int ano, Long orgId);
+    // -------------------------------------------------------------------------------------
+    // MÉTODOS “Opção B” – usando intervalo de LocalDateTime para evitar funções específicas de dialeto
+    // -------------------------------------------------------------------------------------
 
-    // Buscar por mês e ano
-    @Query("SELECT m FROM MovimentacaoProduto m WHERE FUNCTION('YEAR', m.dataHora) = :ano AND FUNCTION('MONTH', m.dataHora) = :mes AND m.org.id = :orgId")
-    List<MovimentacaoProduto> findByAnoAndMesAndOrgId(int ano, int mes, Long orgId);
+    /**
+     * Soma as quantidades de movimentações de um tipo (ENTRADA/SAIDA) dentro de um intervalo de datas e organização.
+     *
+     * Exemplo de uso no serviço:
+     *   LocalDateTime inicio = LocalDateTime.of(ano, mes, 1, 0, 0);
+     *   LocalDateTime fim = inicio.plusMonths(1);
+     *   Integer total = repository.somaPorTipoEIntervaloData(tipo, inicio, fim, orgId);
+     */
+    @Query("SELECT COALESCE(SUM(m.quantidade), 0) " +
+            "FROM MovimentacaoProduto m " +
+            "WHERE m.tipo = :tipo " +
+            "  AND m.dataHora >= :inicio " +
+            "  AND m.dataHora < :fim " +
+            "  AND m.org.id = :orgId")
+    Integer somaPorTipoEIntervaloData(
+            @Param("tipo") TipoMovimentacao tipo,
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fim") LocalDateTime fim,
+            @Param("orgId") Long orgId
+    );
 
-    // Total por tipo e ano
-    @Query("SELECT COALESCE(SUM(m.quantidade), 0) FROM MovimentacaoProduto m WHERE m.tipo = :tipo AND FUNCTION('YEAR', m.dataHora) = :ano AND m.org.id = :orgId")
-    Integer totalPorAno(TipoMovimentacao tipo, int ano, Long orgId);
+    /**
+     * Busca todas as movimentações de um tipo (ENTRADA/SAIDA) dentro de um intervalo de datas e organização.
+     *
+     * Exemplo de uso no serviço:
+     *   LocalDateTime inicio = LocalDateTime.of(ano, mes, 1, 0, 0);
+     *   LocalDateTime fim = inicio.plusMonths(1);
+     *   List<MovimentacaoProduto> movs = repository.findMovimentacoesPorTipoEIntervalo(
+     *         tipo, inicio, fim, orgId);
+     */
+    @Query("SELECT m " +
+            "FROM MovimentacaoProduto m " +
+            "WHERE m.tipo = :tipo " +
+            "  AND m.dataHora >= :inicio " +
+            "  AND m.dataHora < :fim " +
+            "  AND m.org.id = :orgId")
+    List<MovimentacaoProduto> findMovimentacoesPorTipoEIntervalo(
+            @Param("tipo") TipoMovimentacao tipo,
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fim") LocalDateTime fim,
+            @Param("orgId") Long orgId
+    );
 
-    // Total por tipo, mês e ano
-    @Query("SELECT COALESCE(SUM(m.quantidade), 0) FROM MovimentacaoProduto m WHERE m.tipo = :tipo AND FUNCTION('YEAR', m.dataHora) = :ano AND FUNCTION('MONTH', m.dataHora) = :mes AND m.org.id = :orgId")
-    Integer totalPorMes(TipoMovimentacao tipo, int ano, int mes, Long orgId);
+    /**
+     * Busca todas as movimentações de qualquer tipo dentro de um intervalo de datas e organização.
+     *
+     * Exemplo de uso no serviço:
+     *   LocalDateTime inicio = LocalDateTime.of(ano, mes, 1, 0, 0);
+     *   LocalDateTime fim = inicio.plusMonths(1);
+     *   List<MovimentacaoProduto> movs = repository.findMovimentacoesPorIntervalo(inicio, fim, orgId);
+     */
+    @Query("SELECT m " +
+            "FROM MovimentacaoProduto m " +
+            "WHERE m.dataHora >= :inicio " +
+            "  AND m.dataHora < :fim " +
+            "  AND m.org.id = :orgId")
+    List<MovimentacaoProduto> findMovimentacoesPorIntervalo(
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fim") LocalDateTime fim,
+            @Param("orgId") Long orgId
+    );
+
+//  ***** Observação *****
+//  Todos os métodos acima incluem sempre a condição `m.org.id = :orgId`, garantindo que as buscas
+//  respeitem o multitenant (cada organização só vê suas movimentações).
 }
