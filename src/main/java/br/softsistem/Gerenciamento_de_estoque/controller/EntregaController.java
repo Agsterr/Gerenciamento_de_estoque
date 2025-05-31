@@ -8,12 +8,13 @@ import br.softsistem.Gerenciamento_de_estoque.service.EntregaService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -22,108 +23,128 @@ public class EntregaController {
 
     private final EntregaService entregaService;
 
-    // Constructor Injection
     public EntregaController(EntregaService entregaService) {
         this.entregaService = entregaService;
     }
 
-    // Criar uma nova entrega
-    @PostMapping
-    public ResponseEntity<EntregaResponseDto> criarEntrega(@RequestBody @Valid EntregaRequestDto request) {
-        // O orgId é recuperado no serviço, não no controlador.
-        Entrega entrega = entregaService.criarEntrega(request);
+    // =========================
+    // CRUD / PAGINAÇÃO
+    // =========================
 
-        // Retornar a resposta com os dados da entrega criada
+    @PostMapping
+    public ResponseEntity<EntregaResponseDto> criarEntrega(
+            @RequestBody @Valid EntregaRequestDto request
+    ) {
+        Entrega entrega = entregaService.criarEntrega(request);
         EntregaResponseDto responseDto = EntregaResponseDto.fromEntity(entrega);
-        return new ResponseEntity<>(responseDto, HttpStatus.CREATED);  // Retorna com código 201 (Criado)
+        return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
     }
 
-    // Editar uma entrega existente
     @PutMapping("/{id}")
-    public ResponseEntity<EntregaResponseDto> editarEntrega(@PathVariable Long id, @RequestBody @Valid EntregaRequestDto request) {
+    public ResponseEntity<EntregaResponseDto> editarEntrega(
+            @PathVariable Long id,
+            @RequestBody @Valid EntregaRequestDto request
+    ) {
         Entrega entregaAtualizada = entregaService.editarEntrega(id, request);
-
         if (entregaAtualizada == null) {
             throw new ResourceNotFoundException("Entrega não encontrada ou não pertence à organização.");
         }
-
-        // Retornar os dados da entrega editada
         EntregaResponseDto responseDto = EntregaResponseDto.fromEntity(entregaAtualizada);
         return ResponseEntity.ok(responseDto);
     }
 
-    // Deletar uma entrega existente
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarEntrega(@PathVariable Long id) {
         entregaService.deletarEntrega(id);
-        return ResponseEntity.noContent().build();  // Retorna 204 No Content
+        return ResponseEntity.noContent().build();
     }
 
-
-    // Listar todas as entregas de uma organização com paginação
     @GetMapping
     public ResponseEntity<Page<EntregaResponseDto>> listarEntregas(Pageable pageable) {
-        // Obtém as entregas paginadas do serviço
-        Page<EntregaResponseDto> responseDtos = entregaService.listarEntregas(pageable)
-                .map(EntregaResponseDto::fromEntity);  // Converte Entrega para EntregaResponseDto
-        return ResponseEntity.ok(responseDtos);
+        Page<EntregaResponseDto> pageDto = entregaService.listarEntregas(pageable)
+                .map(EntregaResponseDto::fromEntity);
+        return ResponseEntity.ok(pageDto);
     }
 
-    // Consultar total de entregas por dia
-    @GetMapping("/total-por-dia")
-    public ResponseEntity<BigDecimal> totalPorDia(@RequestParam LocalDate dia) {
-        BigDecimal total = entregaService.getTotalPorDia(dia);
-        return ResponseEntity.ok(total);
+    // =========================
+    // NOVOS ENDPOINTS (RESPOSTA DETALHADA)
+    // =========================
+
+    /**
+     * Lista todas as entregas detalhadas de um dia específico.
+     * GET /entregas/por-dia?dia=YYYY-MM-DD
+     */
+    @GetMapping("/por-dia")
+    public ResponseEntity<List<EntregaResponseDto>> porDia(
+            @RequestParam("dia") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dia
+    ) {
+        List<EntregaResponseDto> lista = entregaService.listarEntregasPorDia(dia);
+        return ResponseEntity.ok(lista);
     }
 
-    // Consultar total de entregas por semana
-    @GetMapping("/total-semanal")
-    public ResponseEntity<BigDecimal> totalSemanal(@RequestParam LocalDate inicioSemana, @RequestParam LocalDate fimSemana) {
-        BigDecimal total = entregaService.getTotalSemanal(inicioSemana, fimSemana);
-        return ResponseEntity.ok(total);
+    /**
+     * Lista todas as entregas detalhadas em um intervalo de data/hora.
+     * GET /entregas/por-periodo?inicio=YYYY-MM-DDTHH:MM:SS&fim=YYYY-MM-DDTHH:MM:SS
+     */
+    @GetMapping("/por-periodo")
+    public ResponseEntity<List<EntregaResponseDto>> porPeriodo(
+            @RequestParam("inicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
+            @RequestParam("fim")    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fim
+    ) {
+        List<EntregaResponseDto> lista = entregaService.listarEntregasPorPeriodo(inicio, fim);
+        return ResponseEntity.ok(lista);
     }
 
-    // Consultar total de entregas por mês
-    @GetMapping("/total-mensal")
-    public ResponseEntity<BigDecimal> totalMensal(@RequestParam int mes, @RequestParam int ano) {
-        BigDecimal total = entregaService.getTotalMensal(mes, ano);
-        return ResponseEntity.ok(total);
+    /**
+     * Lista todas as entregas detalhadas de um mês e ano.
+     * GET /entregas/por-mes?mes=MM&ano=YYYY
+     */
+    @GetMapping("/por-mes")
+    public ResponseEntity<List<EntregaResponseDto>> porMes(
+            @RequestParam("mes") int mes,
+            @RequestParam("ano") int ano
+    ) {
+        List<EntregaResponseDto> lista = entregaService.listarEntregasPorMes(mes, ano);
+        return ResponseEntity.ok(lista);
     }
 
-    // Consultar total de entregas feitas por um consumidor
-    @GetMapping("/total-por-consumidor/{consumidorId}")
-    public ResponseEntity<BigDecimal> totalPorConsumidor(@PathVariable Long consumidorId) {
-        BigDecimal total = entregaService.getTotalPorConsumidor(consumidorId);
-        return ResponseEntity.ok(total);
+    /**
+     * Lista todas as entregas detalhadas de um ano inteiro.
+     * GET /entregas/por-ano?ano=YYYY
+     */
+    @GetMapping("/por-ano")
+    public ResponseEntity<List<EntregaResponseDto>> porAno(
+            @RequestParam("ano") int ano
+    ) {
+        List<EntregaResponseDto> lista = entregaService.listarEntregasPorAno(ano);
+        return ResponseEntity.ok(lista);
     }
 
-    // Consultar total de entregas feitas no mês atual
-    @GetMapping("/total-do-mes")
-    public ResponseEntity<BigDecimal> totalDoMesAtual() {
-        BigDecimal total = entregaService.getTotalDoMesAtual();
-        return ResponseEntity.ok(total);
+    /**
+     * Lista todas as entregas detalhadas de um consumidor específico (sem filtro de data).
+     * GET /entregas/por-consumidor/{consumidorId}
+     */
+    @GetMapping("/por-consumidor/{consumidorId}")
+    public ResponseEntity<List<EntregaResponseDto>> porConsumidor(
+            @PathVariable Long consumidorId
+    ) {
+        List<EntregaResponseDto> lista = entregaService.listarEntregasPorConsumidor(consumidorId);
+        return ResponseEntity.ok(lista);
     }
 
-    // Consultar total semanal de entregas por consumidor
-    @GetMapping("/total-semanal-por-consumidor/{consumidorId}")
-    public ResponseEntity<BigDecimal> totalSemanalPorConsumidor(@PathVariable Long consumidorId,
-                                                                @RequestParam LocalDate inicioSemana,
-                                                                @RequestParam LocalDate fimSemana) {
-        BigDecimal total = entregaService.getTotalSemanalPorConsumidor(consumidorId, inicioSemana, fimSemana);
-        return ResponseEntity.ok(total);
+    /**
+     * Lista todas as entregas detalhadas de um consumidor em um intervalo de data/hora.
+     * GET /entregas/por-consumidor/{consumidorId}/periodo?inicio=...&fim=...
+     */
+    @GetMapping("/por-consumidor/{consumidorId}/periodo")
+    public ResponseEntity<List<EntregaResponseDto>> porConsumidorPeriodo(
+            @PathVariable Long consumidorId,
+            @RequestParam("inicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
+            @RequestParam("fim")    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fim
+    ) {
+        List<EntregaResponseDto> lista = entregaService.listarEntregasPorConsumidorPorPeriodo(consumidorId, inicio, fim);
+        return ResponseEntity.ok(lista);
     }
 
-    // Consultar total anual de entregas
-    @GetMapping("/total-anual")
-    public ResponseEntity<BigDecimal> totalAnual(@RequestParam int ano) {
-        BigDecimal total = entregaService.getTotalAnual(ano);
-        return ResponseEntity.ok(total);
-    }
 
-    // Consultar total anual de entregas por consumidor
-    @GetMapping("/total-anual-por-consumidor/{consumidorId}")
-    public ResponseEntity<BigDecimal> totalAnualPorConsumidor(@PathVariable Long consumidorId, @RequestParam int ano) {
-        BigDecimal total = entregaService.getTotalAnualPorConsumidor(consumidorId, ano);
-        return ResponseEntity.ok(total);
-    }
 }

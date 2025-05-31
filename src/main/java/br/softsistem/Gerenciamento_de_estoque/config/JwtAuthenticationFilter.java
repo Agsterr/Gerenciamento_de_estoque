@@ -14,6 +14,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * Filtro JWT que extrai username, userId e orgId dos claims e popula o SecurityContext
+ * com um CustomAuthenticationToken contendo UserDetails + userId + orgId.
+ */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -34,40 +38,48 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String username;
         final Long orgId;
+        final Long userId;
 
-        // Se o cabeçalho Authorization estiver ausente ou não começar com "Bearer ", ignora o filtro
+        // Se não tiver Authorization ou não começar com "Bearer ", apenas segue o fluxo
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             chain.doFilter(request, response);
             return;
         }
 
-        // Extrai o token JWT
+        // Extrai o token (texto após "Bearer ")
         jwt = authHeader.substring(7);
         username = jwtService.extractUsername(jwt);
-        orgId = jwtService.extractOrgId(jwt); // Extração de um campo adicional (ex: organização)
+        orgId = jwtService.extractOrgId(jwt);       // novo claim de orgId
+        userId = jwtService.extractUserId(jwt);     // novo claim de userId
 
-        // Debug logs (remova ou use logger para produção)
-        System.out.println("Token JWT: " + jwt);
-        System.out.println("Username extraído: " + username);
-        System.out.println("Org ID extraído: " + orgId);
+        // DEBUG (ou use um logger no lugar dos prints em produção)
+        System.out.println("=== JWT Filter ===");
+        System.out.println(" Token JWT:      " + jwt);
+        System.out.println(" Username extraído: " + username);
+        System.out.println(" Org ID extraído:   " + orgId);
+        System.out.println(" User ID extraído:  " + userId);
 
-        // Se o usuário ainda não está autenticado
+        // Só autentica se ainda não estiver autenticado no contexto
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
             if (jwtService.isTokenValid(jwt, userDetails)) {
-                // Cria um token de autenticação personalizado que inclui o orgId
-                var authToken = new CustomAuthenticationToken(userDetails, orgId);
+                // Cria o CustomAuthenticationToken usando userId, orgId e authorities
+                var authToken = new CustomAuthenticationToken(
+                        userDetails,
+                        userId,
+                        orgId
+                );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                // Define a autenticação no contexto de segurança
+                // Seta a autenticação no SecurityContext
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             } else {
-                System.out.println("Token JWT inválido.");
+                System.out.println("Token JWT inválido para usuário: " + username);
             }
         }
 
-        // Continua a execução da cadeia de filtros
+        // Prossegue a cadeia de filtros
         chain.doFilter(request, response);
     }
 }

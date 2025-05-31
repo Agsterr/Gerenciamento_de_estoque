@@ -27,65 +27,79 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
 
-    public AuthController(UsuarioRepository usuarioRepository, JwtService jwtService, PasswordEncoder passwordEncoder, RoleRepository roleRepository) {
+    public AuthController(UsuarioRepository usuarioRepository,
+                          JwtService jwtService,
+                          PasswordEncoder passwordEncoder,
+                          RoleRepository roleRepository) {
         this.usuarioRepository = usuarioRepository;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
     }
 
+    /**
+     * Faz login: valida credenciais, verifica status e gera JWT que carrega
+     * tanto o userId quanto o orgId. No payload do front basta enviar username,
+     * senha e orgId; o token cuida do resto.
+     */
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto request) {
-        // Buscar o usuário pelo nome de usuário e pela organização
-        var usuario = usuarioRepository.findByUsernameAndOrgId(request.username(), request.orgId())
+        // 1) Buscar o usuário pelo username e organização
+        Usuario usuario = usuarioRepository
+                .findByUsernameAndOrgId(request.username(), request.orgId())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado ou não pertence à organização"));
 
-        // Verificar se o usuário está ativo
+        // 2) Verificar se o usuário está ativo
         if (!usuario.getAtivo()) {
             throw new UsuarioDesativadoException("Usuário foi desativado");
         }
 
-        // Verificar se a senha está correta
+        // 3) Validar senha
         if (!passwordEncoder.matches(request.senha(), usuario.getSenha())) {
             throw new RuntimeException("Senha incorreta");
         }
 
-        // Gerar o token JWT
-        String token = jwtService.generateToken((UserDetails) usuario, request.orgId());  // Passa o orgId para o JWT
+        // 4) Gerar token JWT incluindo userId e orgId
+        Long userId = usuario.getId();
+        Long orgId  = request.orgId();  // vem do corpo da requisição
+        String token = jwtService.generateToken((UserDetails) usuario, userId, orgId);
 
-        // Retornar o token em um objeto JSON
+        // 5) Retornar token no response
         LoginResponseDto responseDto = new LoginResponseDto(token);
-        return ResponseEntity.ok(responseDto);  // Retornando a resposta como um JSON
+        return ResponseEntity.ok(responseDto);
     }
 
+    /**
+     * Registra um novo usuário em uma organização. Recebe roles, username,
+     * senha e orgId; retorna o DTO do usuário criado (sem expor senha).
+     */
     @PostMapping("/register")
     public UsuarioDto register(@RequestBody @Valid UsuarioRequestDto usuarioRequestDto) {
-        // Recupera o orgId do DTO
         Long orgId = usuarioRequestDto.orgId();
 
-        // Verificar se a organização com o orgId existe
-        var org = usuarioRepository.findById(orgId)
+        // Verifica se a organização existe (exemplo: validar se token ou DTO bate com entidade Org)
+        var orgEntity = usuarioRepository.findById(orgId)
                 .orElseThrow(() -> new RuntimeException("Organização não encontrada"));
+        // (A lógica acima assume que você usa a mesma tabela para usuários e organizações;
+        // ajuste conforme seu modelo de domínio se for diferente.)
 
-        // Processar as roles recebidas no payload (convertendo de nomes para entidades persistidas)
+        // Convertendo nomes de role para entidades persistidas
         List<Role> rolesPersistidas = usuarioRequestDto.roles().stream()
                 .map(nomeRole -> roleRepository.findByNome(nomeRole)
                         .orElseGet(() -> roleRepository.save(new Role(nomeRole))))
                 .toList();
 
-        // Criar o objeto Usuario e preencher os dados
+        // Criar e preencher entidade Usuario
         Usuario usuario = new Usuario();
         usuario.setUsername(usuarioRequestDto.username());
-        usuario.setSenha(passwordEncoder.encode(usuarioRequestDto.senha())); // Criptografar a senha
+        usuario.setSenha(passwordEncoder.encode(usuarioRequestDto.senha()));
         usuario.setEmail(usuarioRequestDto.email());
         usuario.setRoles(rolesPersistidas);
         usuario.setAtivo(true);
-        usuario.setOrg(org.getOrg());  // Associa o usuário à organização
+        usuario.setOrg(orgEntity.getOrg());  // associa ao objeto de Org (ajuste se sua entidade for diferente)
 
-        // Salvar o usuário no banco
+        // Salvar no banco e retornar DTO
         usuario = usuarioRepository.save(usuario);
-
-        // Retornar o DTO com os dados do usuário salvo
         return new UsuarioDto(usuario);
     }
 }

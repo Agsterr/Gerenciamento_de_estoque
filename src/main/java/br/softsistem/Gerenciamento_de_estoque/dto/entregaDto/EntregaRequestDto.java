@@ -3,7 +3,6 @@ package br.softsistem.Gerenciamento_de_estoque.dto.entregaDto;
 import br.softsistem.Gerenciamento_de_estoque.model.Consumidor;
 import br.softsistem.Gerenciamento_de_estoque.model.Entrega;
 import br.softsistem.Gerenciamento_de_estoque.model.Produto;
-import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Min;
@@ -20,12 +19,11 @@ public class EntregaRequestDto {
     @NotNull(message = "O ID do consumidor não pode ser nulo.")
     private Long consumidorId;   // ID do Consumidor
 
-    @NotNull(message = "O ID do entregador não pode ser nulo.")
-    private Long entregadorId;   // ID do Entregador
+    private LocalDateTime horarioEntrega;  // Horário da entrega (opcional)
 
-    private LocalDateTime horarioEntrega;  // Horário da entrega
-
-    // Getters e Setters
+    // ======================
+    // GETTERS E SETTERS
+    // ======================
     public Long getProdutoId() {
         return produtoId;
     }
@@ -50,14 +48,6 @@ public class EntregaRequestDto {
         this.consumidorId = consumidorId;
     }
 
-    public Long getEntregadorId() {
-        return entregadorId;
-    }
-
-    public void setEntregadorId(Long entregadorId) {
-        this.entregadorId = entregadorId;
-    }
-
     public LocalDateTime getHorarioEntrega() {
         return horarioEntrega;
     }
@@ -66,14 +56,23 @@ public class EntregaRequestDto {
         this.horarioEntrega = horarioEntrega;
     }
 
-    // Método para converter o DTO em uma entidade Entrega
-    public Entrega toEntity(Produto produto, Consumidor consumidor, Usuario entregador) {
+    // ==================================
+    // MÉTODO PARA CONVERTER EM ENTIDADE
+    // ==================================
+    /**
+     * Converte este DTO em entidade Entrega, mas ainda não seta o entregador.
+     * O entregador será definido no Service, usando o usuário atualmente logado.
+     */
+    public Entrega toEntity(Produto produto, Consumidor consumidor) {
         Entrega entrega = new Entrega();
         entrega.setProduto(produto);
         entrega.setConsumidor(consumidor);
-        entrega.setEntregador(entregador);
         entrega.setQuantidade(this.quantidade);
-        entrega.setHorarioEntrega(horarioEntrega != null ? horarioEntrega : LocalDateTime.now()); // Se não passar horário, pega o horário atual
+        entrega.setHorarioEntrega(
+                horarioEntrega != null
+                        ? horarioEntrega
+                        : LocalDateTime.now()
+        );
         return entrega;
     }
 }
