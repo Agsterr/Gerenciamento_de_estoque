@@ -14,25 +14,34 @@ import java.util.Optional;
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
-    // Buscar usuários ativos com paginação pela organização
+    // ----------------------------------------------------------------
+    // Buscar usuários ativos, paginação e atualização de “ativo” por orgId
+    // ----------------------------------------------------------------
+
     @Query("SELECT u FROM Usuario u WHERE u.ativo = true AND u.org.id = :orgId")
     Page<Usuario> findByAtivoTrueAndOrgId(@Param("orgId") Long orgId, Pageable pageable);
 
-    // Atualizar estado do campo "ativo" de um usuário pela organização
     @Modifying
     @Query("UPDATE Usuario u SET u.ativo = :ativo WHERE u.id = :id AND u.org.id = :orgId")
-    void atualizarAtivo(@Param("id") Long id, @Param("ativo") Boolean ativo, @Param("orgId") Long orgId);
+    void atualizarAtivo(@Param("id") Long id,
+                        @Param("ativo") Boolean ativo,
+                        @Param("orgId") Long orgId);
 
-    // Buscar usuário por nome de usuário e organização
+    // ----------------------------------------------------------------
+    // Atenção: para multitenant, sempre buscar por username + orgId
+    // ----------------------------------------------------------------
+
     @Query("SELECT u FROM Usuario u WHERE u.username = :username AND u.org.id = :orgId")
-    Optional<Usuario> findByUsernameAndOrgId(@Param("username") String username, @Param("orgId") Long orgId);
+    Optional<Usuario> findByUsernameAndOrgId(@Param("username") String username,
+                                             @Param("orgId") Long orgId);
 
-    // Buscar usuários por e-mail e organização
+    // ----------------------------------------------------------------
+    // Buscas adicionais (por e-mail + orgId e por ID + orgId)
+    // ----------------------------------------------------------------
+
     @Query("SELECT u FROM Usuario u WHERE u.email = :email AND u.org.id = :orgId")
-    Optional<Usuario> findByEmailAndOrgId(@Param("email") String email, @Param("orgId") Long orgId);
+    Optional<Usuario> findByEmailAndOrgId(@Param("email") String email,
+                                          @Param("orgId") Long orgId);
 
-
-    // Buscar usuário por ID e organização
     Optional<Usuario> findByIdAndOrgId(Long id, Long orgId);
-
 }
