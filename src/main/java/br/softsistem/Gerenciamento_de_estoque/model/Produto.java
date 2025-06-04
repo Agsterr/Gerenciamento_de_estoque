@@ -41,6 +41,11 @@ public class Produto {
     @Column(nullable = false)
     private Boolean ativo = true;
 
+    public Produto(long l, String produtoTeste, int i, BigDecimal bigDecimal) {
+    }
+
+    public Produto() {
+    }
     // Getters e Setters
 
     public Long getId() {
