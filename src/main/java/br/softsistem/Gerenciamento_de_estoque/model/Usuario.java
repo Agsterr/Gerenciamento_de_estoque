@@ -59,6 +59,13 @@ public class Usuario implements UserDetails {
     @JoinColumn(name = "org_id", nullable = false) // Chave estrangeira para a organização
     private Org org;
 
+    public Usuario(long l, String entregadorTest, String senha) {
+    }
+
+    public Usuario(){
+
+    }
+
     // Métodos de UserDetails
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

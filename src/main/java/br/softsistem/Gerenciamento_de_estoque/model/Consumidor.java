@@ -5,6 +5,17 @@ import java.util.List;
 
 @Entity
 public class Consumidor {
+    
+    public Consumidor(){}
+
+    public Consumidor(Long id, String nome, String cpf, String endereco, Org org) {
+        this.id = id;
+        this.nome = nome;
+        this.cpf = cpf;
+        this.endereco = endereco;
+        this.org = org; // Opcional, se você quiser incluir a organização diretamente
+    }
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,6 +37,9 @@ public class Consumidor {
 
     @OneToMany(mappedBy = "consumidor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Entrega> entregas;
+
+    public Consumidor(long l, String carlos, String number, String ruaAbc) {
+    }
 
     // Getters e Setters
 
