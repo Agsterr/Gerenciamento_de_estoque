@@ -127,4 +127,10 @@ public class Produto {
     public void setAtivo(Boolean ativo) {
         this.ativo = ativo;
     }
+
+    @Transient
+    public boolean isEstoqueBaixo() {
+        return this.quantidade != null && this.quantidadeMinima != null && this.quantidade <= this.quantidadeMinima;
+    }
+
 }
