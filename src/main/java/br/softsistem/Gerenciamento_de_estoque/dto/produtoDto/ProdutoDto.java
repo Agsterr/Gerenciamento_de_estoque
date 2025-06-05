@@ -38,7 +38,9 @@ public record ProdutoDto(
         @Min(value = 0, message = "A quantidade mínima não pode ser negativa.")
         Integer quantidadeMinima,
 
-        Boolean ativo
+        Boolean ativo,
+
+        Boolean estoqueBaixo // ✅ novo campo adicionado
 ) {
     public ProdutoDto(Produto produto) {
         this(
@@ -51,7 +53,8 @@ public record ProdutoDto(
                 produto.getCriadoEm(),
                 produto.getQuantidade(),
                 produto.getQuantidadeMinima(),
-                produto.getAtivo()
+                produto.getAtivo(),
+                produto.isEstoqueBaixo() // ✅ nova lógica aqui
         );
     }
 }

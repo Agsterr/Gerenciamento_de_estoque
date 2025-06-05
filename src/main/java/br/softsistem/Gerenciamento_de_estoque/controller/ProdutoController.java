@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -48,4 +49,12 @@ public class ProdutoController {
         Produto produto = service.buscarPorId(id, orgId);
         return ResponseEntity.ok(new ProdutoDto(produto));
     }
+
+    @GetMapping("/estoque-baixo")
+    public List<ProdutoDto> listarProdutosComEstoqueBaixo(@RequestParam Long orgId) {
+        return service.listarProdutosComEstoqueBaixo(orgId).stream()
+                .map(ProdutoDto::new)
+                .toList();
+    }
+
 }

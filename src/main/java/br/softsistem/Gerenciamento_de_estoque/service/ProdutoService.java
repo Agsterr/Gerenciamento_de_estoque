@@ -1,5 +1,6 @@
 package br.softsistem.Gerenciamento_de_estoque.service;
 
+import br.softsistem.Gerenciamento_de_estoque.dto.produtoDto.ProdutoDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.produtoDto.ProdutoRequest;
 import br.softsistem.Gerenciamento_de_estoque.enumeracao.TipoMovimentacao;
 import br.softsistem.Gerenciamento_de_estoque.exception.ResourceNotFoundException;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class ProdutoService {
@@ -33,6 +35,15 @@ public class ProdutoService {
         this.orgRepository = orgRepository;
         this.movimentacaoProdutoRepository = movimentacaoProdutoRepository;
     }
+
+    public List<Produto> listarProdutosComEstoqueBaixo(Long orgId) {
+        return repository.findByAtivoTrueAndOrgId(orgId).stream()
+                .filter(Produto::isEstoqueBaixo)
+                .toList();
+    }
+
+
+
 
     public Produto salvar(ProdutoRequest produtoRequest, Long orgId) {
         Categoria categoria = categoriaRepository.findById(produtoRequest.getCategoriaId())

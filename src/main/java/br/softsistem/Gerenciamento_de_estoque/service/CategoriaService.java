@@ -17,10 +17,10 @@ import java.util.Optional;
 public class CategoriaService {
 
     @Autowired
-    private CategoriaRepository categoriaRepository;
+    CategoriaRepository categoriaRepository;
 
     @Autowired
-    private OrgRepository orgRepository;
+    OrgRepository orgRepository;
 
     // Listar todas as categorias de uma organização com paginação
     public Page<Categoria> listarTodos(Long orgId, Pageable pageable) {
