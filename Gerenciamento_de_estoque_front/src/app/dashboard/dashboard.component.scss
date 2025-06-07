@@ -1,20 +1,28 @@
-.dashboard-container {
-  padding: 20px;
-}
-
-.dashboard-header {
+.menu {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 40px; // ⬅ Aumenta o espaçamento horizontal entre os itens
 
-.menu a {
-  margin-right: 10px;
-  text-decoration: none;
-  color: #007bff;
-}
+  a {
+    display: flex;
+    align-items: center;
+    gap: 8px; // Espaço entre o ícone e o texto
+    color: #90caf9;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 10px 16px;
+    border-radius: 8px;
+    transition: background 0.3s ease, color 0.3s ease;
 
-.menu a.active {
-  font-weight: bold;
+    mat-icon {
+      font-size: 20px;
+    }
+
+    &:hover,
+    &.active {
+      background-color: #1e88e5;
+      color: #ffffff;
+    }
+  }
 }

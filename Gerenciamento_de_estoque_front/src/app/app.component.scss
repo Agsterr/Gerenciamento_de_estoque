@@ -1,49 +1,63 @@
-/* Estilo do contêiner principal */
+/* Estilo geral do app */
 .container {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start; /* Alinha os elementos no topo */
-    align-items: center;
-    min-height: 100vh; /* Altura mínima igual à tela */
-    background-color: #070606; /* Fundo cinza escuro */
-    color: #ffffff; /* Texto branco */
-    padding: 20px;
-    box-sizing: border-box;
-    text-align: center;
-  }
-  
-  /* Estilo do título */
-  h1 {
-    margin-bottom: 20px;
-    color: #ffffff; /* Branco */
-  }
-  
-  /* Estilo do menu de navegação */
-  nav {
-    margin-bottom: 20px;
-  }
-  
-  nav a {
-    color: #4a90e2; /* Azul claro */
-    text-decoration: none;
-    font-size: 1.2rem;
-    margin: 0 10px;
-  }
-  
-  nav a.active {
-    font-weight: bold;
-    text-decoration: underline;
-  }
-  
-  nav a:hover {
-    color: #357ab8; /* Azul mais escuro no hover */
-  }
-  
-  /* Estilo para o router-outlet */
-  .router-container {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    margin-top: 20px;
-  }
-  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0d0d0d 0%, #1a1a1a 100%);
+  color: #f0f0f0;
+  padding: 30px 20px;
+  box-sizing: border-box;
+  font-family: 'Roboto', sans-serif;
+  text-align: center;
+}
+
+/* Título */
+h1 {
+  margin-bottom: 20px;
+  font-size: 2.2rem;
+  font-weight: 500;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Navegação */
+nav {
+  margin-bottom: 25px;
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+nav a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #90caf9;
+  text-decoration: none;
+  font-size: 1.1rem;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: background 0.3s, color 0.3s;
+}
+
+nav a mat-icon {
+  font-size: 20px;
+}
+
+nav a.active,
+nav a:hover {
+  background-color: #1e88e5;
+  color: #fff;
+}
+
+/* Conteúdo centralizado */
+.router-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 1200px;
+  margin-top: 20px;
+}

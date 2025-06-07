@@ -1,36 +1,37 @@
-
 <div class="categoria-container">
   <h2>Gerenciamento de Categorias</h2>
 
-  <!-- Mensagem de Sucesso ou Erro -->
-  <div *ngIf="mensagem" class="mensagem sucesso" [ngClass]="mensagemTipo">
+  <!-- Mensagens de Sucesso ou Erro -->
+  <div *ngIf="mensagem" class="mensagem mensagem--sucesso" role="alert" aria-live="assertive">
     {{ mensagem }}
   </div>
-  <div *ngIf="mensagemErro" class="mensagem erro" [ngClass]="mensagemTipo">
+  <div *ngIf="mensagemErro" class="mensagem mensagem--erro" role="alert" aria-live="assertive">
     {{ mensagemErro }}
   </div>
 
   <!-- Botão para Adicionar Nova Categoria -->
-  <div class="menu">
-    <button (click)="toggleNovaCategoriaForm()">Adicionar Nova Categoria</button>
+  <div class="categoria-menu">
+    <button (click)="toggleNovaCategoriaForm()" type="button" class="btn btn--primario">
+      <i class="fas fa-plus"></i> Nova Categoria
+    </button>
   </div>
 
-  <!-- Tabela de Categorias -->
+  <!-- Lista de Categorias -->
   <div class="categoria-lista">
-    <h3>Categorias</h3>
-    <table class="categoria-tabela">
+    <h3>Categorias Existentes</h3>
+    <table class="categoria-tabela" role="table">
       <thead>
         <tr>
-          <th>Nome</th>
-          <th>Ações</th>
+          <th scope="col">Nome</th>
+          <th scope="col">Ações</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let categoria of categorias">
           <td>{{ categoria.nome }}</td>
           <td>
-            <button class="btn-deletar" (click)="deletarCategoria(categoria.id)">
-              Deletar
+            <button type="button" class="btn btn--deletar" (click)="deletarCategoria(categoria.id)">
+              <i class="fas fa-trash"></i> Deletar
             </button>
           </td>
         </tr>
@@ -38,13 +39,16 @@
     </table>
   </div>
 
-  <!-- Formulário de Criação de Categoria -->
-  <div *ngIf="showNovaCategoriaInput" class="categoria-criar">
+  <!-- Formulário de Criação -->
+  <div *ngIf="showNovaCategoriaInput" class="categoria-formulario">
     <h3>Criar Nova Categoria</h3>
-    <form [formGroup]="categoriaForm" (ngSubmit)="criarCategoria()">
-      <label for="nome">Nome:</label>
-      <input id="nome" formControlName="nome" />
-      <button type="submit" [disabled]="categoriaForm.invalid">Criar</button>
+    <form [formGroup]="categoriaForm" (ngSubmit)="criarCategoria()" aria-labelledby="form-nova-categoria">
+      <label for="nome" class="categoria-formulario__label">Nome da Categoria:</label>
+      <input id="nome" type="text" formControlName="nome" placeholder="Digite o nome" class="categoria-formulario__input" aria-required="true" />
+      
+      <button type="submit" [disabled]="categoriaForm.invalid" class="btn btn--salvar">
+        <i class="fas fa-check"></i> Criar
+      </button>
     </form>
   </div>
 </div>

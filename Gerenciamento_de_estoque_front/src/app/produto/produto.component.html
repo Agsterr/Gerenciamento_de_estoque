@@ -1,19 +1,32 @@
-
-
 <div class="produto-container">
+
+  <!-- ALERTA DE ESTOQUE BAIXO -->
+  <div *ngIf="alertaEstoqueBaixo" class="alerta-estoque-baixo">
+    <i class="fas fa-exclamation-triangle"></i>
+    Atenção! Há produtos com estoque abaixo do mínimo.
+    <button (click)="fecharAlertaEstoque()" aria-label="Fechar alerta">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
   <!-- Mensagens de feedback -->
   <div *ngIf="mensagem" class="mensagem sucesso">{{ mensagem }}</div>
   <div *ngIf="mensagemErro" class="mensagem erro">{{ mensagemErro }}</div>
 
-  <!-- Controle de exibição de seções -->
+  <!-- Menu de Ações -->
   <div class="menu">
-    <button (click)="exibirListaProdutos()">Lista de Produtos</button>
-    <button (click)="exibirCriarProduto()">Criar Novo Produto</button>
+    <button (click)="exibirListaProdutos()">
+      <i class="fas fa-list"></i> Lista de Produtos
+    </button>
+    <button (click)="exibirCriarProduto()">
+      <i class="fas fa-plus-circle"></i> Criar Novo Produto
+    </button>
   </div>
 
   <!-- Lista de Produtos -->
   <div *ngIf="exibirLista" class="produto-lista">
-    <h2>Lista de Produtos</h2>
+    <h2><i class="fas fa-box"></i> Produtos Cadastrados</h2>
+
     <table class="tabela-produtos">
       <thead>
         <tr>
@@ -33,9 +46,15 @@
           <td>{{ produto.quantidade }}</td>
           <td>{{ produto.categoriaNome }}</td>
           <td>
-            <button (click)="deletarProduto(produto.id)" class="btn-deletar">Deletar</button>
-            <button (click)="verDetalhes(produto.id)" class="btn-detalhes">Ver Detalhes</button>
-            <button (click)="exibirEditarProduto(produto.id)" class="btn-editar">Editar</button>
+            <button (click)="verDetalhes(produto.id)" class="btn-detalhes" title="Ver Detalhes">
+              <i class="fas fa-eye"></i>
+            </button>
+            <button (click)="exibirEditarProduto(produto.id)" class="btn-editar" title="Editar">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button (click)="deletarProduto(produto.id)" class="btn-deletar" title="Excluir">
+              <i class="fas fa-trash-alt"></i>
+            </button>
           </td>
         </tr>
       </tbody>
@@ -43,75 +62,87 @@
 
     <!-- Paginação -->
     <div class="pagination">
-      <button (click)="paginaAnterior()" [disabled]="currentPage === 0">Anterior</button>
-      <button (click)="proximaPagina()" [disabled]="currentPage === totalPages - 1 || totalPages === 0">Próxima</button>
-      <p>Página {{ currentPage + 1 }} de {{ totalPages > 0 ? totalPages : 1 }}</p> <!-- Corrige o display de totalPages -->
+      <button (click)="paginaAnterior()" [disabled]="currentPage === 0">
+        <i class="fas fa-chevron-left"></i> Anterior
+      </button>
+      <button (click)="proximaPagina()" [disabled]="currentPage === totalPages - 1 || totalPages === 0">
+        Próxima <i class="fas fa-chevron-right"></i>
+      </button>
+      <p>Página {{ currentPage + 1 }} de {{ totalPages > 0 ? totalPages : 1 }}</p>
     </div>
   </div>
 
-  <!-- Formulário de Edição -->
-  <div *ngIf="exibirEditar" class="produto-editar">
-    <h2>Editar Produto</h2>
-    <form [formGroup]="produtoForm" (ngSubmit)="atualizarProduto()">
-      <label for="nome">Nome:</label>
-      <input id="nome" formControlName="nome" type="text" />
+ <!-- Formulário de Edição -->
+<div *ngIf="exibirEditar" class="produto-editar">
+  <h2><i class="fas fa-edit"></i> Editar Produto</h2>
 
-      <label for="descricao">Descrição:</label>
-      <input id="descricao" formControlName="descricao" type="text" />
+  <form [formGroup]="produtoForm" (ngSubmit)="atualizarProduto()">
+    <label for="nome">Nome:</label>
+    <input id="nome" formControlName="nome" type="text" />
 
-      <label for="preco">Preço:</label>
-      <input id="preco" formControlName="preco" type="number" />
+    <label for="descricao">Descrição:</label>
+    <input id="descricao" formControlName="descricao" type="text" />
 
-      <label for="quantidade">Quantidade:</label>
-      <input id="quantidade" formControlName="quantidade" type="number" />
+    <label for="preco">Preço:</label>
+    <input id="preco" formControlName="preco" type="number" step="0.01" />
 
-      <label for="quantidadeMinima">Quantidade Mínima:</label>
-      <input id="quantidadeMinima" formControlName="quantidadeMinima" type="number" />
+    <label for="quantidade">Quantidade:</label>
+    <input id="quantidade" formControlName="quantidade" type="number" />
 
-      <label for="categoriaId">Categoria:</label>
-      <select id="categoriaId" formControlName="categoriaId">
-        <option *ngFor="let categoria of categorias" [value]="categoria.id">
-          {{ categoria.nome }}
-        </option>
-      </select>
+    <label for="quantidadeMinima">Quantidade Mínima:</label>
+    <input id="quantidadeMinima" formControlName="quantidadeMinima" type="number" />
 
-      <button type="submit" [disabled]="produtoForm.invalid">Atualizar Produto</button>
-    </form>
-  </div>
+    <label for="categoriaId">Categoria:</label>
+    <select id="categoriaId" formControlName="categoriaId">
+      <option *ngFor="let categoria of categorias" [value]="categoria.id">
+        {{ categoria.nome }}
+      </option>
+    </select>
 
-  <!-- Formulário de Criação -->
-  <div *ngIf="exibirCriar" class="produto-criar">
-    <h2>Criar Novo Produto</h2>
-    <form [formGroup]="produtoForm" (ngSubmit)="criarProduto()">
-      <label for="nome">Nome:</label>
-      <input id="nome" formControlName="nome" type="text" />
+    <button type="submit" [disabled]="produtoForm.invalid">
+      <i class="fas fa-save"></i> Atualizar Produto
+    </button>
+  </form>
+</div>
 
-      <label for="descricao">Descrição:</label>
-      <input id="descricao" formControlName="descricao" type="text" />
 
-      <label for="preco">Preço:</label>
-      <input id="preco" formControlName="preco" type="number" />
+<!-- Formulário de Criação -->
+<div *ngIf="exibirCriar" class="produto-criar">
+  <h2><i class="fas fa-plus-circle"></i> Criar Novo Produto</h2>
 
-      <label for="quantidade">Quantidade:</label>
-      <input id="quantidade" formControlName="quantidade" type="number" />
+  <form [formGroup]="produtoForm" (ngSubmit)="criarProduto()">
+    <label for="nome">Nome:</label>
+    <input id="nome" formControlName="nome" type="text" />
 
-      <label for="quantidadeMinima">Quantidade Mínima:</label>
-      <input id="quantidadeMinima" formControlName="quantidadeMinima" type="number" />
+    <label for="descricao">Descrição:</label>
+    <input id="descricao" formControlName="descricao" type="text" />
 
-      <label for="categoriaId">Categoria:</label>
-      <select id="categoriaId" formControlName="categoriaId">
-        <option *ngFor="let categoria of categorias" [value]="categoria.id">
-          {{ categoria.nome }}
-        </option>
-      </select>
+    <label for="preco">Preço:</label>
+    <input id="preco" formControlName="preco" type="number" step="0.01" />
 
-      <button type="submit" [disabled]="produtoForm.invalid">Criar Produto</button>
-    </form>
-  </div>
+    <label for="quantidade">Quantidade:</label>
+    <input id="quantidade" formControlName="quantidade" type="number" />
+
+    <label for="quantidadeMinima">Quantidade Mínima:</label>
+    <input id="quantidadeMinima" formControlName="quantidadeMinima" type="number" />
+
+    <label for="categoriaId">Categoria:</label>
+    <select id="categoriaId" formControlName="categoriaId">
+      <option *ngFor="let categoria of categorias" [value]="categoria.id">
+        {{ categoria.nome }}
+      </option>
+    </select>
+
+    <button type="submit" [disabled]="produtoForm.invalid">
+      <i class="fas fa-check"></i> Criar Produto
+    </button>
+  </form>
+</div>
+
 
   <!-- Detalhes do Produto -->
   <div *ngIf="produtoDetalhado" class="produto-detalhado">
-    <h2>Detalhes do Produto</h2>
+    <h2><i class="fas fa-info-circle"></i> Detalhes do Produto</h2>
     <p><strong>ID:</strong> {{ produtoDetalhado.id }}</p>
     <p><strong>Nome:</strong> {{ produtoDetalhado.nome }}</p>
     <p><strong>Descrição:</strong> {{ produtoDetalhado.descricao }}</p>
@@ -120,6 +151,8 @@
     <p><strong>Quantidade Mínima:</strong> {{ produtoDetalhado.quantidadeMinima }}</p>
     <p><strong>Categoria:</strong> {{ produtoDetalhado.categoriaNome }}</p>
     <p><strong>Data de Criação:</strong> {{ produtoDetalhado.criadoEm | date: 'dd/MM/yy HH:mm' }}</p>
-    <button (click)="fecharDetalhes()">Fechar</button>
+    <button (click)="fecharDetalhes()">
+      <i class="fas fa-arrow-left"></i> Voltar
+    </button>
   </div>
 </div>

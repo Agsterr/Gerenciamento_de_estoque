@@ -1,29 +1,35 @@
-
-
 import { Component, OnInit } from '@angular/core';
-import { ProdutoService } from '../services/produto.service'; // Serviço Produto
+import { ProdutoService } from '../services/produto.service';
 import { Router, RouterModule } from '@angular/router';
-import { Produto } from '../models/produto.model'; // Modelo Produto
+import { Produto } from '../models/produto.model';
+
+// ✅ Importação do Angular Material para ícones
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-dashboard',
+  standalone: true,
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
-  standalone: true,
-  imports: [RouterModule],
+  imports: [
+    RouterModule,
+    MatIconModule // ⬅ necessário para que <mat-icon> funcione
+  ],
 })
 export class DashboardComponent implements OnInit {
-  produtos: Produto[] = []; // Lista de produtos
+  produtos: Produto[] = [];
 
-  constructor(private produtoService: ProdutoService, private router: Router) {}
+  constructor(
+    private produtoService: ProdutoService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
-    this.produtoService.listarProdutos().subscribe((data: Produto[]) => {
-      this.produtos = data; // Atribuindo a resposta à variável 'produtos'
-    });
+    
+    
   }
 
   verDetalhesProduto(produtoId: number): void {
-    this.router.navigate([`/dashboard/produtos/${produtoId}`]); // Navegação para detalhes do produto
+    this.router.navigate([`/dashboard/produtos/${produtoId}`]);
   }
 }
