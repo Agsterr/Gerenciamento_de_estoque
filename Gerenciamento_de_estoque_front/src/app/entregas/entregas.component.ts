@@ -74,25 +74,26 @@ export class EntregasComponent implements OnInit {
     });
   }
 
-  carregarConsumidores(): void {
-    // Agora o orgId já está sendo gerenciado no ConsumidorService, então basta chamar a função
-    this.consumidorService.listarConsumidoresPorOrg().subscribe({
-      next: (data) => {
-        if (data && data.consumidores) {
-          this.consumidores = data.consumidores;  // Atribui a lista de consumidores
-          console.log('Consumidores carregados:', this.consumidores);
-          this.mensagem = data.message;  // Exibe a mensagem de sucesso (caso não tenha consumidores, ela será uma mensagem informativa)
-          this.onConsumidorChange();  // Chama um método que faz o processamento após a carga dos consumidores
-        } else {
-          this.mensagemErro = 'Nenhum consumidor encontrado.';  // Caso não haja consumidores
-        }
-      },
-      error: (err) => {
-        console.error('Erro ao carregar consumidores:', err);
-        this.mensagemErro = 'Erro ao carregar consumidores. Por favor, tente novamente.';
-      },
-    });
-  }
+ carregarConsumidores(): void {
+  // Usa o método atual `listarConsumidores()` que já aplica o orgId internamente
+  this.consumidorService.listarConsumidores().subscribe({
+    next: (consumidores: Consumer[]) => {
+      if (consumidores && consumidores.length > 0) {
+        this.consumidores = consumidores;
+        console.log('Consumidores carregados:', this.consumidores);
+        this.mensagem = 'Consumidores carregados com sucesso.';
+        this.onConsumidorChange();  // Mantém a chamada pós-processamento
+      } else {
+        this.mensagemErro = 'Nenhum consumidor encontrado.';
+      }
+    },
+    error: (err: any) => {
+      console.error('Erro ao carregar consumidores:', err);
+      this.mensagemErro = 'Erro ao carregar consumidores. Por favor, tente novamente.';
+    },
+  });
+}
+
   
 
   onProdutoChange(): void {

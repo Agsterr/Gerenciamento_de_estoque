@@ -1,127 +1,114 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { Consumer } from '../models/consumer.model';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { throwError } from 'rxjs';
+import { Consumer } from '../models/consumer.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ConsumidorService {
-  private apiUrl = 'http://localhost:8080/consumidores'; // URL da API
+  private apiUrl = 'http://localhost:8080/consumidores';
 
   constructor(private http: HttpClient) {}
 
-  // Gerar os headers com o token JWT
+  // ✅ Gera headers com o token JWT para autenticação
   private getAuthHeaders(): HttpHeaders {
     const token = localStorage.getItem('jwtToken');
-    if (!token) {
-      throw new Error('Token não encontrado. O usuário precisa estar autenticado.');
-    }
+    if (!token) throw new Error('Token não encontrado. Faça login.');
     return new HttpHeaders().set('Authorization', `Bearer ${token}`);
   }
 
-  // Método para obter o orgId
+  // ✅ Extrai o orgId do token JWT
   public getOrgId(): string {
     const token = localStorage.getItem('jwtToken');
-    if (!token) {
-      console.error('Token não encontrado. O usuário precisa estar autenticado.');
-      throw new Error('Token não encontrado. O usuário precisa estar autenticado.');
-    }
-
+    if (!token) throw new Error('Token não encontrado.');
     const payload = this.decodeJwt(token);
-    if (payload && payload.org_id) {
-      return payload.org_id;  // Retorna o orgId extraído do token
-    }
-
+    if (payload && payload.org_id) return payload.org_id;
     throw new Error('OrgId não encontrado no token.');
   }
 
-  // Função para decodificar o JWT
+  // ✅ Decodifica o JWT para extrair informações do payload
   private decodeJwt(token: string): any {
     const parts = token.split('.');
-    if (parts.length !== 3) {
-      throw new Error('Token JWT inválido.');
-    }
+    if (parts.length !== 3) throw new Error('Token JWT inválido.');
     const payload = atob(parts[1]);
     return JSON.parse(payload);
   }
 
-  // Método para listar consumidores de uma organização específica
-  listarConsumidoresPorOrg(): Observable<{ message: string, consumidores: Consumer[] }> {
-    const orgId = this.getOrgId();  // Obtém o orgId do localStorage ou do token
+  /**
+   * 🔍 Lista consumidores com paginação.
+   * @param page Número da página
+   * @param size Quantidade por página
+   */
+  listarConsumidores(page: number = 0, size: number = 10): Observable<Consumer[]> {
     const headers = this.getAuthHeaders();
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
 
-    return this.http.get<{ message: string, consumidores: Consumer[] }>(`${this.apiUrl}/${orgId}`, { headers }).pipe(
-      catchError((error) => {
+    return this.http.get<{ content: Consumer[] }>(`${this.apiUrl}`, { headers, params }).pipe(
+      map(response => response.content),
+      catchError(error => {
         console.error('Erro ao listar consumidores:', error);
-        return throwError(() => new Error('Falha ao carregar consumidores, tente novamente.'));
+        return throwError(() => new Error('Falha ao carregar consumidores.'));
       })
     );
   }
 
-  // Método para criar um novo consumidor
+  /**
+   * ✅ Cria um novo consumidor.
+   * @param consumidor Dados do novo consumidor
+   */
   criarConsumidor(consumidor: Partial<Consumer>): Observable<Consumer> {
-    const orgId = this.getOrgId();  // Obtém o orgId do localStorage
     const headers = this.getAuthHeaders();
-
-    const body = { 
+    const body = {
       ...consumidor,
-      orgId  // Adiciona o orgId no corpo da requisição
+      orgId: this.getOrgId()
     };
 
     return this.http.post<Consumer>(`${this.apiUrl}`, body, { headers }).pipe(
-      catchError((error) => {
+      catchError(error => {
         console.error('Erro ao criar consumidor:', error);
-        return throwError(() => new Error('Falha ao criar consumidor, tente novamente.'));
+        return throwError(() => new Error('Erro ao criar consumidor.'));
       })
     );
   }
 
+  /**
+   * ✏️ Edita um consumidor existente.
+   * @param consumidor Objeto com dados a serem atualizados
+   */
   editarConsumidor(consumidor: Partial<Consumer>): Observable<Consumer> {
-    const orgId = this.getOrgId();  // Obtém o orgId do localStorage
-    const headers = this.getAuthHeaders();
-  
-    // Verifique se o id está presente antes de fazer a requisição
     if (!consumidor.id) {
-      console.error('ID do consumidor não fornecido:', consumidor);
-      return throwError(() => new Error('ID do consumidor não encontrado.'));
+      return throwError(() => new Error('ID do consumidor ausente.'));
     }
-  
-    // Adicionando o orgId no corpo da requisição
-    const body = { 
+
+    const headers = this.getAuthHeaders();
+    const body = {
       ...consumidor,
-      orgId // Garantindo que o orgId seja incluído corretamente
+      orgId: this.getOrgId()
     };
-  
-    console.log('Atualizando consumidor no backend:', body);
-  
-    // Fazendo a requisição PUT para o backend com a URL que inclui o id e orgId
-    return this.http
-      .put<Consumer>(`${this.apiUrl}/${consumidor.id}/${orgId}`, body, { headers })
-      .pipe(
-        catchError((error) => {
-          console.error('Erro ao editar consumidor:', error);
-          return throwError(() => new Error('Falha ao editar consumidor, tente novamente.'));
-        })
-      );
+
+    return this.http.put<Consumer>(`${this.apiUrl}/${consumidor.id}`, body, { headers }).pipe(
+      catchError(error => {
+        console.error('Erro ao editar consumidor:', error);
+        return throwError(() => new Error('Erro ao editar consumidor.'));
+      })
+    );
   }
-   
-   
-  
-  
 
-  // Método para deletar um consumidor pelo ID e orgId
+  /**
+   * 🗑️ Remove um consumidor por ID.
+   * @param id ID do consumidor
+   */
   deletarConsumidor(id: number): Observable<void> {
-    const orgId = this.getOrgId(); // Obtém o orgId do localStorage
-    const headers = this.getAuthHeaders(); // Obtém os headers de autenticação
+    const headers = this.getAuthHeaders();
 
-    // Passando o orgId como parte da URL no caminho, conforme definido no backend
-    return this.http.delete<void>(`${this.apiUrl}/${id}/${orgId}`, { headers }).pipe(
-      catchError((error) => {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers }).pipe(
+      catchError(error => {
         console.error('Erro ao deletar consumidor:', error);
-        return throwError(() => new Error('Falha ao deletar consumidor, tente novamente.'));
+        return throwError(() => new Error('Erro ao deletar consumidor.'));
       })
     );
   }
