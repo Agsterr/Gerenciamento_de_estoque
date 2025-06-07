@@ -1,14 +1,23 @@
-
 <div class="container">
   <h1>{{ title }}</h1>
 
   <nav>
-    <a routerLink="/home" routerLinkActive="active">Home</a> |
-    <a routerLink="/login" routerLinkActive="active">Login</a> |
-    <a routerLink="/register" routerLinkActive="active">Register</a>
+    <a routerLink="/home" routerLinkActive="active">
+      <mat-icon>home</mat-icon>
+      Home
+    </a>
+
+    <a routerLink="/login" routerLinkActive="active">
+      <mat-icon>login</mat-icon>
+      Login
+    </a>
+
+    <a routerLink="/register" routerLinkActive="active">
+      <mat-icon>person_add</mat-icon>
+      Register
+    </a>
   </nav>
-   
-  
+
   <div class="router-container">
     <router-outlet></router-outlet>
   </div>

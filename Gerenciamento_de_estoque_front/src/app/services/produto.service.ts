@@ -1,136 +1,105 @@
-
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { Produto } from '../models/produto.model'; // Modelo de Produto que será usado no frontend
-import { map } from 'rxjs/operators';
-import { Categoria } from '../models/categoria.model'; // Adicione esta linha
-
+import { Observable, throwError } from 'rxjs';
+import { Produto } from '../models/produto.model';
+import { map, catchError } from 'rxjs/operators';
+import { Categoria } from '../models/categoria.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ProdutoService {
-  private apiUrl = 'http://localhost:8080/produtos'; // URL da API
+  private apiUrl = 'http://localhost:8080/produtos';
 
   constructor(private http: HttpClient) {}
 
-  // Gera os headers com o token JWT
   private getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem('jwtToken'); // Obtém o token do localStorage
-    if (!token) {
-      // Se o token não for encontrado, gera um erro controlado
-      throw new Error('Token não encontrado. O usuário precisa estar autenticado.');
-    }
-    // Retorna os headers com o token JWT
+    const token = localStorage.getItem('jwtToken');
+    if (!token) throw new Error('Token não encontrado. O usuário precisa estar autenticado.');
     return new HttpHeaders().set('Authorization', `Bearer ${token}`);
   }
 
-  // Método para obter o orgId do token JWT
   private getOrgId(): string {
     const token = localStorage.getItem('jwtToken');
-    if (!token) {
-      console.error('Token não encontrado. O usuário precisa estar autenticado.');
-      throw new Error('Token não encontrado. O usuário precisa estar autenticado.');
-    }
-
-    // Decode o token para extrair o orgId
+    if (!token) throw new Error('Token não encontrado.');
     const payload = this.decodeJwt(token);
-    if (payload && payload.org_id) {
-      return payload.org_id;  // Retorna o orgId extraído do token
-    }
-
+    if (payload?.org_id) return payload.org_id;
     throw new Error('OrgId não encontrado no token.');
   }
 
-  // Função para decodificar o JWT
   private decodeJwt(token: string): any {
     const parts = token.split('.');
-    if (parts.length !== 3) {
-      throw new Error('Token JWT inválido.');
-    }
-
+    if (parts.length !== 3) throw new Error('Token JWT inválido.');
     const payload = atob(parts[1]);
     return JSON.parse(payload);
   }
 
-  // Método para listar produtos (com paginação)
- 
-  listarProdutos(page: number = 0, size: number = 100): Observable<any> {
-    const orgId = this.getOrgId();  // Obtém o orgId do localStorage ou do token
-    const headers = this.getAuthHeaders(); // Obtém os headers com o token
-  
-    return this.http.get<any>(`${this.apiUrl}/${orgId}?page=${page}&size=${size}`, { headers }).pipe(
-      map((response: any) => {
-        return {
-          content: response.content.map((produto: any) => ({
-            ...produto,
-            categoria: new Categoria(
-              produto.categoriaId,     // ID da categoria
-              produto.categoriaNome,   // Mapeando a categoriaNome para o campo nome da Categoria
-              produto.descricao,       // Descrição
-              produto.criadoEm,        // Data de criação
-              produto.orgId           // ID da organização
-            )
-          })),
-          totalPages: response.totalPages,
-          currentPage: response.number,
-        };
+  // ✅ Listar todos os produtos (paginado)
+  listarProdutos(page: number = 0, size: number = 100): Observable<{ content: Produto[], totalPages: number, currentPage: number }> {
+    const orgId = this.getOrgId();
+    const headers = this.getAuthHeaders();
+
+    return this.http.get<any>(`${this.apiUrl}?orgId=${orgId}&page=${page}&size=${size}`, { headers }).pipe(
+      map(response => ({
+        content: response.content,
+        totalPages: response.totalPages,
+        currentPage: response.number
+      })),
+      catchError(err => {
+        console.error('Erro ao buscar produtos:', err);
+        return throwError(() => err);
       })
     );
   }
-  
-   
-  
-  
-  
 
-  // Método para obter detalhes de um produto por ID
+  // ✅ Listar produtos com estoque baixo
+  listarProdutosComEstoqueBaixo(): Observable<Produto[]> {
+    const orgId = this.getOrgId();
+    const headers = this.getAuthHeaders();
+
+    return this.http.get<Produto[]>(`${this.apiUrl}/estoque-baixo?orgId=${orgId}`, { headers }).pipe(
+      catchError(err => {
+        console.error('Erro ao buscar produtos com estoque baixo:', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  // ✅ Buscar produto por ID
   getProdutoById(produtoId: number): Observable<Produto> {
-    const orgId = this.getOrgId();  // Obtém o orgId do localStorage ou do token
-    const headers = this.getAuthHeaders(); // Obtém os headers com o token
-    return this.http.get<Produto>(`${this.apiUrl}/${produtoId}/${orgId}`, { headers });
+    const orgId = this.getOrgId();
+    const headers = this.getAuthHeaders();
+    return this.http.get<Produto>(`${this.apiUrl}/${produtoId}?orgId=${orgId}`, { headers });
   }
 
- // ProdutoService
-criarProduto(produto: Produto): Observable<Produto> {
-  const orgId = this.getOrgId();  // Obtém o orgId do localStorage
-  const headers = this.getAuthHeaders(); // Obtém os headers com o token
+  // ✅ Criar produto
+  criarProduto(produto: Produto): Observable<Produto> {
+    const orgId = this.getOrgId();
+    const headers = this.getAuthHeaders().set('orgId', orgId.toString());
+    const body = { ...produto };
+    return this.http.post<Produto>(`${this.apiUrl}`, body, { headers });
+  }
 
-  // Adicionando o orgId nos cabeçalhos (cabeçalhos de autorização já incluem o token)
-  const updatedHeaders = headers.set('orgId', orgId.toString());  // Envia o orgId no cabeçalho
-
-  // Envia o corpo da requisição com o produto
-  const body = { ...produto };  // Não precisamos adicionar o orgId aqui, pois já está no cabeçalho
-
-  return this.http.post<Produto>(`${this.apiUrl}/${orgId}`, body, { headers: updatedHeaders });
-}
-
-
-  // Método para atualizar um produto via PUT
+  // ✅ Atualizar produto
   atualizarProduto(produto: Produto, id: number): Observable<Produto> {
-    const orgId = this.getOrgId();  // Obtém o orgId do localStorage
-    const headers = this.getAuthHeaders();  // Obtém os headers com o token
-
-    // Adicionando o orgId no corpo da requisição
+    const orgId = this.getOrgId();
+    const headers = this.getAuthHeaders();
     const body = { ...produto, orgId };
-
-    return this.http.put<Produto>(`${this.apiUrl}/${id}/${orgId}`, body, { headers });
+    return this.http.put<Produto>(`${this.apiUrl}/${id}?orgId=${orgId}`, body, { headers });
   }
 
-  // Método para atualizar a quantidade do produto
+  // ✅ Atualizar quantidade
   atualizarProdutoQuantidade(produtoId: number, quantidade: number): Observable<Produto> {
-    const orgId = this.getOrgId(); // Obtém o orgId do localStorage
-    const headers = this.getAuthHeaders(); // Obtém os headers com o token
-    const body = { quantidade }; // Envia a quantidade no corpo da requisição
+    const orgId = this.getOrgId();
+    const headers = this.getAuthHeaders();
+    const body = { quantidade };
     return this.http.patch<Produto>(`${this.apiUrl}/${produtoId}/${orgId}/quantidade`, body, { headers });
   }
 
-  // Método para deletar um produto pelo ID
+  // ✅ Deletar produto
   deletarProduto(produtoId: number): Observable<string> {
-    const orgId = this.getOrgId(); // Obtém o orgId do localStorage
-    const headers = this.getAuthHeaders(); // Obtém os headers de autenticação
-
-    return this.http.delete<string>(`${this.apiUrl}/${produtoId}/${orgId}`, { headers });
+    const orgId = this.getOrgId();
+    const headers = this.getAuthHeaders();
+    return this.http.delete<string>(`${this.apiUrl}/${produtoId}?orgId=${orgId}`, { headers });
   }
 }

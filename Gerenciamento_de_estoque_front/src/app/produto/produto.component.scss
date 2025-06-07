@@ -51,7 +51,7 @@
 }
 
 .tabela-produtos tbody tr:hover {
-  background-color: #f1f1f1; /* Destaca a linha ao passar o cursor */
+  background-color: #f1f1f1;
 }
 
 .tabela-produtos .btn-deletar,
@@ -103,6 +103,7 @@
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .menu button {
@@ -118,6 +119,11 @@
 .menu button:hover {
   background-color: #0056b3;
   transform: scale(1.05);
+}
+
+.menu button:focus {
+  outline: 2px solid #0056b3;
+  outline-offset: 2px;
 }
 
 /* Paginação */
@@ -163,13 +169,9 @@
     padding: 10px;
   }
 
-  .menu button {
-    padding: 8px 12px;
-    font-size: 0.9rem;
-  }
-
+  .menu button,
   .pagination button {
-    padding: 6px 10px;
+    padding: 8px 12px;
     font-size: 0.9rem;
   }
 }
@@ -185,18 +187,14 @@
     padding: 8px;
   }
 
-  .menu button {
-    padding: 8px 10px;
-    font-size: 0.9rem;
-  }
-
+  .menu button,
   .pagination button {
     padding: 6px 10px;
     font-size: 0.9rem;
   }
 }
 
-/* Estilos para o formulário de criação de produto */
+/* Estilos para o formulário de criação e edição */
 .produto-criar,
 .produto-editar {
   background: #fff;
@@ -215,7 +213,7 @@
 .produto-criar form,
 .produto-editar form {
   display: grid;
-  grid-template-columns: 1fr 2fr; /* Duas colunas: uma para rótulos e outra para os campos */
+  grid-template-columns: 1fr 2fr;
   gap: 15px;
 }
 
@@ -238,7 +236,7 @@
 .produto-criar button,
 .produto-editar button {
   padding: 10px 15px;
-  background-color: #28a745; /* Verde */
+  background-color: #28a745;
   color: #fff;
   border: none;
   border-radius: 5px;
@@ -260,11 +258,10 @@
   transform: none;
 }
 
-/* Responsividade para a criação de produto */
 @media (max-width: 768px) {
   .produto-criar form,
   .produto-editar form {
-    grid-template-columns: 1fr; /* Coluna única para formulários */
+    grid-template-columns: 1fr;
   }
 
   .produto-criar button,
@@ -274,15 +271,6 @@
 }
 
 @media (max-width: 480px) {
-  .produto-container {
-    padding: 10px;
-  }
-
-  .produto-criar form,
-  .produto-editar form {
-    grid-template-columns: 1fr; /* Coloca tudo em uma coluna para telas menores */
-  }
-
   .produto-criar button,
   .produto-editar button {
     width: 100%;
@@ -310,7 +298,7 @@
 
 .produto-detalhado button {
   padding: 10px 15px;
-  background-color: #dc3545; /* Vermelho */
+  background-color: #dc3545;
   color: #fff;
   border: none;
   border-radius: 5px;
@@ -322,4 +310,24 @@
 .produto-detalhado button:hover {
   background-color: #a71d2a;
   transform: scale(1.05);
+}
+
+/* Dark mode futuro */
+@media (prefers-color-scheme: dark) {
+  .produto-container,
+  .produto-criar,
+  .produto-editar,
+  .produto-detalhado {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+  }
+
+  .tabela-produtos th {
+    background-color: #004b99;
+  }
+
+  .tabela-produtos td,
+  .tabela-produtos th {
+    border-color: #444;
+  }
 }
