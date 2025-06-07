@@ -1,5 +1,6 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
+import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaComAvisoResponseDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaRequestDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaResponseDto;
 import br.softsistem.Gerenciamento_de_estoque.exception.ResourceNotFoundException;
@@ -32,12 +33,11 @@ public class EntregaController {
     // =========================
 
     @PostMapping
-    public ResponseEntity<EntregaResponseDto> criarEntrega(
+    public ResponseEntity<EntregaComAvisoResponseDto> criarEntrega(
             @RequestBody @Valid EntregaRequestDto request
     ) {
-        Entrega entrega = entregaService.criarEntrega(request);
-        EntregaResponseDto responseDto = EntregaResponseDto.fromEntity(entrega);
-        return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
+        EntregaComAvisoResponseDto response = entregaService.criarEntrega(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{id}")
