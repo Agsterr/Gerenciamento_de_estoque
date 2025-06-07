@@ -1,5 +1,6 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
+import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaComAvisoResponseDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaRequestDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaResponseDto;
 import br.softsistem.Gerenciamento_de_estoque.model.Consumidor;
@@ -89,19 +90,32 @@ class EntregaControllerTest {
         request.setQuantidade(10);
         request.setHorarioEntrega(LocalDateTime.now());
 
-        Entrega entregaMock = gerarEntregaMock();
+        // Simular EntregaResponseDto
+        EntregaResponseDto entregaDto = new EntregaResponseDto(
+                1L,
+                "Carlos",
+                "Produto Teste",
+                "Entregador Teste",
+                10,
+                LocalDateTime.now()
+        );
 
-        Mockito.when(entregaService.criarEntrega(any(EntregaRequestDto.class))).thenReturn(entregaMock);
+        // Simular resposta com ou sem aviso
+        EntregaComAvisoResponseDto responseDto = new EntregaComAvisoResponseDto(entregaDto, null);
+
+        Mockito.when(entregaService.criarEntrega(any(EntregaRequestDto.class))).thenReturn(responseDto);
 
         mockMvc.perform(post("/entregas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.nomeConsumidor").value("Carlos"))
-                .andExpect(jsonPath("$.nomeProduto").value("Produto Teste"))
-                .andExpect(jsonPath("$.nomeEntregador").value("Entregador Teste"));
+                .andExpect(jsonPath("$.entrega.id").value(1L))
+                .andExpect(jsonPath("$.entrega.nomeConsumidor").value("Carlos"))
+                .andExpect(jsonPath("$.entrega.nomeProduto").value("Produto Teste"))
+                .andExpect(jsonPath("$.entrega.nomeEntregador").value("Entregador Teste"))
+                .andExpect(jsonPath("$.aviso").doesNotExist()); // Ou `.value("⚠ Estoque...")` se quiser simular o aviso
     }
+
 
     @Test
     void editarEntrega() throws Exception {

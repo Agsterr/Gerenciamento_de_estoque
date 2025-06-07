@@ -1,14 +1,12 @@
 package br.softsistem.Gerenciamento_de_estoque.service;
 
 import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
+import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaComAvisoResponseDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaRequestDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaResponseDto;
 import br.softsistem.Gerenciamento_de_estoque.exception.OrganizacaoNaoEncontradaException;
 import br.softsistem.Gerenciamento_de_estoque.exception.ResourceNotFoundException;
-import br.softsistem.Gerenciamento_de_estoque.model.Consumidor;
-import br.softsistem.Gerenciamento_de_estoque.model.Entrega;
-import br.softsistem.Gerenciamento_de_estoque.model.Produto;
-import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
+import br.softsistem.Gerenciamento_de_estoque.model.*;
 import br.softsistem.Gerenciamento_de_estoque.enumeracao.TipoMovimentacao;
 import br.softsistem.Gerenciamento_de_estoque.repository.ConsumidorRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.EntregaRepository;
@@ -51,46 +49,51 @@ public class EntregaService {
     // ================================
     // CRIAR ENTREGA (com entregador automático)
     // ================================
-    public Entrega criarEntrega(EntregaRequestDto entregaRequest) {
+
+    public EntregaComAvisoResponseDto criarEntrega(EntregaRequestDto entregaRequest) {
         Long orgId = SecurityUtils.getCurrentOrgId();
         if (orgId == null) {
             throw new OrganizacaoNaoEncontradaException("Organização não encontrada no contexto de segurança");
         }
 
-        // 1) Buscar Consumidor (obrigatório no DTO)
         Consumidor consumidor = consumidorRepository.findByIdAndOrgId(entregaRequest.getConsumidorId(), orgId)
                 .orElseThrow(() -> new ResourceNotFoundException("Consumidor não encontrado ou não pertence à organização"));
 
-        // 2) Buscar Produto (obrigatório no DTO)
         Produto produto = produtoRepository.findByIdAndOrgId(entregaRequest.getProdutoId(), orgId)
                 .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado ou não pertence à organização"));
 
-        // 3) Verificar estoque
         if (produto.getQuantidade() < entregaRequest.getQuantidade()) {
             throw new IllegalArgumentException("Estoque insuficiente para a entrega.");
         }
+
         produto.setQuantidade(produto.getQuantidade() - entregaRequest.getQuantidade());
         produtoRepository.save(produto);
 
-        // 4) Obter entregador (usuário logado) a partir do SecurityUtils
+        // ⚠️ Aviso de estoque baixo
+        String avisoEstoqueBaixo = null;
+        if (produto.isEstoqueBaixo()) {
+            avisoEstoqueBaixo = String.format(
+                    "⚠ Estoque do produto '%s' está abaixo do mínimo! Atual: %d | Mínimo: %d",
+                    produto.getNome(), produto.getQuantidade(), produto.getQuantidadeMinima()
+            );
+        }
+
         Long entregadorId = SecurityUtils.getCurrentUserId();
         if (entregadorId == null) {
             throw new ResourceNotFoundException("Usuário autenticação inválida ou não encontrado");
         }
+
         Usuario entregador = usuarioRepository.findByIdAndOrgId(entregadorId, orgId)
                 .orElseThrow(() -> new ResourceNotFoundException("Entregador (usuário logado) não encontrado ou não pertence à organização"));
 
-        // 5) Montar entidade Entrega (DTO não carrega entregador)
         Entrega entrega = entregaRequest.toEntity(produto, consumidor);
-        entrega.setEntregador(entregador);      // setamos quem está logado
+        entrega.setEntregador(entregador);
         entrega.setOrg(produto.getOrg());
         entrega.calcularValor();
 
         Entrega entregaSalva = entregaRepository.save(entrega);
 
-        // 6) Registrar Movimentação de Saída (produto saindo do estoque)
-        br.softsistem.Gerenciamento_de_estoque.model.MovimentacaoProduto movimentacao =
-                new br.softsistem.Gerenciamento_de_estoque.model.MovimentacaoProduto();
+        MovimentacaoProduto movimentacao = new MovimentacaoProduto();
         movimentacao.setProduto(produto);
         movimentacao.setQuantidade(entrega.getQuantidade());
         movimentacao.setDataHora(LocalDateTime.now());
@@ -98,8 +101,13 @@ public class EntregaService {
         movimentacao.setOrg(produto.getOrg());
         movimentacaoProdutoRepository.save(movimentacao);
 
-        return entregaSalva;
+        return new EntregaComAvisoResponseDto(
+                EntregaResponseDto.fromEntity(entregaSalva),
+                avisoEstoqueBaixo
+        );
     }
+
+
 
     // ================================
     // EDITAR ENTREGA (mantém entregador antigo)

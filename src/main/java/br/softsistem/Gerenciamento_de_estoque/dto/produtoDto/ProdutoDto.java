@@ -24,6 +24,8 @@ public record ProdutoDto(
         @NotNull(message = "O ID da categoria é obrigatório.")
         Long categoriaId,
 
+        String categoriaNome, // ✅ novo campo adicionado
+
         @NotNull(message = "O ID da organização é obrigatório.")
         Long orgId,
 
@@ -40,7 +42,7 @@ public record ProdutoDto(
 
         Boolean ativo,
 
-        Boolean estoqueBaixo // ✅ novo campo adicionado
+        Boolean estoqueBaixo
 ) {
     public ProdutoDto(Produto produto) {
         this(
@@ -49,12 +51,13 @@ public record ProdutoDto(
                 produto.getPreco(),
                 produto.getDescricao(),
                 produto.getCategoria().getId(),
+                produto.getCategoria().getNome(), // ✅ pega o nome da categoria
                 produto.getOrg().getId(),
                 produto.getCriadoEm(),
                 produto.getQuantidade(),
                 produto.getQuantidadeMinima(),
                 produto.getAtivo(),
-                produto.isEstoqueBaixo() // ✅ nova lógica aqui
+                produto.isEstoqueBaixo()
         );
     }
 }

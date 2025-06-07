@@ -1,6 +1,7 @@
 package br.softsistem.Gerenciamento_de_estoque.service;
 
 import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
+import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaComAvisoResponseDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaRequestDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaResponseDto;
 import br.softsistem.Gerenciamento_de_estoque.model.*;
@@ -108,55 +109,42 @@ class EntregaServiceTest {
         // Fechando o mock estático após cada teste
         mockedSecurityUtils.close();
     }
+
     @Test
     void criarEntrega() {
-        // Criando o entregador (usuário)
         Usuario entregador = new Usuario();
         entregador.setId(1L);
         entregador.setUsername("EntregadorTest");
 
-        // Mocks de domínio
-        Org org = new Org();
-        org.setId(1L);  // Organização fictícia
-
-        Consumidor consumidor = new Consumidor();
-        consumidor.setId(1L);
-        consumidor.setNome("Carlos");
-        consumidor.setCpf("12345678900");
-        consumidor.setEndereco("Rua ABC");
-        consumidor.setOrg(org);
-
-        Produto produto = new Produto();
-        produto.setId(1L);
-        produto.setNome("Produto Teste");
-        produto.setQuantidade(100);  // Produto com estoque suficiente
-        produto.setPreco(new BigDecimal("20.00"));
-        produto.setOrg(org);
+        Produto produto = entrega.getProduto();
 
         Entrega entregaEsperada = new Entrega();
         entregaEsperada.setId(1L);
-        entregaEsperada.setConsumidor(consumidor);
         entregaEsperada.setProduto(produto);
+        entregaEsperada.setConsumidor(entrega.getConsumidor());
         entregaEsperada.setQuantidade(10);
-        entregaEsperada.setEntregador(entregador);  // Associando o entregador
-        entregaEsperada.setOrg(org);
+        entregaEsperada.setEntregador(entregador);
+        entregaEsperada.setOrg(produto.getOrg());
 
-        // Mock dos repositórios
-        when(consumidorRepository.findByIdAndOrgId(anyLong(), anyLong())).thenReturn(Optional.of(consumidor));
-        when(produtoRepository.findByIdAndOrgId(anyLong(), anyLong())).thenReturn(Optional.of(produto));
-        when(usuarioRepository.findByIdAndOrgId(anyLong(), anyLong())).thenReturn(Optional.of(entregador));
+        when(consumidorRepository.findByIdAndOrgId(anyLong(), anyLong()))
+                .thenReturn(Optional.of(entrega.getConsumidor()));
+        when(produtoRepository.findByIdAndOrgId(anyLong(), anyLong()))
+                .thenReturn(Optional.of(produto));
+        when(usuarioRepository.findByIdAndOrgId(anyLong(), anyLong()))
+                .thenReturn(Optional.of(entregador));
         when(produtoRepository.save(any(Produto.class))).thenReturn(produto);
         when(entregaRepository.save(any(Entrega.class))).thenReturn(entregaEsperada);
 
-        // Chamada do método
-        Entrega resultado = entregaService.criarEntrega(entregaRequestDto);
+        EntregaComAvisoResponseDto resultado = entregaService.criarEntrega(entregaRequestDto);
 
-        // Verificações
         assertNotNull(resultado);
-        assertEquals(1L, resultado.getId());
-        assertEquals(10, resultado.getQuantidade());
-        assertEquals("EntregadorTest", resultado.getEntregador().getUsername());
+        assertNotNull(resultado.entrega());
+        assertEquals(1L, resultado.entrega().id());
+        assertEquals("EntregadorTest", resultado.entrega().nomeEntregador());
+        assertNull(resultado.avisoEstoqueBaixo());
     }
+
+
 
 
 
