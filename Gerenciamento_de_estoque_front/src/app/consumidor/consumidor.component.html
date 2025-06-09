@@ -1,70 +1,63 @@
+<!-- consumid​or.component.html -->
+<div class="consumidor-container">
+  <!-- Título da página -->
+  <h1 class="titulo-gestao">Gestão de Consumidores</h1>
 
-
-<div id="consumidor-container">
-  <h1 id="titulo-gestao">Gestão de Consumidores</h1>
-
-  <!-- Botões de ações -->
-  <div id="acoes-container">
-    <button id="botao-listar" (click)="toggleList()">Listar Consumidores</button>
-    <button id="botao-adicionar" (click)="toggleAddForm()">Adicionar Consumidor</button>
+  <!-- Botões de navegação entre lista e formulário -->
+  <div class="acoes-container">
+    <button class="botao-listar" (click)="toggleList()">Listar Consumidores</button>
+    <button class="botao-adicionar" (click)="toggleAddForm()">Adicionar Consumidor</button>
   </div>
 
-  <!-- Formulário para adicionar/editar consumidor -->
-  <div id="form-adicionar-container" *ngIf="showAddForm">
-    <h2 id="titulo-form">{{ editingConsumer ? 'Editar Consumidor' : 'Adicionar Consumidor' }}</h2>
-    <form [formGroup]="consumerForm" (ngSubmit)="submitAddForm()" id="form-adicionar">
+  <!-- Formulário de criação/edição, exibido quando showAddForm é true -->
+  <div class="form-adicionar-container" *ngIf="showAddForm">
+    <!-- Título dinâmico, muda conforme edição ou criação -->
+    <h2 class="titulo-form">
+      {{ editingConsumer ? 'Editar Consumidor' : 'Adicionar Consumidor' }}
+    </h2>
+    <!-- Form reativo vinculado a consumerForm -->
+    <form [formGroup]="consumerForm" (ngSubmit)="submitAddForm()" class="form-adicionar">
+      <!-- Campo Nome -->
       <div class="form-group">
         <label for="nome">Nome:</label>
-        <input
-          type="text"
-          id="nome"
-          formControlName="nome"
-          required
-        />
+        <input id="nome" type="text" formControlName="nome" required />
       </div>
 
+      <!-- Campo CPF -->
       <div class="form-group">
         <label for="cpf">CPF:</label>
-        <input
-          type="text"
-          id="cpf"
-          formControlName="cpf"
-          required
-        />
+        <input id="cpf" type="text" formControlName="cpf" required />
       </div>
 
+      <!-- Campo Endereço -->
       <div class="form-group">
         <label for="endereco">Endereço:</label>
-        <input
-          type="text"
-          id="endereco"
-          formControlName="endereco"
-          required
-        />
+        <input id="endereco" type="text" formControlName="endereco" required />
       </div>
 
-      <button type="submit" id="botao-salvar">
+      <!-- Botão de submissão, texto varia conforme ação -->
+      <button type="submit" class="botao-salvar">
         {{ editingConsumer ? 'Salvar Alterações' : 'Salvar' }}
       </button>
     </form>
   </div>
 
-  <!-- Campo de busca -->
-  <div id="busca-container" *ngIf="showList">
+  <!-- Campo de busca, exibido quando showList é true -->
+  <div class="busca-container" *ngIf="showList">
     <input
+      name="searchTerm"
       type="text"
-      id="campo-busca"
+      class="campo-busca"
       placeholder="Buscar consumidores"
       [(ngModel)]="searchTerm"
       (input)="applyFilter()"
-      class="form-control"
     />
   </div>
 
-  <!-- Lista de consumidores -->
-  <div id="lista-container" *ngIf="showList">
-    <h2 id="titulo-lista">Lista de Consumidores</h2>
-    <table id="tabela-consumidores">
+  <!-- Tabela de exibição da lista de consumidores -->
+  <div class="lista-container" *ngIf="showList">
+    <h2 class="titulo-lista">Lista de Consumidores</h2>
+    <table class="tabela-consumidores">
       <thead>
         <tr>
           <th>Nome</th>
@@ -74,13 +67,15 @@
         </tr>
       </thead>
       <tbody>
+        <!-- Itera sobre filteredConsumers e mostra cada linha -->
         <tr *ngFor="let consumer of filteredConsumers">
           <td>{{ consumer.nome }}</td>
           <td>{{ consumer.cpf }}</td>
           <td>{{ consumer.endereco }}</td>
           <td>
-            <button id="botao-deletar" (click)="deleteConsumer(consumer.id)">Deletar</button>
-            <button id="botao-editar" (click)="editConsumer(consumer)">Editar</button>
+            <!-- Botões de ação para cada consumidor -->
+            <button class="botao-deletar" (click)="deleteConsumer(consumer.id)">Deletar</button>
+            <button class="botao-editar" (click)="editConsumer(consumer)">Editar</button>
           </td>
         </tr>
       </tbody>
