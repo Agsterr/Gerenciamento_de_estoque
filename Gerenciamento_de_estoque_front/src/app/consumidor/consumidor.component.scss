@@ -1,33 +1,36 @@
-/* Estilos para o contêiner principal */
-#consumidor-container {
+/* consumid​or.component.scss */
+
+/* Container principal: centraliza o card e aplica padding, fundo e sombras */
+.consumidor-container {
   padding: 20px;
   font-family: Arial, sans-serif;
   max-width: 800px;
   margin: 0 auto;
-  background-color: #ffffff; /* Fundo branco */
+  background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  color: #000000; /* Texto preto */
+  color: #000000;
 }
 
-/* Título */
-#titulo-gestao {
+/* Título principal: centralizado e com tamanho destacado */
+.titulo-gestao {
   text-align: center;
-  color: #333; /* Cor mais escura para o título */
+  color: #333;
   margin-bottom: 20px;
   font-size: 1.8rem;
 }
 
-/* Botões de ações */
-#acoes-container {
+/* Container dos botões de ação: alinhamento horizontal e espaçamento */
+.acoes-container {
   display: flex;
   justify-content: center;
   gap: 10px;
   margin-bottom: 20px;
 }
 
-#botao-listar,
-#botao-adicionar {
+/* Botões de listar e adicionar: estilo base e hover */
+.botao-listar,
+.botao-adicionar {
   padding: 10px 20px;
   font-size: 14px;
   cursor: pointer;
@@ -37,20 +40,18 @@
   color: white;
   transition: background-color 0.3s, transform 0.2s;
 }
-
-#botao-listar:hover,
-#botao-adicionar:hover {
+.botao-listar:hover,
+.botao-adicionar:hover {
   background-color: #0056b3;
   transform: scale(1.05);
 }
 
-/* Campo de busca */
-#busca-container {
+/* Campo de busca: centralizado com largura responsiva */
+.busca-container {
   margin-bottom: 20px;
   text-align: center;
 }
-
-#campo-busca {
+.campo-busca {
   width: 100%;
   max-width: 500px;
   padding: 10px;
@@ -59,60 +60,58 @@
   font-size: 1rem;
 }
 
-/* Tabela de consumidores */
-#tabela-consumidores {
+/* Tabela de consumidores: cabeçalhos e células com padding e bordo */
+.tabela-consumidores {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
 }
-
-#tabela-consumidores th, #tabela-consumidores td {
+.tabela-consumidores th,
+.tabela-consumidores td {
   padding: 12px;
   text-align: left;
   border: 1px solid #ddd;
 }
 
-#tabela-consumidores th {
+/* Cabeçalho da tabela: cor de fundo e texto branco */
+.tabela-consumidores th {
   background-color: #007bff;
   color: white;
 }
 
-#tabela-consumidores tbody tr:hover {
-  background-color: #f1f1f1; /* Destaca a linha ao passar o cursor */
+/* Linha hover: leve alteração de cor para feedback */
+.tabela-consumidores tbody tr:hover {
+  background-color: #f1f1f1;
 }
 
-/* Botões dentro da tabela */
-#botao-deletar,
-#botao-editar {
+/* Botões dentro da tabela: estilo de deletar e editar */
+.botao-deletar,
+.botao-editar {
   padding: 5px 10px;
   font-size: 12px;
   cursor: pointer;
   border: none;
   border-radius: 5px;
-  background-color: #dc3545;
   color: white;
   transition: background-color 0.3s, transform 0.2s;
 }
-
-#botao-editar {
+.botao-deletar {
+  background-color: #dc3545;
+}
+.botao-editar {
   background-color: #007bff;
 }
-
-#botao-deletar:hover,
-#botao-editar:hover {
+.botao-deletar:hover {
+  background-color: #a71d2a;
+  transform: scale(1.05);
+}
+.botao-editar:hover {
+  background-color: #0056b3;
   transform: scale(1.05);
 }
 
-#botao-deletar:hover {
-  background-color: #a71d2a;
-}
-
-#botao-editar:hover {
-  background-color: #0056b3;
-}
-
-/* Formulário de adicionar/editar consumidor */
-#form-adicionar-container {
+/* Estilização do formulário de adicionar/editar */
+.form-adicionar-container {
   margin-top: 20px;
   padding: 20px;
   border: 1px solid #ddd;
@@ -120,29 +119,25 @@
   background-color: #f9f9f9;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
-
-#form-adicionar {
+.form-adicionar {
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
-
-#form-adicionar label {
+.form-adicionar label {
   font-weight: bold;
   font-size: 1rem;
   color: #333;
 }
-
-#form-adicionar input {
+.form-adicionar input {
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 5px;
   font-size: 1rem;
-  width: 100%; /* Garantir que os inputs ocupem toda a largura */
-  box-sizing: border-box; /* Garantir que o padding não quebre o layout */
+  width: 100%;
+  box-sizing: border-box;
 }
-
-#botao-salvar {
+.botao-salvar {
   padding: 10px 20px;
   font-size: 14px;
   cursor: pointer;
@@ -152,57 +147,50 @@
   color: white;
   transition: background-color 0.3s, transform 0.2s;
 }
-
-#botao-salvar:hover {
+.botao-salvar:hover {
   background-color: #0056b3;
   transform: scale(1.05);
 }
 
-/* Responsividade para dispositivos móveis */
+/* Media Queries: ajustes para tablets */
 @media (max-width: 768px) {
-  #form-adicionar-container {
+  .form-adicionar-container {
     padding: 15px;
   }
-
-  #form-adicionar input {
+  .form-adicionar input {
     font-size: 0.9rem;
     padding: 8px;
   }
-
-  #botao-salvar {
+  .botao-salvar {
     font-size: 0.9rem;
     padding: 8px 15px;
   }
 }
 
+/* Media Queries: ajustes para mobile */
 @media (max-width: 480px) {
-  #consumidor-container {
+  .consumidor-container {
     padding: 10px;
   }
-
-  #titulo-gestao {
+  .titulo-gestao {
     font-size: 1.5rem;
   }
-
-  #campo-busca {
+  .campo-busca {
     padding: 8px;
     font-size: 12px;
   }
-
-  #botao-listar,
-  #botao-adicionar,
-  #botao-deletar,
-  #botao-editar,
-  #botao-salvar {
+  .botao-listar,
+  .botao-adicionar,
+  .botao-deletar,
+  .botao-editar,
+  .botao-salvar {
     font-size: 12px;
     padding: 8px 10px;
   }
-
-  #form-adicionar-container {
+  .form-adicionar-container {
     padding: 12px;
   }
-
-  #form-adicionar input {
+  .form-adicionar input {
     font-size: 0.9rem;
     padding: 6px;
   }
