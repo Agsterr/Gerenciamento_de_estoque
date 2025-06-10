@@ -1,6 +1,6 @@
-/* consumid​or.component.scss */
+/* consumidor.component.scss */
 
-/* Container principal: centraliza o card e aplica padding, fundo e sombras */
+/* ---------- Container principal ---------- */
 .consumidor-container {
   padding: 20px;
   font-family: Arial, sans-serif;
@@ -9,10 +9,10 @@
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  color: #000000;
+  color: #000;
 }
 
-/* Título principal: centralizado e com tamanho destacado */
+/* ---------- Título ---------- */
 .titulo-gestao {
   text-align: center;
   color: #333;
@@ -20,7 +20,7 @@
   font-size: 1.8rem;
 }
 
-/* Container dos botões de ação: alinhamento horizontal e espaçamento */
+/* ---------- Ações ---------- */
 .acoes-container {
   display: flex;
   justify-content: center;
@@ -28,17 +28,22 @@
   margin-bottom: 20px;
 }
 
-/* Botões de listar e adicionar: estilo base e hover */
 .botao-listar,
 .botao-adicionar {
+  display: flex;
+  align-items: center;
   padding: 10px 20px;
   font-size: 14px;
   cursor: pointer;
   border: none;
   border-radius: 5px;
   background-color: #007bff;
-  color: white;
+  color: #fff;
   transition: background-color 0.3s, transform 0.2s;
+}
+.botao-listar i,
+.botao-adicionar i {
+  margin-right: 0.5rem;
 }
 .botao-listar:hover,
 .botao-adicionar:hover {
@@ -46,7 +51,7 @@
   transform: scale(1.05);
 }
 
-/* Campo de busca: centralizado com largura responsiva */
+/* ---------- Busca ---------- */
 .busca-container {
   margin-bottom: 20px;
   text-align: center;
@@ -60,7 +65,7 @@
   font-size: 1rem;
 }
 
-/* Tabela de consumidores: cabeçalhos e células com padding e bordo */
+/* ---------- Tabela ---------- */
 .tabela-consumidores {
   width: 100%;
   border-collapse: collapse;
@@ -72,35 +77,34 @@
   text-align: left;
   border: 1px solid #ddd;
 }
-
-/* Cabeçalho da tabela: cor de fundo e texto branco */
 .tabela-consumidores th {
   background-color: #007bff;
-  color: white;
+  color: #fff;
 }
-
-/* Linha hover: leve alteração de cor para feedback */
 .tabela-consumidores tbody tr:hover {
   background-color: #f1f1f1;
 }
 
-/* Botões dentro da tabela: estilo de deletar e editar */
+/* ---------- Botões da tabela ---------- */
 .botao-deletar,
 .botao-editar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 5px 10px;
   font-size: 12px;
   cursor: pointer;
   border: none;
   border-radius: 5px;
-  color: white;
+  color: #fff;
   transition: background-color 0.3s, transform 0.2s;
 }
-.botao-deletar {
-  background-color: #dc3545;
+.botao-deletar i,
+.botao-editar i {
+  margin: 0; /* sem margem extra */
 }
-.botao-editar {
-  background-color: #007bff;
-}
+.botao-deletar { background-color: #dc3545; }
+.botao-editar  { background-color: #007bff; }
 .botao-deletar:hover {
   background-color: #a71d2a;
   transform: scale(1.05);
@@ -110,7 +114,7 @@
   transform: scale(1.05);
 }
 
-/* Estilização do formulário de adicionar/editar */
+/* ---------- Formulário ---------- */
 .form-adicionar-container {
   margin-top: 20px;
   padding: 20px;
@@ -138,47 +142,71 @@
   box-sizing: border-box;
 }
 .botao-salvar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 10px 20px;
   font-size: 14px;
   cursor: pointer;
   border: none;
   border-radius: 5px;
   background-color: #007bff;
-  color: white;
+  color: #fff;
   transition: background-color 0.3s, transform 0.2s;
+}
+.botao-salvar i {
+  margin: 0; /* sem margem extra */
 }
 .botao-salvar:hover {
   background-color: #0056b3;
   transform: scale(1.05);
 }
 
-/* Media Queries: ajustes para tablets */
-@media (max-width: 768px) {
-  .form-adicionar-container {
-    padding: 15px;
-  }
-  .form-adicionar input {
-    font-size: 0.9rem;
-    padding: 8px;
-  }
-  .botao-salvar {
-    font-size: 0.9rem;
-    padding: 8px 15px;
-  }
+/* ---------- Paginação ---------- */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+.pagination button {
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  border: 1px solid #007bff;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #007bff;
+  transition: background-color 0.2s, color 0.2s;
+}
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pagination button:not(:disabled):hover {
+  background-color: #007bff;
+  color: #fff;
+}
+.pagination p {
+  font-size: 14px;
+  color: #333;
+  margin: 0;
 }
 
-/* Media Queries: ajustes para mobile */
+/* ---------- Responsividade ---------- */
+@media (max-width: 768px) {
+  .form-adicionar-container { padding: 15px; }
+  .form-adicionar input     { font-size: 0.9rem; padding: 8px; }
+  .botao-salvar             { font-size: 0.9rem; padding: 8px 15px; }
+}
+
 @media (max-width: 480px) {
-  .consumidor-container {
-    padding: 10px;
-  }
-  .titulo-gestao {
-    font-size: 1.5rem;
-  }
-  .campo-busca {
-    padding: 8px;
-    font-size: 12px;
-  }
+  .consumidor-container { padding: 10px; }
+  .titulo-gestao        { font-size: 1.5rem; }
+
+  .campo-busca { padding: 8px; font-size: 12px; }
+
   .botao-listar,
   .botao-adicionar,
   .botao-deletar,
@@ -187,11 +215,7 @@
     font-size: 12px;
     padding: 8px 10px;
   }
-  .form-adicionar-container {
-    padding: 12px;
-  }
-  .form-adicionar input {
-    font-size: 0.9rem;
-    padding: 6px;
-  }
+
+  .form-adicionar-container { padding: 12px; }
+  .form-adicionar input     { font-size: 0.9rem; padding: 6px; }
 }

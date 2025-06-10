@@ -46,7 +46,11 @@
   gap: 10px;
 }
 
+/* Botões com ícones */
 .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 10px 15px;
   font-size: 1rem;
   border: none;
@@ -54,37 +58,39 @@
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease;
 }
+.btn i {
+  margin: 0; /* remove margem extra do ícone */
+}
 
+/* Botão menu (Adicionar) */
 .btn--menu {
   background-color: #007bff;
   color: white;
 }
-
 .btn--menu:hover {
   background-color: #0056b3;
   transform: scale(1.05);
 }
 
+/* Botão criar (Confirmar criação) */
 .btn--criar {
   background-color: #28a745;
   color: white;
 }
-
 .btn--criar:hover {
   background-color: #218838;
   transform: scale(1.05);
 }
-
 .btn--criar:disabled {
   background-color: #6c757d;
   cursor: not-allowed;
 }
 
+/* Botão deletar */
 .btn--deletar {
   background-color: #dc3545;
   color: white;
 }
-
 .btn--deletar:hover {
   background-color: #c82333;
 }
@@ -93,7 +99,6 @@
 .categoria-container__lista {
   margin-top: 20px;
 }
-
 .categoria-container__lista h3 {
   margin-bottom: 10px;
   font-size: 1.5rem;
@@ -107,18 +112,16 @@
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
-
-.categoria-tabela th, .categoria-tabela td {
+.categoria-tabela th,
+.categoria-tabela td {
   padding: 12px 15px;
   text-align: left;
   border: 1px solid #ddd;
 }
-
 .categoria-tabela th {
   background-color: #007bff;
   color: white;
 }
-
 .categoria-tabela tbody tr:hover {
   background-color: #f1f1f1;
 }
@@ -131,7 +134,6 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   margin-top: 20px;
 }
-
 .categoria-container__formulario h3 {
   margin-bottom: 15px;
   font-size: 1.5rem;
@@ -142,13 +144,11 @@ form {
   display: flex;
   flex-direction: column;
 }
-
 label {
   margin-bottom: 5px;
   font-size: 1rem;
   color: #333;
 }
-
 input {
   margin-bottom: 15px;
   padding: 10px;
@@ -168,29 +168,21 @@ input:focus-visible {
   .categoria-container {
     padding: 15px;
   }
-
   .categoria-container__titulo {
     font-size: 1.5rem;
   }
-
   .categoria-container__menu {
     flex-direction: column;
     align-items: flex-start;
   }
-
   .btn {
     width: 100%;
   }
-
   .categoria-container__lista h3,
   .categoria-container__formulario h3 {
     font-size: 1.2rem;
   }
-
-  form label {
-    font-size: 0.9rem;
-  }
-
+  form label,
   form input,
   form button {
     font-size: 0.9rem;
@@ -202,16 +194,13 @@ input:focus-visible {
   .categoria-container {
     padding: 10px;
   }
-
   .categoria-container__titulo {
     font-size: 1.3rem;
   }
-
   .categoria-container__lista h3,
   .categoria-container__formulario h3 {
     font-size: 1rem;
   }
-
   form input,
   form button {
     font-size: 0.9rem;
