@@ -1,62 +1,61 @@
-<!-- consumid​or.component.html -->
+<!-- src/app/components/consumidor.component.html -->
 <div class="consumidor-container">
-  <!-- Título da página -->
+  <!-- Título -->
   <h1 class="titulo-gestao">Gestão de Consumidores</h1>
 
-  <!-- Botões de navegação entre lista e formulário -->
+  <!-- Botões -->
   <div class="acoes-container">
-    <button class="botao-listar" (click)="toggleList()">Listar Consumidores</button>
-    <button class="botao-adicionar" (click)="toggleAddForm()">Adicionar Consumidor</button>
+    <button class="botao-listar" (click)="toggleList()">
+      <i class="fas fa-list"></i> Listar Consumidores
+    </button>
+    <button class="botao-adicionar" (click)="toggleAddForm()">
+      <i class="fas fa-plus-circle"></i> Adicionar Consumidor
+    </button>
   </div>
 
-  <!-- Formulário de criação/edição, exibido quando showAddForm é true -->
+  <!-- Formulário -->
   <div class="form-adicionar-container" *ngIf="showAddForm">
-    <!-- Título dinâmico, muda conforme edição ou criação -->
     <h2 class="titulo-form">
       {{ editingConsumer ? 'Editar Consumidor' : 'Adicionar Consumidor' }}
     </h2>
-    <!-- Form reativo vinculado a consumerForm -->
+
     <form [formGroup]="consumerForm" (ngSubmit)="submitAddForm()" class="form-adicionar">
-      <!-- Campo Nome -->
       <div class="form-group">
         <label for="nome">Nome:</label>
         <input id="nome" type="text" formControlName="nome" required />
       </div>
 
-      <!-- Campo CPF -->
       <div class="form-group">
         <label for="cpf">CPF:</label>
         <input id="cpf" type="text" formControlName="cpf" required />
       </div>
 
-      <!-- Campo Endereço -->
       <div class="form-group">
         <label for="endereco">Endereço:</label>
         <input id="endereco" type="text" formControlName="endereco" required />
       </div>
 
-      <!-- Botão de submissão, texto varia conforme ação -->
       <button type="submit" class="botao-salvar">
+        <i class="fas fa-save"></i>
         {{ editingConsumer ? 'Salvar Alterações' : 'Salvar' }}
       </button>
     </form>
   </div>
 
-  <!-- Campo de busca, exibido quando showList é true -->
+  <!-- Busca -->
   <div class="busca-container" *ngIf="showList">
     <input
-      name="searchTerm"
-      type="text"
       class="campo-busca"
+      type="text"
       placeholder="Buscar consumidores"
       [(ngModel)]="searchTerm"
-      (input)="applyFilter()"
-    />
+      (input)="applyFilter()" />
   </div>
 
-  <!-- Tabela de exibição da lista de consumidores -->
+  <!-- Lista -->
   <div class="lista-container" *ngIf="showList">
     <h2 class="titulo-lista">Lista de Consumidores</h2>
+
     <table class="tabela-consumidores">
       <thead>
         <tr>
@@ -66,19 +65,35 @@
           <th>Ações</th>
         </tr>
       </thead>
+
       <tbody>
-        <!-- Itera sobre filteredConsumers e mostra cada linha -->
         <tr *ngFor="let consumer of filteredConsumers">
           <td>{{ consumer.nome }}</td>
           <td>{{ consumer.cpf }}</td>
           <td>{{ consumer.endereco }}</td>
           <td>
-            <!-- Botões de ação para cada consumidor -->
-            <button class="botao-deletar" (click)="deleteConsumer(consumer.id)">Deletar</button>
-            <button class="botao-editar" (click)="editConsumer(consumer)">Editar</button>
+            <button class="botao-deletar" (click)="deleteConsumer(consumer.id)">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+            <button class="botao-editar" (click)="editConsumer(consumer)">
+              <i class="fas fa-edit"></i>
+            </button>
           </td>
         </tr>
       </tbody>
     </table>
+
+    <!-- Paginação -->
+    <div class="pagination" *ngIf="totalPages > 0">
+      <button (click)="paginaAnterior()" [disabled]="currentPage === 0">
+        <i class="fas fa-chevron-left"></i> Anterior
+      </button>
+
+      <button (click)="proximaPagina()" [disabled]="currentPage >= totalPages - 1">
+        Próxima <i class="fas fa-chevron-right"></i>
+      </button>
+
+      <p>Página {{ currentPage + 1 }} de {{ totalPages }}</p>
+    </div>
   </div>
 </div>

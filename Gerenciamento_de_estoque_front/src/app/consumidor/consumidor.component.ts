@@ -1,11 +1,12 @@
+// src/app/components/consumers.component.ts
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { ConsumidorService } from '../services/consumidor.service';
 import { Consumer } from '../models/consumer.model';
+import { ConsumerPagedResponse } from '../models/consumer-paged-response.model';
 
 @Component({
   selector: 'app-consumers',
@@ -15,23 +16,27 @@ import { Consumer } from '../models/consumer.model';
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
 })
 export class ConsumersComponent implements OnInit {
-  consumerForm: FormGroup;  // FormGroup reativo para criação/edição
-  searchTerm: string = '';  // Termo atual de busca
-  consumers: Consumer[] = [];  // Lista completa de consumidores
-  filteredConsumers: Consumer[] = [];  // Lista filtrada por busca
-  showList = true;  // Controla exibição da lista
-  showAddForm = false;  // Controla exibição do formulário
-  editingConsumer = false;  // Flag de edição
-  mensagem = '';  // Mensagem de sucesso
-  mensagemErro = '';  // Mensagem de erro
-  mensagemTipo = '';  // Tipo da mensagem: 'sucesso' ou 'erro'
+  consumerForm: FormGroup;
+  searchTerm = '';
+  consumers: Consumer[] = [];
+  filteredConsumers: Consumer[] = [];
+  showList = true;
+  showAddForm = false;
+  editingConsumer = false;
+  mensagem = '';
+  mensagemErro = '';
+  mensagemTipo = '';
+
+  // Paginação
+  currentPage = 0;
+  pageSize = 10;
+  totalPages = 0;
+  totalElements = 0;
 
   constructor(
     private consumidorService: ConsumidorService,
-    private fb: FormBuilder,
-    private router: Router
+    private fb: FormBuilder
   ) {
-    // Inicializa o FormGroup com campos e validações
     this.consumerForm = this.fb.group({
       id: [null],
       nome: ['', Validators.required],
@@ -40,48 +45,42 @@ export class ConsumersComponent implements OnInit {
     });
   }
 
-  /**
-   * Ciclo de vida OnInit: busca consumidores ao carregar o componente
-   */
   ngOnInit(): void {
     this.fetchConsumers();
   }
 
-  /**
-   * Busca consumidores do backend, ordena e aplica filtro inicial
-   */
-  fetchConsumers(): void {
-    this.consumidorService.listarConsumidores().subscribe({
-      next: (data) => {
-        this.consumers = data.sort((a, b) =>
-          a.nome.toLowerCase().localeCompare(b.nome.toLowerCase())
-        );
-        this.mensagem = 'Lista de consumidores carregada com sucesso.';
-        this.mensagemTipo = 'sucesso';
-        this.applyFilter();
-      },
-      error: (err) => {
-        console.error('Erro ao buscar consumidores:', err);
-        this.mensagemErro = 'Erro ao buscar consumidores!';
-        this.mensagemTipo = 'erro';
-      },
-    });
+  /** Busca paginada de consumidores */
+  fetchConsumers(page: number = 0): void {
+    this.consumidorService
+      .listarConsumidoresPaged(page, this.pageSize)
+      .subscribe({
+        next: (resp: ConsumerPagedResponse) => {
+          const p = resp.page;
+          this.currentPage   = p.number;
+          this.pageSize      = p.size;
+          this.totalPages    = p.totalPages;
+          this.totalElements = p.totalElements;
+
+          this.consumers = resp.content.sort((a, b) =>
+            a.nome.localeCompare(b.nome)
+          );
+          this.applyFilter();
+          // <-- remover: this.onSuccess('Lista carregada com sucesso');
+        },
+        error: () => this.onError('Erro ao buscar consumidores!')
+      });
   }
 
-  /**
-   * Alterna para exibir a lista de consumidores
-   */
+  /** Mostrar lista */
   toggleList(): void {
     this.showList = true;
     this.showAddForm = false;
     this.editingConsumer = false;
     this.resetForm();
-    this.fetchConsumers();
+    this.fetchConsumers(this.currentPage);
   }
 
-  /**
-   * Alterna para exibir o formulário de adição de consumidor
-   */
+  /** Mostrar form de adicionar */
   toggleAddForm(): void {
     this.showAddForm = true;
     this.showList = false;
@@ -89,98 +88,82 @@ export class ConsumersComponent implements OnInit {
     this.resetForm();
   }
 
-  /**
-   * Submete o formulário: Decide entre criar ou editar
-   */
   submitAddForm(): void {
     if (this.consumerForm.invalid) {
-      this.mensagemErro = 'Por favor, preencha todos os campos corretamente!';
-      this.mensagemTipo = 'erro';
+      this.onError('Preencha todos os campos corretamente!');
       return;
     }
     this.editingConsumer ? this.updateConsumer() : this.createConsumer();
   }
 
-  /**
-   * Chama o serviço para criar um novo consumidor
-   */
   createConsumer(): void {
-    const novoConsumidor: Partial<Consumer> = this.consumerForm.value;
-    this.consumidorService.criarConsumidor(novoConsumidor).subscribe({
-      next: () => this.onSuccess('Consumidor adicionado com sucesso!'),
-      error: () => this.onError('Erro ao adicionar consumidor!'),
+    const novo = this.consumerForm.value as Partial<Consumer>;
+    this.consumidorService.criarConsumidor(novo).subscribe({
+      next: () => this.onSuccess('Consumidor adicionado!'),
+      error: err => this.onError(err.error?.error || 'Erro ao adicionar consumidor!')
     });
   }
 
-  /**
-   * Chama o serviço para atualizar um consumidor existente
-   */
   updateConsumer(): void {
-    const updated: Partial<Consumer> = this.consumerForm.value;
-    if (!updated.id) {
-      this.onError('ID do consumidor é obrigatório para edição.');
+    const upd = this.consumerForm.value as Partial<Consumer>;
+    if (!upd.id) {
+      this.onError('ID obrigatório para edição');
       return;
     }
-    this.consumidorService.editarConsumidor(updated).subscribe({
-      next: () => this.onSuccess('Consumidor atualizado com sucesso!'),
-      error: () => this.onError('Erro ao editar consumidor!'),
+    this.consumidorService.editarConsumidor(upd).subscribe({
+      next: () => this.onSuccess('Consumidor atualizado!'),
+      error: () => this.onError('Erro ao editar consumidor!')
     });
   }
 
-  /**
-   * Chama o serviço para deletar um consumidor pelo ID
-   */
   deleteConsumer(id: number): void {
-    if (!confirm('Tem certeza que deseja deletar este consumidor?')) return;
+    if (!confirm('Confirma exclusão?')) return;
     this.consumidorService.deletarConsumidor(id).subscribe({
-      next: () => this.onSuccess('Consumidor deletado com sucesso!'),
-      error: () => this.onError('Erro ao deletar consumidor!'),
+      next: () => this.onSuccess('Consumidor deletado!'),
+      error: () => this.onError('Erro ao deletar consumidor!')
     });
   }
 
-  /**
-   * Filtra a lista de consumidores pelo termo de busca
-   */
   applyFilter(): void {
-    const term = this.searchTerm.trim().toLowerCase();
-    this.filteredConsumers = term
-      ? this.consumers.filter(c => c.nome.toLowerCase().includes(term))
+    const t = this.searchTerm.trim().toLowerCase();
+    this.filteredConsumers = t
+      ? this.consumers.filter(c => c.nome.toLowerCase().includes(t))
       : [...this.consumers];
   }
 
-  /**
-   * Prepara o formulário para edição, populando campos
-   */
-  editConsumer(consumer: Consumer): void {
+  editConsumer(c: Consumer): void {
     this.editingConsumer = true;
     this.showAddForm = true;
     this.showList = false;
-    this.consumerForm.patchValue(consumer);
+    this.consumerForm.patchValue(c);
   }
 
-  /**
-   * Reseta o formulário e limpa mensagens e filtros
-   */
+  paginaAnterior(): void {
+    if (this.currentPage > 0) {
+      this.fetchConsumers(this.currentPage - 1);
+    }
+  }
+
+  proximaPagina(): void {
+    if (this.currentPage + 1 < this.totalPages) {
+      this.fetchConsumers(this.currentPage + 1);
+    }
+  }
+
   resetForm(): void {
     this.consumerForm.reset();
     this.searchTerm = '';
-    this.mensagemErro = '';
     this.mensagem = '';
+    this.mensagemErro = '';
     this.mensagemTipo = '';
   }
 
-  /**
-   * Handler genérico para sucesso: exibe mensagem e retorna à lista
-   */
   private onSuccess(msg: string): void {
     this.mensagem = msg;
     this.mensagemTipo = 'sucesso';
-    this.toggleList();
+    this.toggleList();  // volta para lista após operação de sucesso
   }
 
-  /**
-   * Handler genérico para erro: exibe mensagem de erro
-   */
   private onError(msg: string): void {
     this.mensagemErro = msg;
     this.mensagemTipo = 'erro';
