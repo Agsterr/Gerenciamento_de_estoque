@@ -1,54 +1,42 @@
-
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EntregasService } from '../services/entregas.service';
 import { ProdutoService } from '../services/produto.service';
 import { ConsumidorService } from '../services/consumidor.service';
-import { Entrega } from '../models/entrega.model';
-import { PageEntregaResponse } from '../models/PageEntregaResponse.model';
-import { Produto } from '../models/produto.model';
-import { Consumer } from '../models/consumer.model';
-import { EntregaRequest } from '../models/EntregaRequest.model'; 
+import { EntregaResponse } from '../models/src/app/models/entrega/entrega-response.model';
+import { PageEntregaResponse } from '../models/src/app/models/entrega/PageEntregaResponse.model';
+import { EntregaRequest } from '../models/src/app/models/entrega/entrega-request.model';
 
 @Component({
   selector: 'app-entregas',
   standalone: true,
-  templateUrl: './entregas.component.html',
-  styleUrls: ['./entregas.component.scss'],
   imports: [CommonModule, FormsModule],
+  templateUrl: './entregas.component.html',
+  styleUrls: ['./entregas.component.scss']
 })
 export class EntregasComponent implements OnInit {
-  entregas: Entrega[] = [];
-  filteredEntregas: Entrega[] = [];
-  searchTerm: string = '';
-  showList: boolean = false;
-  showAddForm: boolean = false;
+  entregas: EntregaResponse[] = [];
+  filteredEntregas: EntregaResponse[] = [];
+  searchTerm = '';
+  showList = false;
+  showAddForm = false;
+  showEditForm = false;
 
-  produtos: Produto[] = [];
-  consumidores: Consumer[] = [];
+  produtos: any[] = [];
+  consumidores: any[] = [];
 
-  selectedProduto: Produto | undefined;
-  selectedConsumidor: Consumer | undefined;
+  novaEntrega: Partial<EntregaRequest> = {};
+  currentPage = 0;
+  totalPages = 0;
+  pageSize = 20;
 
-  novaEntrega: Partial<EntregaRequest> = {
-    produtoId: undefined,
-    quantidade: 1,
-    consumidorId: undefined,
-    consumidor: {
-      nome: '',
-      cpf: '',
-    },
-  };
+  mensagem = '';
+  mensagemErro = '';
 
-  currentPage: number = 0;
-  totalPages: number = 0;
-  pageSize: number = 20;
+  // Guarda o ID da entrega que será editada
+  idEntregaParaEditar: number | null = null;
 
-  mensagem: string = '';
-  mensagemErro: string = '';
-
-  // Remover a definição do orgId manual e obter ele diretamente do ConsumidorService
   constructor(
     private entregasService: EntregasService,
     private produtoService: ProdutoService,
@@ -62,56 +50,16 @@ export class EntregasComponent implements OnInit {
 
   carregarProdutos(): void {
     this.produtoService.listarProdutos(0, 100).subscribe({
-      next: (data) => {
-        this.produtos = data.content;
-        console.log('Produtos carregados:', this.produtos);
-        this.onProdutoChange();
-      },
-      error: (err) => {
-        console.error('Erro ao carregar produtos:', err);
-        this.mensagemErro = 'Erro ao carregar produtos. Por favor, tente novamente.';
-      },
+      next: data => this.produtos = data.content,
+      error: () => this.mensagemErro = 'Erro ao carregar produtos.'
     });
   }
 
- carregarConsumidores(): void {
-  // Usa o método atual `listarConsumidores()` que já aplica o orgId internamente
-  this.consumidorService.listarConsumidores().subscribe({
-    next: (consumidores: Consumer[]) => {
-      if (consumidores && consumidores.length > 0) {
-        this.consumidores = consumidores;
-        console.log('Consumidores carregados:', this.consumidores);
-        this.mensagem = 'Consumidores carregados com sucesso.';
-        this.onConsumidorChange();  // Mantém a chamada pós-processamento
-      } else {
-        this.mensagemErro = 'Nenhum consumidor encontrado.';
-      }
-    },
-    error: (err: any) => {
-      console.error('Erro ao carregar consumidores:', err);
-      this.mensagemErro = 'Erro ao carregar consumidores. Por favor, tente novamente.';
-    },
-  });
-}
-
-  
-
-  onProdutoChange(): void {
-    if (this.novaEntrega.produtoId != null && this.produtos.length > 0) {
-      this.selectedProduto = this.produtos.find(p => p.id === Number(this.novaEntrega.produtoId));
-      console.log('Produto selecionado:', this.selectedProduto);
-    } else {
-      this.selectedProduto = undefined;
-    }
-  }
-
-  onConsumidorChange(): void {
-    if (this.novaEntrega.consumidorId != null && this.consumidores.length > 0) {
-      this.selectedConsumidor = this.consumidores.find(c => c.id === Number(this.novaEntrega.consumidorId));
-      console.log('Consumidor selecionado:', this.selectedConsumidor);
-    } else {
-      this.selectedConsumidor = undefined;
-    }
+  carregarConsumidores(): void {
+    this.consumidorService.listarConsumidores().subscribe({
+      next: data => this.consumidores = data,
+      error: () => this.mensagemErro = 'Erro ao carregar consumidores.'
+    });
   }
 
   toggleList(): void {
@@ -121,118 +69,96 @@ export class EntregasComponent implements OnInit {
     }
   }
 
-  toggleAddForm(): void {
-    this.showAddForm = !this.showAddForm;
-    if (!this.showAddForm) {
-      this.clearMessages();
-      this.selectedProduto = undefined;
-      this.selectedConsumidor = undefined;
-      this.novaEntrega.produtoId = undefined;
-      this.novaEntrega.quantidade = 1;
-      this.novaEntrega.consumidorId = undefined;
-      this.novaEntrega.consumidor = { nome: '', cpf: '' };
-    }
-  }
-
   fetchEntregas(page: number): void {
     this.entregasService.listarEntregas(page, this.pageSize).subscribe({
       next: (data: PageEntregaResponse) => {
-        this.entregas = data.content.map((entrega) => {
-          let formattedDate = '';
-          if (entrega.horarioEntrega) {
-            const horarioISO = new Date(entrega.horarioEntrega);
-            if (!isNaN(horarioISO.getTime())) {
-              const day = String(horarioISO.getDate()).padStart(2, '0');
-              const month = String(horarioISO.getMonth() + 1).padStart(2, '0');
-              const year = String(horarioISO.getFullYear()).slice(-2);
-              const hours = String(horarioISO.getHours()).padStart(2, '0');
-              const minutes = String(horarioISO.getMinutes()).padStart(2, '0');
-              formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
-            } else {
-              console.error('Formato de data inválido:', entrega.horarioEntrega);
-              formattedDate = 'Data inválida';
-            }
-          }
-          return {
-            ...entrega,
-            horarioEntrega: formattedDate,
-          };
-        });
-        this.currentPage = data.number;
-        this.totalPages = data.totalPages;
+        this.entregas = data.content;
+        this.currentPage = data.page.number;
+        this.totalPages = data.page.totalPages;
         this.applyFilter();
       },
-      error: (err) => {
-        console.error('Erro ao carregar entregas:', err);
-        this.mensagemErro = 'Erro ao carregar entregas. Por favor, tente novamente.';
-      },
+      error: () => this.mensagemErro = 'Erro ao carregar entregas.'
     });
   }
 
-  submitAddForm(): void {
+ submitAddForm(): void {
+  if (!this.novaEntrega.produtoId || !this.novaEntrega.consumidorId || !this.novaEntrega.quantidade) {
+    this.mensagemErro = 'Todos os campos são obrigatórios.';
+    return;
+  }
+
+  const payload: EntregaRequest = {
+    produtoId: this.novaEntrega.produtoId!,
+    quantidade: this.novaEntrega.quantidade!,
+    consumidorId: this.novaEntrega.consumidorId!,
+    horarioEntrega: this.novaEntrega.horarioEntrega
+  };
+
+  this.entregasService.criarEntrega(payload).subscribe({
+    next: response => {
+      this.mensagem = response.mensagemEstoqueBaixo || 'Entrega criada com sucesso!';
+      this.showAddForm = false;
+      this.fetchEntregas(this.currentPage);
+    },
+    error: () => this.mensagemErro = 'Erro ao registrar entrega.'
+  });
+}
+
+
+  editEntrega(id: number): void {
+    const entrega = this.entregas.find(e => e.id === id);
+
+    if (entrega) {
+      this.novaEntrega = {
+        produtoId: entrega.produtoId,
+        quantidade: entrega.quantidade,
+        consumidorId: entrega.consumidorId,
+        horarioEntrega: entrega.horarioEntrega
+      };
+
+      this.idEntregaParaEditar = entrega.id;
+      this.showEditForm = true;
+      this.showAddForm = false;
+    }
+  }
+
+  submitEditForm(): void {
     if (!this.novaEntrega.produtoId || !this.novaEntrega.consumidorId || !this.novaEntrega.quantidade) {
       this.mensagemErro = 'Todos os campos são obrigatórios.';
       return;
     }
 
-    if (!this.selectedConsumidor) {
-      this.mensagemErro = 'Consumidor selecionado não é válido.';
-      return;
-    }
-
-    const produtoId = Number(this.novaEntrega.produtoId);
-
-    const entregaPayload = {
-      consumidor: {
-        id: this.novaEntrega.consumidorId,
-        nome: this.selectedConsumidor?.nome,
-        cpf: this.selectedConsumidor?.cpf,
-      },
-      produtoId: produtoId,
-      quantidade: this.novaEntrega.quantidade,
+    const payload: EntregaRequest = {
+      produtoId: this.novaEntrega.produtoId!,
+      quantidade: this.novaEntrega.quantidade!,
+      consumidorId: this.novaEntrega.consumidorId!,
+      horarioEntrega: this.novaEntrega.horarioEntrega
     };
 
-    this.entregasService.criarEntrega(entregaPayload).subscribe({
-      next: (response) => {
-        this.mensagem = response.message;
-        this.novaEntrega = { produtoId: undefined, consumidorId: undefined, quantidade: undefined };
-        this.showAddForm = false;
-      },
-      error: (err) => {
-        console.error('Erro ao registrar entrega:', err);
-        this.mensagemErro = 'Erro ao registrar entrega.';
-      },
-    });
-  }
-
-  applyFilter(): void {
-    if (this.searchTerm.trim() === '') {
-      this.filteredEntregas = this.entregas;
-    } else {
-      const term = this.searchTerm.toLowerCase();
-      this.filteredEntregas = this.entregas.filter(
-        (entrega) =>
-          entrega.nomeConsumidor.toLowerCase().includes(term) ||
-          entrega.nomeProduto.toLowerCase().includes(term) ||
-          entrega.nomeEntregador.toLowerCase().includes(term)
-      );
+    if (this.idEntregaParaEditar !== null) {
+      this.entregasService.editarEntrega(this.idEntregaParaEditar, payload).subscribe({
+        next: () => {
+          this.mensagem = 'Entrega atualizada com sucesso!';
+          this.showEditForm = false;
+          this.fetchEntregas(this.currentPage);
+        },
+        error: () => {
+          this.mensagemErro = 'Erro ao atualizar entrega.';
+        }
+      });
     }
   }
 
   deleteEntrega(id: number): void {
-    if (confirm('Tem certeza que deseja deletar esta entrega?')) {
-      this.entregasService.deletarEntrega(id).subscribe({
-        next: () => {
-          alert('Entrega deletada com sucesso!');
-          this.entregas = this.entregas.filter((entrega) => entrega.id !== id);
-          this.applyFilter();
-        },
-        error: (err) => {
-          console.error('Erro ao deletar entrega:', err);
-          alert('Erro ao deletar entrega. Por favor, tente novamente.');
-        },
-      });
-    }
+    if (!confirm('Deseja realmente excluir esta entrega?')) return;
+
+    this.entregasService.deletarEntrega(id).subscribe({
+      next: () => {
+        this.entregas = this.entregas.filter(e => e.id !== id);
+        this.applyFilter();
+      },
+      error: () => alert('Erro ao deletar entrega.')
+    });
   }
 
   proximaPagina(): void {
@@ -247,10 +173,14 @@ export class EntregasComponent implements OnInit {
     }
   }
 
-  private clearMessages(delay: number = 0): void {
-    setTimeout(() => {
-      this.mensagem = '';
-      this.mensagemErro = '';
-    }, delay);
+  applyFilter(): void {
+    const term = this.searchTerm.toLowerCase();
+    this.filteredEntregas = this.searchTerm
+      ? this.entregas.filter(e =>
+          e.nomeConsumidor.toLowerCase().includes(term) ||
+          e.nomeProduto.toLowerCase().includes(term) ||
+          e.nomeEntregador.toLowerCase().includes(term)
+        )
+      : [...this.entregas];
   }
 }

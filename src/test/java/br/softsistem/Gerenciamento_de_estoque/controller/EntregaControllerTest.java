@@ -84,37 +84,102 @@ class EntregaControllerTest {
 
     @Test
     void criarEntrega() throws Exception {
+        // Monta request
         EntregaRequestDto request = new EntregaRequestDto();
         request.setConsumidorId(1L);
         request.setProdutoId(1L);
         request.setQuantidade(10);
         request.setHorarioEntrega(LocalDateTime.now());
 
-        // Simular EntregaResponseDto
+        // Monta EntregaResponseDto simulado
         EntregaResponseDto entregaDto = new EntregaResponseDto(
-                1L,
-                "Carlos",
-                "Produto Teste",
-                "Entregador Teste",
-                10,
-                LocalDateTime.now()
+                1L, // ID
+                "Carlos", // Nome do consumidor
+                "Produto Teste", // Nome do produto
+                "Entregador Teste", // Nome do entregador
+                10, // Quantidade
+                LocalDateTime.now(), // Horário da entrega
+                1L, // produtoId
+                1L  // consumidorId
         );
 
-        // Simular resposta com ou sem aviso
-        EntregaComAvisoResponseDto responseDto = new EntregaComAvisoResponseDto(entregaDto, null);
+        // Simula resposta sem aviso de estoque baixo
+        EntregaComAvisoResponseDto responseDto = new EntregaComAvisoResponseDto(
+                entregaDto,
+                false,      // estoqueBaixo
+                null        // mensagemEstoqueBaixo
+        );
 
-        Mockito.when(entregaService.criarEntrega(any(EntregaRequestDto.class))).thenReturn(responseDto);
+        // Configura o mock do serviço
+        Mockito.when(entregaService.criarEntrega(any(EntregaRequestDto.class)))
+                .thenReturn(responseDto);
 
+        // Realiza a requisição POST e valida a resposta
         mockMvc.perform(post("/entregas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.entrega.id").value(1L))
+                .andExpect(status().isCreated())  // Verifica se o status é 201 Created
+                // Valida os dados da entrega retornada
+                .andExpect(jsonPath("$.entrega.id").value(1))
                 .andExpect(jsonPath("$.entrega.nomeConsumidor").value("Carlos"))
                 .andExpect(jsonPath("$.entrega.nomeProduto").value("Produto Teste"))
                 .andExpect(jsonPath("$.entrega.nomeEntregador").value("Entregador Teste"))
-                .andExpect(jsonPath("$.aviso").doesNotExist()); // Ou `.value("⚠ Estoque...")` se quiser simular o aviso
+                .andExpect(jsonPath("$.entrega.produtoId").value(1)) // Verifica produtoId
+                .andExpect(jsonPath("$.entrega.consumidorId").value(1)) // Verifica consumidorId
+                // Valida a nova flag e a ausência de mensagem de estoque baixo
+                .andExpect(jsonPath("$.estoqueBaixo").value(false))
+                .andExpect(jsonPath("$.mensagemEstoqueBaixo").doesNotExist());
     }
+
+
+
+    @Test
+    void criarEntregaComAvisoDeEstoqueBaixo() throws Exception {
+        // Prepara a requisição (DTO) que será enviada para a API
+        EntregaRequestDto request = new EntregaRequestDto();
+        request.setConsumidorId(1L);  // Consumidor ID
+        request.setProdutoId(1L);     // Produto ID
+        request.setQuantidade(50);    // Quantidade solicitada
+        request.setHorarioEntrega(LocalDateTime.now()); // Horário da entrega
+
+        // Prepara a resposta que o serviço irá retornar
+        EntregaResponseDto entregaDto = new EntregaResponseDto(
+                2L, // ID da entrega
+                "João", // Nome do consumidor
+                "Produto Crítico", // Nome do produto
+                "Entregador Teste", // Nome do entregador
+                50, // Quantidade
+                LocalDateTime.now(), // Horário da entrega
+                1L, // produtoId
+                1L  // consumidorId
+        );
+
+        // Aviso de estoque baixo
+        String avisoMensagem = "⚠ Estoque do produto 'Produto Crítico' está abaixo do mínimo! Atual: 5 | Mínimo: 10";
+
+        // Prepara o DTO de resposta com o aviso de estoque baixo
+        EntregaComAvisoResponseDto responseDto = new EntregaComAvisoResponseDto(
+                entregaDto,
+                true,           // Estoque baixo
+                avisoMensagem   // Mensagem do aviso de estoque baixo
+        );
+
+        // Configura o comportamento do mock para retornar a resposta desejada
+        Mockito.when(entregaService.criarEntrega(any(EntregaRequestDto.class)))
+                .thenReturn(responseDto);
+
+        // Realiza a requisição POST para o endpoint de criar entrega
+        mockMvc.perform(post("/entregas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())  // Espera que a resposta seja 201 Created
+                .andExpect(jsonPath("$.entrega.id").value(2)) // Verifica o ID da entrega
+                .andExpect(jsonPath("$.estoqueBaixo").value(true)) // Verifica se o estoque está baixo
+                .andExpect(jsonPath("$.mensagemEstoqueBaixo").value(avisoMensagem)) // Verifica a mensagem de aviso
+                .andExpect(jsonPath("$.entrega.produtoId").value(1L)) // Verifica o produtoId
+                .andExpect(jsonPath("$.entrega.consumidorId").value(1L)); // Verifica o consumidorId
+    }
+
 
 
     @Test

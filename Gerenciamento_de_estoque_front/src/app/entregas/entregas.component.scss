@@ -1,5 +1,4 @@
 /* Estilos para o contêiner principal */
-
 .entrega-container {
   padding: 20px;
   font-family: Arial, sans-serif;
@@ -23,6 +22,9 @@
   padding: 15px;
   margin-bottom: 20px;
   border-radius: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .alert-success {
@@ -49,6 +51,9 @@
   cursor: pointer;
   border: none;
   border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   transition: background-color 0.3s, transform 0.3s;
 }
 
@@ -72,49 +77,52 @@
   width: 100%;
   max-width: 500px;
   padding: 10px;
-  margin: 0 auto;
+  margin: 0 auto 25px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  display: block;
-  margin-bottom: 25px;
   font-size: 14px;
   transition: border-color 0.3s;
+  display: block;
 }
 
 .search-input:focus {
   border-color: #007bff;
 }
 
-/* Controle de Paginação */
-.pagination-controls {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
+/* Paginação */
+.pagination {
   margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
 }
 
-.pagination-controls button {
-  padding: 8px 12px;
-  background-color: #007bff;
-  color: #fff;
+.pagination button {
+  padding: 8px 16px;
+  background-color: #007bff; /* azul igual ao botão primário */
+  color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s, transform 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
-.pagination-controls button:disabled {
-  background-color: #6c757d;
+.pagination button:disabled {
+  background-color: #6c757d; /* cinza para desabilitado */
   cursor: not-allowed;
 }
 
-.pagination-controls button:hover:not(:disabled) {
-  background-color: #0056b3;
+.pagination button:hover:not(:disabled) {
+  background-color: #0056b3; /* azul escuro no hover */
   transform: scale(1.05);
 }
 
-.pagination-controls span {
-  align-self: center;
+.pagination p {
+  margin: 0;
   font-size: 14px;
 }
 
@@ -160,14 +168,37 @@
   background-color: #dc3545;
   color: white;
   transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .btn-danger:hover {
   background-color: #a71d2a;
 }
 
-/* Formulário de Adição de Entrega */
-.add-form-section {
+/* Botão de Editar - agora azul como o botão primário */
+.btn-primary {
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+/* Formulário de Adição e Edição de Entrega */
+.add-form-section,
+.edit-form-section {
   margin-top: 30px;
   padding: 20px;
   border: 1px solid #ddd;
@@ -175,63 +206,38 @@
   background-color: #f9f9f9;
 }
 
-.add-form-section h3 {
+.add-form-section h3,
+.edit-form-section h3 {
   text-align: center;
   margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-.add-form-section .form-group {
+.add-form-section .form-group,
+.edit-form-section .form-group {
   margin-bottom: 15px;
 }
 
-.add-form-section label {
+.add-form-section label,
+.edit-form-section label {
   font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .add-form-section select.form-control,
-.add-form-section input.form-control {
+.add-form-section input.form-control,
+.edit-form-section select.form-control,
+.edit-form-section input.form-control {
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
-}
-
-/* Informações do Produto Selecionado */
-.produto-info,
-.consumidor-info {
-  margin-bottom: 15px;
-  padding: 10px;
-  border: 1px solid #007bff;
-  border-radius: 4px;
-  background-color: #e9f7fe;
-}
-
-.produto-info h4,
-.consumidor-info h4 {
-  margin-bottom: 10px;
-  color: #007bff;
-}
-
-/* Botão de Submissão */
-.btn-success {
-  padding: 10px 20px;
-  font-size: 14px;
-  cursor: pointer;
-  border: none;
-  border-radius: 4px;
-  background-color: #28a745;
-  color: white;
-  transition: background-color 0.3s;
-}
-
-.btn-success:hover {
-  background-color: #218838;
-}
-
-.btn-success:disabled {
-  background-color: #b0e0b3;
-  cursor: not-allowed;
 }
 
 /* Responsividade */
@@ -245,7 +251,7 @@
     max-width: 100%;
   }
 
-  .pagination-controls {
+  .pagination {
     flex-direction: column;
   }
 
@@ -258,7 +264,8 @@
     padding: 8px;
   }
 
-  .add-form-section {
+  .add-form-section,
+  .edit-form-section {
     padding: 15px;
   }
 }
@@ -278,12 +285,12 @@
     font-size: 12px;
   }
 
-  .pagination-controls button {
+  .pagination button {
     padding: 6px 10px;
     font-size: 12px;
   }
 
-  .pagination-controls span {
+  .pagination p {
     font-size: 12px;
   }
 
@@ -293,16 +300,20 @@
     font-size: 12px;
   }
 
-  .add-form-section h3 {
+  .add-form-section h3,
+  .edit-form-section h3 {
     font-size: 1.2rem;
   }
 
-  .add-form-section .form-group label {
+  .add-form-section .form-group label,
+  .edit-form-section .form-group label {
     font-size: 0.9rem;
   }
 
   .add-form-section select.form-control,
-  .add-form-section input.form-control {
+  .add-form-section input.form-control,
+  .edit-form-section select.form-control,
+  .edit-form-section input.form-control {
     font-size: 0.9rem;
     padding: 8px;
   }

@@ -1,72 +1,136 @@
+// src/app/services/entregas.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { Entrega } from '../models/entrega.model';
-import { PageEntregaResponse } from '../models/PageEntregaResponse.model';
-import { EntregaRequest } from '../models/EntregaRequest.model';
-import { ApiResponse } from '../models/api-response.model';  // Certifique-se de que a interface ApiResponse está correta
-import { AuthService } from './auth.service'; // Serviço de autenticação
+import { Observable, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { EntregaResponse } from '../models/src/app/models/entrega/entrega-response.model';
+import { PageEntregaResponse } from '../models/src/app/models/entrega/PageEntregaResponse.model';
+import { EntregaRequest } from '../models/src/app/models/entrega/entrega-request.model';
+import { EntregaComAvisoResponse } from '../models/src/app/models/entrega/entrega-com-aviso-response.model';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class EntregasService {
-  private apiUrl = 'http://localhost:8080/entregas'; // URL da API
+  private apiUrl = 'http://localhost:8080/entregas';
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(private http: HttpClient) {}
 
-  /**
-   * Gera os headers com o token JWT
-   * @returns HttpHeaders
-   */
   private getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem('jwtToken'); // Obtém o token do localStorage
+    const token = localStorage.getItem('jwtToken');
     if (!token) {
-      throw new Error('Token não encontrado. O usuário precisa estar autenticado.');
+      throw new Error('Token não encontrado. Usuário não autenticado.');
     }
-    return new HttpHeaders()
-      .set('Authorization', `Bearer ${token}`)
-      .set('Content-Type', 'application/json'); // Define o Content-Type como application/json
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
   }
 
-  /**
-   * Lista entregas com paginação.
-   * @param page Número da página.
-   * @param size Quantidade de itens por página.
-   * @returns Observable<PageEntregaResponse>
-   */
+  private handleError(error: any) {
+    // Aqui você pode personalizar o tratamento de erros
+    console.error('Erro na requisição:', error);
+    return throwError(() => error);
+  }
+
   listarEntregas(page: number, size: number): Observable<PageEntregaResponse> {
     const params = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString());
+      .set('page', page)
+      .set('size', size);
 
     return this.http.get<PageEntregaResponse>(this.apiUrl, {
       headers: this.getAuthHeaders(),
-      params,
-    });
+      params
+    }).pipe(
+      catchError(this.handleError)
+    );
   }
 
-  /**
-   * Cria uma nova entrega.
-   * @param entrega Dados da nova entrega.
-   * @returns Observable<ApiResponse> - Agora retornando ApiResponse
-   */
-  criarEntrega(entrega: Partial<EntregaRequest>): Observable<ApiResponse> {
-    return this.http.post<ApiResponse>(this.apiUrl, entrega, {
-      headers: this.getAuthHeaders(),
-      observe: 'body', // Para observar o corpo da resposta
-    });
+  criarEntrega(entrega: EntregaRequest): Observable<EntregaComAvisoResponse> {
+    return this.http.post<EntregaComAvisoResponse>(this.apiUrl, entrega, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      catchError(this.handleError)
+    );
   }
 
-  /**
-   * Deleta uma entrega pelo ID.
-   * @param id ID da entrega a ser deletada.
-   * @returns Observable<ApiResponse> - Agora retornando ApiResponse
-   */
-  deletarEntrega(id: number): Observable<ApiResponse> {
-    return this.http.delete<ApiResponse>(`${this.apiUrl}/${id}`, {
+  editarEntrega(id: number, entrega: EntregaRequest): Observable<EntregaResponse> {
+    return this.http.put<EntregaResponse>(`${this.apiUrl}/${id}`, entrega, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  deletarEntrega(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  porDia(dia: string): Observable<EntregaResponse[]> {
+    const params = new HttpParams().set('dia', dia);
+    return this.http.get<EntregaResponse[]>(`${this.apiUrl}/por-dia`, {
       headers: this.getAuthHeaders(),
-      observe: 'body', // Para observar o corpo da resposta
-    });
+      params
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  porPeriodo(inicio: string, fim: string): Observable<EntregaResponse[]> {
+    const params = new HttpParams()
+      .set('inicio', inicio)
+      .set('fim', fim);
+    return this.http.get<EntregaResponse[]>(`${this.apiUrl}/por-periodo`, {
+      headers: this.getAuthHeaders(),
+      params
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  porMes(mes: number, ano: number): Observable<EntregaResponse[]> {
+    const params = new HttpParams()
+      .set('mes', mes)
+      .set('ano', ano);
+    return this.http.get<EntregaResponse[]>(`${this.apiUrl}/por-mes`, {
+      headers: this.getAuthHeaders(),
+      params
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  porAno(ano: number): Observable<EntregaResponse[]> {
+    const params = new HttpParams().set('ano', ano);
+    return this.http.get<EntregaResponse[]>(`${this.apiUrl}/por-ano`, {
+      headers: this.getAuthHeaders(),
+      params
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  porConsumidor(consumidorId: number): Observable<EntregaResponse[]> {
+    return this.http.get<EntregaResponse[]>(`${this.apiUrl}/por-consumidor/${consumidorId}`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  porConsumidorPeriodo(consumidorId: number, inicio: string, fim: string): Observable<EntregaResponse[]> {
+    const params = new HttpParams()
+      .set('inicio', inicio)
+      .set('fim', fim);
+    return this.http.get<EntregaResponse[]>(`${this.apiUrl}/por-consumidor/${consumidorId}/periodo`, {
+      headers: this.getAuthHeaders(),
+      params
+    }).pipe(
+      catchError(this.handleError)
+    );
   }
 }

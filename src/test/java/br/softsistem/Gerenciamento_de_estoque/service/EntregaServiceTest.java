@@ -61,16 +61,12 @@ class EntregaServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Mockando SecurityUtils
         mockedSecurityUtils = Mockito.mockStatic(SecurityUtils.class);
-        mockedSecurityUtils.when(SecurityUtils::getCurrentOrgId).thenReturn(1L);  // Organização
-        mockedSecurityUtils.when(SecurityUtils::getCurrentUserId).thenReturn(1L); // Usuário logado
+        mockedSecurityUtils.when(SecurityUtils::getCurrentOrgId).thenReturn(1L);
+        mockedSecurityUtils.when(SecurityUtils::getCurrentUserId).thenReturn(1L);
 
-        // Criando uma instância de Org
-        Org org = new Org();
-        org.setId(1L);
+        Org org = new Org(); org.setId(1L);
 
-        // Criando Consumidor
         Consumidor consumidor = new Consumidor();
         consumidor.setId(1L);
         consumidor.setNome("Carlos");
@@ -78,15 +74,13 @@ class EntregaServiceTest {
         consumidor.setEndereco("Rua ABC");
         consumidor.setOrg(org);
 
-        // Criando Produto
         Produto produto = new Produto();
         produto.setId(1L);
         produto.setNome("Produto Teste");
-        produto.setQuantidade(100);  // importante! evitar NullPointer
+        produto.setQuantidade(100);
         produto.setPreco(new BigDecimal("20.00"));
         produto.setOrg(org);
 
-        // Criando Entrega
         entrega = new Entrega();
         entrega.setId(1L);
         entrega.setConsumidor(consumidor);
@@ -95,7 +89,6 @@ class EntregaServiceTest {
         entrega.setHorarioEntrega(LocalDateTime.parse("2025-06-03T12:00:00"));
         entrega.setOrg(org);
 
-        // DTO para criar entrega
         entregaRequestDto = new EntregaRequestDto();
         entregaRequestDto.setConsumidorId(1L);
         entregaRequestDto.setProdutoId(1L);
@@ -103,21 +96,22 @@ class EntregaServiceTest {
         entregaRequestDto.setHorarioEntrega(LocalDateTime.parse("2025-06-03T12:00:00"));
     }
 
-
     @AfterEach
     void tearDown() {
-        // Fechando o mock estático após cada teste
         mockedSecurityUtils.close();
     }
 
     @Test
     void criarEntrega() {
+        // Simula usuário entregador
         Usuario entregador = new Usuario();
         entregador.setId(1L);
         entregador.setUsername("EntregadorTest");
 
+        // Produto e consumidor simulados
         Produto produto = entrega.getProduto();
 
+        // Entidade de entrega esperada após salvar
         Entrega entregaEsperada = new Entrega();
         entregaEsperada.setId(1L);
         entregaEsperada.setProduto(produto);
@@ -125,7 +119,9 @@ class EntregaServiceTest {
         entregaEsperada.setQuantidade(10);
         entregaEsperada.setEntregador(entregador);
         entregaEsperada.setOrg(produto.getOrg());
+        entregaEsperada.setHorarioEntrega(entrega.getHorarioEntrega());
 
+        // Mocks dos repositórios
         when(consumidorRepository.findByIdAndOrgId(anyLong(), anyLong()))
                 .thenReturn(Optional.of(entrega.getConsumidor()));
         when(produtoRepository.findByIdAndOrgId(anyLong(), anyLong()))
@@ -135,44 +131,46 @@ class EntregaServiceTest {
         when(produtoRepository.save(any(Produto.class))).thenReturn(produto);
         when(entregaRepository.save(any(Entrega.class))).thenReturn(entregaEsperada);
 
+        // Chama o método de serviço
         EntregaComAvisoResponseDto resultado = entregaService.criarEntrega(entregaRequestDto);
 
+        // Validações principais
         assertNotNull(resultado);
         assertNotNull(resultado.entrega());
         assertEquals(1L, resultado.entrega().id());
         assertEquals("EntregadorTest", resultado.entrega().nomeEntregador());
-        assertNull(resultado.avisoEstoqueBaixo());
+
+        // Novos campos adicionados no DTO
+        assertEquals(produto.getId(), resultado.entrega().produtoId(), "Deve trazer o id do produto");
+        assertEquals(entrega.getConsumidor().getId(), resultado.entrega().consumidorId(), "Deve trazer o id do consumidor");
+
+        // Valida flag e mensagem de estoque
+        assertFalse(resultado.estoqueBaixo());
+        assertNull(resultado.mensagemEstoqueBaixo(), "A mensagem deve ser null quando não há aviso de estoque baixo");
     }
-
-
-
-
 
     @Test
     void editarEntrega() {
-        // Dados de entrada simulados
         EntregaRequestDto entregaRequest = new EntregaRequestDto();
         entregaRequest.setConsumidorId(1L);
         entregaRequest.setProdutoId(1L);
         entregaRequest.setQuantidade(20);
         entregaRequest.setHorarioEntrega(LocalDateTime.parse("2025-06-03T12:00:00"));
 
-        // Mocks
         Consumidor consumidor = new Consumidor(1L, "Carlos", "12345678900", "Rua ABC");
         Produto produto = new Produto(1L, "Produto Teste", 100, new BigDecimal("20.00"));
-        produto.setQuantidade(10);  // Garantindo que a quantidade não seja null
-        produto.setPreco(new BigDecimal("20.00"));  // Garantindo que o preço não seja null
+        produto.setQuantidade(10);
+        produto.setPreco(new BigDecimal("20.00"));
 
-        Org org = new Org();
-        org.setId(1L);  // Criando uma organização fictícia e associando um ID
-        consumidor.setOrg(org);  // Associe a organização ao consumidor
+        Org org = new Org(); org.setId(1L);
+        consumidor.setOrg(org);
 
         Entrega entregaExistente = new Entrega();
         entregaExistente.setId(1L);
         entregaExistente.setConsumidor(consumidor);
         entregaExistente.setProduto(produto);
         entregaExistente.setQuantidade(10);
-        entregaExistente.setOrg(org);  // Associe a organização à entrega
+        entregaExistente.setOrg(org);
 
         when(entregaRepository.findById(1L)).thenReturn(Optional.of(entregaExistente));
         when(consumidorRepository.findByIdAndOrgId(anyLong(), anyLong())).thenReturn(Optional.of(consumidor));
@@ -180,17 +178,12 @@ class EntregaServiceTest {
         when(produtoRepository.save(any(Produto.class))).thenReturn(produto);
         when(entregaRepository.save(any(Entrega.class))).thenReturn(entregaExistente);
 
-        // Chamada do método
         Entrega resultado = entregaService.editarEntrega(1L, entregaRequest);
 
-        // Verificações
         assertNotNull(resultado);
         assertEquals(20, resultado.getQuantidade());
-        // Verifique se o valor foi calculado corretamente
-        assertEquals(new BigDecimal("400.00"), resultado.getValor());  // A quantidade * preço deve resultar em 400.00
+        assertEquals(new BigDecimal("400.00"), resultado.getValor());
     }
-
-
     @Test
     void deletarEntrega() {
         // Mocks
