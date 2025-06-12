@@ -56,36 +56,42 @@ public class EntregaService {
             throw new OrganizacaoNaoEncontradaException("Organização não encontrada no contexto de segurança");
         }
 
-        Consumidor consumidor = consumidorRepository.findByIdAndOrgId(entregaRequest.getConsumidorId(), orgId)
+        Consumidor consumidor = consumidorRepository
+                .findByIdAndOrgId(entregaRequest.getConsumidorId(), orgId)
                 .orElseThrow(() -> new ResourceNotFoundException("Consumidor não encontrado ou não pertence à organização"));
 
-        Produto produto = produtoRepository.findByIdAndOrgId(entregaRequest.getProdutoId(), orgId)
+        Produto produto = produtoRepository
+                .findByIdAndOrgId(entregaRequest.getProdutoId(), orgId)
                 .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado ou não pertence à organização"));
 
         if (produto.getQuantidade() < entregaRequest.getQuantidade()) {
             throw new IllegalArgumentException("Estoque insuficiente para a entrega.");
         }
 
+        // Ajusta estoque
         produto.setQuantidade(produto.getQuantidade() - entregaRequest.getQuantidade());
         produtoRepository.save(produto);
 
-        // ⚠️ Aviso de estoque baixo
-        String avisoEstoqueBaixo = null;
-        if (produto.isEstoqueBaixo()) {
-            avisoEstoqueBaixo = String.format(
-                    "⚠ Estoque do produto '%s' está abaixo do mínimo! Atual: %d | Mínimo: %d",
-                    produto.getNome(), produto.getQuantidade(), produto.getQuantidadeMinima()
-            );
-        }
+        // Calcula flag e mensagem de estoque baixo
+        boolean estoqueBaixo = produto.isEstoqueBaixo();
+        String mensagemEstoqueBaixo = estoqueBaixo
+                ? String.format(
+                "⚠ Estoque do produto '%s' está abaixo do mínimo! Atual: %d | Mínimo: %d",
+                produto.getNome(),
+                produto.getQuantidade(),
+                produto.getQuantidadeMinima()
+        )
+                : null; // PADRONIZA: null quando não há mensagem
 
         Long entregadorId = SecurityUtils.getCurrentUserId();
         if (entregadorId == null) {
             throw new ResourceNotFoundException("Usuário autenticação inválida ou não encontrado");
         }
+        Usuario entregador = usuarioRepository
+                .findByIdAndOrgId(entregadorId, orgId)
+                .orElseThrow(() -> new ResourceNotFoundException("Entregador não encontrado ou não pertence à organização"));
 
-        Usuario entregador = usuarioRepository.findByIdAndOrgId(entregadorId, orgId)
-                .orElseThrow(() -> new ResourceNotFoundException("Entregador (usuário logado) não encontrado ou não pertence à organização"));
-
+        // Monta e salva a entidade
         Entrega entrega = entregaRequest.toEntity(produto, consumidor);
         entrega.setEntregador(entregador);
         entrega.setOrg(produto.getOrg());
@@ -93,17 +99,20 @@ public class EntregaService {
 
         Entrega entregaSalva = entregaRepository.save(entrega);
 
+        // Registra movimentação
         MovimentacaoProduto movimentacao = new MovimentacaoProduto();
         movimentacao.setProduto(produto);
-        movimentacao.setQuantidade(entrega.getQuantidade());
+        movimentacao.setQuantidade(entregaSalva.getQuantidade());
         movimentacao.setDataHora(LocalDateTime.now());
         movimentacao.setTipo(TipoMovimentacao.SAIDA);
         movimentacao.setOrg(produto.getOrg());
         movimentacaoProdutoRepository.save(movimentacao);
 
+        // Retorna DTO com flag e mensagem
         return new EntregaComAvisoResponseDto(
                 EntregaResponseDto.fromEntity(entregaSalva),
-                avisoEstoqueBaixo
+                estoqueBaixo,
+                mensagemEstoqueBaixo
         );
     }
 

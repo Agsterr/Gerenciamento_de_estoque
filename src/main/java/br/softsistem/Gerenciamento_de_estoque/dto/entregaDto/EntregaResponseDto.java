@@ -1,7 +1,6 @@
 package br.softsistem.Gerenciamento_de_estoque.dto.entregaDto;
 
 import br.softsistem.Gerenciamento_de_estoque.model.Entrega;
-
 import java.time.LocalDateTime;
 
 public record EntregaResponseDto(
@@ -10,7 +9,9 @@ public record EntregaResponseDto(
         String nomeProduto,
         String nomeEntregador,
         Integer quantidade,
-        LocalDateTime horarioEntrega
+        LocalDateTime horarioEntrega,
+        Long produtoId,   // Novo campo
+        Long consumidorId // Novo campo
 ) {
     // Método estático para conversão de entidade para DTO
     public static EntregaResponseDto fromEntity(Entrega entrega) {
@@ -20,7 +21,9 @@ public record EntregaResponseDto(
                 entrega.getProduto().getNome(),
                 entrega.getEntregador().getUsername(),
                 entrega.getQuantidade(),
-                entrega.getHorarioEntrega()
+                entrega.getHorarioEntrega(),
+                entrega.getProduto().getId(),  // Atribuindo o produtoId
+                entrega.getConsumidor().getId()  // Atribuindo o consumidorId
         );
     }
 }
