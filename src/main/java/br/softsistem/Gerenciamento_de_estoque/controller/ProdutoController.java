@@ -77,4 +77,15 @@ public class ProdutoController {
                 .toList();
         return ResponseEntity.ok(produtos);
     }
+    @PutMapping("/{id}")
+    public ResponseEntity<?> editarProduto(@PathVariable Long id, @RequestBody ProdutoRequest produtoRequest) {
+        Long orgId = SecurityUtils.getCurrentOrgId();
+        if (orgId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        Produto produtoEditado = service.editar(id, produtoRequest, orgId);
+        return ResponseEntity.ok(new ProdutoDto(produtoEditado));
+    }
+
+
 }

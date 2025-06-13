@@ -103,4 +103,42 @@ public class ProdutoService {
     public boolean produtoExistente(Long id, Long orgId) {
         return repository.findByIdAndOrgId(id, orgId).isPresent();
     }
+
+    public Produto editar(Long id, ProdutoRequest produtoRequest, Long orgId) {
+        Categoria categoria = categoriaRepository.findById(produtoRequest.getCategoriaId())
+                .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada."));
+
+        Org org = orgRepository.findById(orgId)
+                .orElseThrow(() -> new ResourceNotFoundException("Organização não encontrada."));
+
+        Produto produtoExistente = repository.findByIdAndOrgId(id, orgId)
+                .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado com o ID fornecido ou não pertence à organização."));
+
+        // Atualiza os campos com os valores do request
+        produtoExistente.setNome(produtoRequest.getNome());
+        produtoExistente.setDescricao(produtoRequest.getDescricao());
+        produtoExistente.setPreco(produtoRequest.getPreco());
+
+        // Para a quantidade, neste método vamos atualizar diretamente para o valor passado (não somar)
+        produtoExistente.setQuantidade(produtoRequest.getQuantidade());
+
+        produtoExistente.setQuantidadeMinima(produtoRequest.getQuantidadeMinima());
+        produtoExistente.setCategoria(categoria);
+        produtoExistente.setOrg(org);
+
+        Produto salvo = repository.save(produtoExistente);
+
+        // Registrar movimentação de ENTRADA com a quantidade nova (ou você pode criar outra lógica aqui)
+        MovimentacaoProduto movimentacao = new MovimentacaoProduto();
+        movimentacao.setProduto(salvo);
+        movimentacao.setQuantidade(produtoRequest.getQuantidade());
+        movimentacao.setDataHora(LocalDateTime.now());
+        movimentacao.setTipo(TipoMovimentacao.ENTRADA);
+        movimentacao.setOrg(org);
+
+        movimentacaoProdutoRepository.save(movimentacao);
+
+        return salvo;
+    }
+
 }
