@@ -1,20 +1,44 @@
-// Componente Principal: AppComponent
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { MatIconModule } from '@angular/material/icon'; // Importação do módulo de ícones
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatButtonModule } from '@angular/material/button';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [
+    CommonModule,
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
-    MatIconModule // Necessário para o uso de <mat-icon>
+    MatIconModule,
+    MatMenuModule,
+    MatButtonModule,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
   title = 'Gerenciamento De Estoque';
+  menuAberto = false;
+
+  constructor(public authService: AuthService) {}
+
+  // Getter para o estado do login (evita chamar método direto no template)
+  get isLoggedIn(): boolean {
+    return this.authService.isLoggedIn();
+  }
+
+  // Getter para o nome do usuário
+  get userName(): string {
+    const user = this.authService.getLoggedUser();
+    return user?.username || 'Usuário';
+  }
+
+  logout(): void {
+    this.authService.logout();
+  }
 }

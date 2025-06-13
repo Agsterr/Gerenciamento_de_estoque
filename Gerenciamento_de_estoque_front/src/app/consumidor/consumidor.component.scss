@@ -1,10 +1,8 @@
-/* consumidor.component.scss */
-
 /* ---------- Container principal ---------- */
 .consumidor-container {
   padding: 20px;
   font-family: Arial, sans-serif;
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
   background-color: #ffffff;
   border-radius: 8px;
@@ -14,16 +12,20 @@
 
 /* ---------- Título ---------- */
 .titulo-gestao {
-  text-align: center;
+  text-align: left ;
   color: #333;
   margin-bottom: 20px;
   font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
 /* ---------- Ações ---------- */
 .acoes-container {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;  /* alinhado à esquerda */
   gap: 10px;
   margin-bottom: 20px;
 }
@@ -54,7 +56,7 @@
 /* ---------- Busca ---------- */
 .busca-container {
   margin-bottom: 20px;
-  text-align: center;
+  text-align: left;
 }
 .campo-busca {
   width: 100%;
@@ -80,6 +82,7 @@
 .tabela-consumidores th {
   background-color: #007bff;
   color: #fff;
+  font-weight: 600;
 }
 .tabela-consumidores tbody tr:hover {
   background-color: #f1f1f1;
@@ -132,6 +135,9 @@
   font-weight: bold;
   font-size: 1rem;
   color: #333;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 .form-adicionar input {
   padding: 10px;
@@ -162,7 +168,7 @@
   transform: scale(1.05);
 }
 
-/* Paginação */
+/* ---------- Paginação ---------- */
 .pagination {
   margin-top: 20px;
   display: flex;
@@ -198,6 +204,7 @@
   margin: 0;
   font-size: 14px;
 }
+
 /* ---------- Responsividade ---------- */
 @media (max-width: 768px) {
   .form-adicionar-container { padding: 15px; }

@@ -1,7 +1,6 @@
-<!-- src/app/components/consumidor.component.html -->
 <div class="consumidor-container">
   <!-- Título -->
-  <h1 class="titulo-gestao">Gestão de Consumidores</h1>
+  <h1 class="titulo-gestao"><i class="fas fa-users"></i> Gestão de Consumidores</h1>
 
   <!-- Botões -->
   <div class="acoes-container">
@@ -16,22 +15,29 @@
   <!-- Formulário -->
   <div class="form-adicionar-container" *ngIf="showAddForm">
     <h2 class="titulo-form">
+      <i class="fas fa-user-edit"></i>
       {{ editingConsumer ? 'Editar Consumidor' : 'Adicionar Consumidor' }}
     </h2>
 
     <form [formGroup]="consumerForm" (ngSubmit)="submitAddForm()" class="form-adicionar">
       <div class="form-group">
-        <label for="nome">Nome:</label>
+        <label for="nome">
+          <i class="fas fa-id-badge"></i> Nome:
+        </label>
         <input id="nome" type="text" formControlName="nome" required />
       </div>
 
       <div class="form-group">
-        <label for="cpf">CPF:</label>
+        <label for="cpf">
+          <i class="fas fa-address-card"></i> CPF:
+        </label>
         <input id="cpf" type="text" formControlName="cpf" required />
       </div>
 
       <div class="form-group">
-        <label for="endereco">Endereço:</label>
+        <label for="endereco">
+          <i class="fas fa-map-marker-alt"></i> Endereço:
+        </label>
         <input id="endereco" type="text" formControlName="endereco" required />
       </div>
 
@@ -54,15 +60,15 @@
 
   <!-- Lista -->
   <div class="lista-container" *ngIf="showList">
-    <h2 class="titulo-lista">Lista de Consumidores</h2>
+    <h2 class="titulo-lista"><i class="fas fa-list-alt"></i> Lista de Consumidores</h2>
 
     <table class="tabela-consumidores">
       <thead>
         <tr>
-          <th>Nome</th>
-          <th>CPF</th>
-          <th>Endereço</th>
-          <th>Ações</th>
+          <th><i class="fas fa-id-badge"></i> Nome</th>
+          <th><i class="fas fa-address-card"></i> CPF</th>
+          <th><i class="fas fa-map-marker-alt"></i> Endereço</th>
+          <th><i class="fas fa-cogs"></i> Ações</th>
         </tr>
       </thead>
 
@@ -72,10 +78,10 @@
           <td>{{ consumer.cpf }}</td>
           <td>{{ consumer.endereco }}</td>
           <td>
-            <button class="botao-deletar" (click)="deleteConsumer(consumer.id)">
+            <button class="botao-deletar" (click)="deleteConsumer(consumer.id)" title="Excluir">
               <i class="fas fa-trash-alt"></i>
             </button>
-            <button class="botao-editar" (click)="editConsumer(consumer)">
+            <button class="botao-editar" (click)="editConsumer(consumer)" title="Editar">
               <i class="fas fa-edit"></i>
             </button>
           </td>
