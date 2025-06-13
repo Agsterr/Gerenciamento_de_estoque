@@ -57,6 +57,8 @@ export class ProdutoComponent implements OnInit {
     this.verificarEstoqueBaixo();
   }
 
+  
+
   exibirListaProdutos(): void {
     this.exibirLista = true;
     this.exibirCriar = false;
@@ -75,31 +77,9 @@ export class ProdutoComponent implements OnInit {
     this.produtoDetalhado = null;
   }
 
-  exibirEditarProduto(produtoId: number): void {
-    this.exibirLista = false;
-    this.exibirCriar = false;
-    this.exibirEditar = true;
-    this.mensagem = '';
-    this.mensagemErro = '';
 
-    this.produtoService.getProdutoById(produtoId).subscribe({
-      next: (produto) => {
-        this.produtoForm.setValue({
-          nome: produto.nome,
-          descricao: produto.descricao,
-          preco: produto.preco,
-          quantidade: produto.quantidade,
-          quantidadeMinima: produto.quantidadeMinima,
-          categoriaId: produto.categoriaId,
-        });
-        this.produtoDetalhado = produto;
-      },
-      error: (error: any) => {
-        this.mensagemErro = 'Erro ao carregar produto.';
-        console.error('Erro ao carregar produto:', error);
-      }
-    });
-  }
+
+  
 
   atualizarProduto(): void {
     if (this.produtoForm.valid && this.produtoDetalhado) {
@@ -156,6 +136,68 @@ export class ProdutoComponent implements OnInit {
       }
     });
   }
+
+ 
+  // Método que será chamado para atualizar o produto já carregado no formulário
+  editarProduto(): void {
+    if (this.produtoForm.valid && this.produtoDetalhado) {
+      // Monta o objeto Produto para envio (garantindo o id e orgId)
+      const produtoAtualizado: Produto = {
+        ...this.produtoForm.value,
+        id: this.produtoDetalhado.id,
+        orgId: Number(this.getOrgId()),
+        ativo: true,
+        criadoEm: this.produtoDetalhado.criadoEm,
+        status: this.produtoDetalhado.status || '',
+        categoriaNome: this.produtoDetalhado.categoriaNome || '',
+      };
+
+      this.produtoService.atualizarProduto(produtoAtualizado, produtoAtualizado.id).subscribe({
+        next: () => {
+          this.mensagem = 'Produto atualizado com sucesso!';
+          this.carregarProdutos(this.currentPage);
+          this.produtoForm.reset();
+          this.exibirListaProdutos(); // Volta para a lista após editar
+          this.produtoDetalhado = null;
+        },
+        error: (error: any) => {
+          this.mensagemErro = 'Erro ao atualizar produto.';
+          console.error('Erro ao atualizar produto:', error);
+        }
+      });
+    } else {
+      this.mensagemErro = 'Por favor, preencha corretamente os campos do formulário.';
+    }
+  }
+
+  // Atualizar exibirEditarProduto para abrir o formulário com dados do produto
+  exibirEditarProduto(produtoId: number): void {
+    this.exibirLista = false;
+    this.exibirCriar = false;
+    this.exibirEditar = true;
+    this.mensagem = '';
+    this.mensagemErro = '';
+
+    this.produtoService.getProdutoById(produtoId).subscribe({
+      next: (produto) => {
+        this.produtoForm.setValue({
+          nome: produto.nome,
+          descricao: produto.descricao,
+          preco: produto.preco,
+          quantidade: produto.quantidade,
+          quantidadeMinima: produto.quantidadeMinima,
+          categoriaId: produto.categoriaId,
+        });
+        this.produtoDetalhado = produto;
+      },
+      error: (error: any) => {
+        this.mensagemErro = 'Erro ao carregar produto para edição.';
+        console.error('Erro ao carregar produto:', error);
+      }
+    });
+  }
+
+
 
   toggleAdicionar(produtoId: number): void {
     this.quantidadesAdicionar[produtoId] !== undefined

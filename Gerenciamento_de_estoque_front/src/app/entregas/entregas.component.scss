@@ -1,12 +1,12 @@
-/* Estilos para o contêiner principal */
+/* Container principal */
 .entrega-container {
   padding: 20px;
-  font-family: Arial, sans-serif;
   max-width: 1200px;
-  margin: 0 auto;
-  background-color: #ffffff;
+  margin: 20px auto;
+  font-family: Arial, sans-serif;
+  background-color: #fff;
   border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   color: #000;
 }
 
@@ -15,56 +15,63 @@
   text-align: center;
   color: #333;
   margin-bottom: 20px;
+  font-size: 1.5rem;
+  font-weight: 600;
 }
 
-/* Mensagens de Sucesso e Erro */
+/* Mensagens de feedback */
 .alert {
-  padding: 15px;
-  margin-bottom: 20px;
-  border-radius: 5px;
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  font-weight: 600;
+  font-size: 1rem;
 }
 
 .alert-success {
   background-color: #d4edda;
   color: #155724;
+  border: 1px solid #c3e6cb;
 }
 
 .alert-danger {
   background-color: #f8d7da;
   color: #721c24;
+  border: 1px solid #f5c6cb;
 }
 
-/* Botões de Ação */
+/* Botões de ação */
 .action-buttons {
   display: flex;
   justify-content: center;
   gap: 15px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .action-buttons .btn {
   padding: 10px 20px;
-  font-size: 14px;
+  font-size: 1rem;
   cursor: pointer;
   border: none;
-  border-radius: 4px;
+  border-radius: 5px;
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: background-color 0.3s, transform 0.3s;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .action-buttons .btn-primary {
   background-color: #007bff;
-  color: white;
+  color: #fff;
 }
 
 .action-buttons .btn-success {
   background-color: #28a745;
-  color: white;
+  color: #fff;
 }
 
 .action-buttons .btn:hover {
@@ -72,21 +79,22 @@
   transform: scale(1.05);
 }
 
-/* Campo de Busca */
+/* Campo de busca */
 .search-input {
   width: 100%;
   max-width: 500px;
-  padding: 10px;
+  padding: 10px 12px;
   margin: 0 auto 25px;
   border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  transition: border-color 0.3s;
+  border-radius: 5px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
   display: block;
 }
 
 .search-input:focus {
   border-color: #007bff;
+  outline: none;
 }
 
 /* Paginação */
@@ -99,104 +107,101 @@
 }
 
 .pagination button {
-  padding: 8px 16px;
-  background-color: #007bff; /* azul igual ao botão primário */
-  color: white;
+  padding: 8px 14px;
+  background-color: #007bff;
+  color: #fff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: background-color 0.3s ease, transform 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .pagination button:disabled {
-  background-color: #6c757d; /* cinza para desabilitado */
+  background-color: #6c757d;
   cursor: not-allowed;
+  transform: none;
 }
 
 .pagination button:hover:not(:disabled) {
-  background-color: #0056b3; /* azul escuro no hover */
+  background-color: #0056b3;
   transform: scale(1.05);
 }
 
 .pagination p {
-  margin: 0;
-  font-size: 14px;
+  margin: 0 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
 }
 
-/* Tabela de Entregas */
+/* Tabela de entregas */
 .entrega-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s ease;
 }
 
 .entrega-table th,
 .entrega-table td {
-  padding: 12px;
+  padding: 12px 15px;
   text-align: left;
   border: 1px solid #ddd;
+  font-size: 1rem;
 }
 
 .entrega-table th {
-  background-color: #f4f4f4;
+  background-color: #007bff;
+  color: #fff;
+  font-weight: 600;
 }
 
-.entrega-table td {
-  background-color: #ffffff;
-}
-
-.entrega-table tr:nth-child(even) {
+.entrega-table tbody tr:nth-child(even) {
   background-color: #f9f9f9;
 }
 
-.entrega-table tr:hover {
-  background-color: #f1f1f1;
-  transition: background-color 0.3s;
+.entrega-table tbody tr:hover {
+  background-color: #e9ecef;
+  transition: background-color 0.3s ease;
 }
 
-/* Botão de Deletar */
-.btn-danger {
-  padding: 5px 10px;
-  font-size: 12px;
+/* Botões de tabela */
+.btn-danger,
+.btn-primary {
+  padding: 6px 12px;
+  font-size: 0.9rem;
   cursor: pointer;
   border: none;
-  border-radius: 4px;
-  background-color: #dc3545;
-  color: white;
-  transition: background-color 0.3s;
-  display: flex;
+  border-radius: 5px;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  color: #fff;
+}
+
+.btn-danger {
+  background-color: #dc3545;
 }
 
 .btn-danger:hover {
   background-color: #a71d2a;
+  transform: scale(1.05);
 }
 
-/* Botão de Editar - agora azul como o botão primário */
 .btn-primary {
-  padding: 5px 10px;
-  font-size: 12px;
-  cursor: pointer;
-  border: none;
-  border-radius: 4px;
   background-color: #007bff;
-  color: white;
-  transition: background-color 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 4px;
 }
 
 .btn-primary:hover {
   background-color: #0056b3;
+  transform: scale(1.05);
 }
 
-/* Formulário de Adição e Edição de Entrega */
+/* Formulário de Adição e Edição */
 .add-form-section,
 .edit-form-section {
   margin-top: 30px;
@@ -204,15 +209,19 @@
   border: 1px solid #ddd;
   border-radius: 8px;
   background-color: #f9f9f9;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .add-form-section h3,
 .edit-form-section h3 {
   text-align: center;
   margin-bottom: 20px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #333;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   gap: 8px;
 }
 
@@ -223,10 +232,10 @@
 
 .add-form-section label,
 .edit-form-section label {
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  font-weight: 600;
+  font-size: 1rem;
+  display: block;
+  margin-bottom: 5px;
 }
 
 .add-form-section select.form-control,
@@ -234,17 +243,18 @@
 .edit-form-section select.form-control,
 .edit-form-section input.form-control {
   width: 100%;
-  padding: 10px;
+  padding: 10px 12px;
   border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
+  border-radius: 5px;
+  font-size: 1rem;
+  box-sizing: border-box;
 }
 
 /* Responsividade */
 @media (max-width: 768px) {
   .action-buttons {
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
   }
 
   .search-input {
@@ -255,13 +265,10 @@
     flex-direction: column;
   }
 
-  .entrega-table {
-    font-size: 12px;
-  }
-
   .entrega-table th,
   .entrega-table td {
-    padding: 8px;
+    font-size: 0.9rem;
+    padding: 10px;
   }
 
   .add-form-section,
@@ -272,32 +279,32 @@
 
 @media (max-width: 480px) {
   .entrega-container {
-    padding: 10px;
+    padding: 15px;
   }
 
   .action-buttons .btn {
-    padding: 8px 10px;
-    font-size: 12px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
   }
 
   .search-input {
-    padding: 8px;
-    font-size: 12px;
+    padding: 8px 10px;
+    font-size: 0.9rem;
   }
 
   .pagination button {
     padding: 6px 10px;
-    font-size: 12px;
+    font-size: 0.9rem;
   }
 
   .pagination p {
-    font-size: 12px;
+    font-size: 0.85rem;
   }
 
   .entrega-table th,
   .entrega-table td {
-    padding: 6px;
-    font-size: 12px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
   }
 
   .add-form-section h3,
@@ -305,8 +312,8 @@
     font-size: 1.2rem;
   }
 
-  .add-form-section .form-group label,
-  .edit-form-section .form-group label {
+  .add-form-section label,
+  .edit-form-section label {
     font-size: 0.9rem;
   }
 
@@ -315,11 +322,6 @@
   .edit-form-section select.form-control,
   .edit-form-section input.form-control {
     font-size: 0.9rem;
-    padding: 8px;
-  }
-
-  .btn-success {
-    padding: 8px 12px;
-    font-size: 12px;
+    padding: 8px 10px;
   }
 }

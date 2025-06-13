@@ -7,8 +7,8 @@ html, body {
   background-color: #121212; /* Dark Mode */
   color: #f0f0f0; /* Texto claro */
   line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased; /* suaviza fontes em WebKit */
+  -moz-osx-font-smoothing: grayscale;  /* suaviza fontes no Firefox para Mac */
 }
 
 /* Links com transição suave e melhor visibilidade */
@@ -25,11 +25,11 @@ a:hover {
 
 /* Seleção de texto personalizada */
 ::selection {
-  background: #1976d2;
-  color: #fff;
+  background: #1976d2; /* Azul para seleção */
+  color: #fff; /* texto branco */
 }
 
 /* Responsividade global */
 * {
-  box-sizing: border-box;
+  box-sizing: border-box; /* inclui padding e border na largura e altura */
 }

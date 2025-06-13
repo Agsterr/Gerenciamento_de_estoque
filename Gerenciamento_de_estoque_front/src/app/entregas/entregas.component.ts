@@ -43,10 +43,14 @@ export class EntregasComponent implements OnInit {
     private consumidorService: ConsumidorService
   ) {}
 
-  ngOnInit(): void {
-    this.carregarProdutos();
-    this.carregarConsumidores();
-  }
+ ngOnInit(): void {
+  this.carregarProdutos();
+  this.carregarConsumidores();
+  this.showList = true;       // garante que a lista fique visível
+  this.fetchEntregas(this.currentPage);
+}
+
+
 
   carregarProdutos(): void {
     this.produtoService.listarProdutos(0, 100).subscribe({
