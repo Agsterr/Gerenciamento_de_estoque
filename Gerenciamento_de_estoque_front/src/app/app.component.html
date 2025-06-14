@@ -1,40 +1,35 @@
+<!-- src/app/app.component.html -->
 <div class="container">
   <h1>{{ title }}</h1>
 
   <nav>
-    <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-      <mat-icon>home</mat-icon>
-      Home
+    <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-link">
+      <mat-icon>home</mat-icon> Home
     </a>
 
     <ng-container *ngIf="!isLoggedIn">
-      <a routerLink="/login" routerLinkActive="active">
-        <mat-icon>login</mat-icon>
-        Login
+      <a routerLink="/login" routerLinkActive="active" class="nav-link">
+        <mat-icon>login</mat-icon> Login
       </a>
 
-      <a routerLink="/register" routerLinkActive="active">
-        <mat-icon>person_add</mat-icon>
-        Register
+      <a routerLink="/register" routerLinkActive="active" class="nav-link">
+        <mat-icon>person_add</mat-icon> Register
       </a>
     </ng-container>
 
     <ng-container *ngIf="isLoggedIn">
-      <a routerLink="/dashboard" routerLinkActive="active">
-        <mat-icon>dashboard</mat-icon>
-        Dashboard
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+        <mat-icon>dashboard</mat-icon> Dashboard
       </a>
 
       <!-- Dropdown usuário -->
       <button mat-button [matMenuTriggerFor]="menu" aria-label="Menu do usuário" class="user-button">
-        <mat-icon>account_circle</mat-icon>
-        {{ userName }}
+        <mat-icon>account_circle</mat-icon> {{ userName }}
         <mat-icon>arrow_drop_down</mat-icon>
       </button>
       <mat-menu #menu="matMenu">
         <button mat-menu-item (click)="logout()">
-          <mat-icon>logout</mat-icon>
-          Logout
+          <mat-icon>logout</mat-icon> Logout
         </button>
       </mat-menu>
     </ng-container>

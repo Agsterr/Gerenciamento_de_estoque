@@ -13,6 +13,11 @@
   <div *ngIf="mensagem" class="mensagem sucesso">{{ mensagem }}</div>
   <div *ngIf="mensagemErro" class="mensagem erro">{{ mensagemErro }}</div>
 
+    <!-- Lista de Produtos -->
+  <div *ngIf="exibirLista" class="produto-lista">
+    <h2><i class="fas fa-box"></i> Produtos Cadastrados</h2>
+
+
   <!-- Menu de Ações -->
   <div class="menu">
     <button (click)="exibirListaProdutos()">
@@ -23,9 +28,6 @@
     </button>
   </div>
 
-  <!-- Lista de Produtos -->
-  <div *ngIf="exibirLista" class="produto-lista">
-    <h2><i class="fas fa-box"></i> Produtos Cadastrados</h2>
 
     <table class="tabela-produtos">
       <thead>

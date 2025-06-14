@@ -1,54 +1,54 @@
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-nav {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 15px;
-  justify-content: space-between;
-}
-
-nav a,
-.user-button,
-.menu-toggle {
+/* Estilo geral para os links do menu */
+.nav-link {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px; /* Espaçamento entre o ícone e o texto */
   text-decoration: none;
-  color: #3f51b5;
-  font-weight: 500;
+  color: #333;
+  font-size: 1.1rem;
 }
 
+.nav-link mat-icon {
+  font-size: 1.5rem; /* Tamanho do ícone */
+}
+
+/* Estilo do menu de usuário */
 .user-button {
-  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   background: none;
   border: none;
-  font-size: 1rem;
+  cursor: pointer;
 }
 
+.user-button mat-icon {
+  font-size: 1.5rem; /* Tamanho do ícone */
+}
+
+/* Estilo do botão de menu */
 .menu-toggle {
   background: none;
   border: none;
   cursor: pointer;
-  display: none; /* esconder em desktop */
+  display: none;
 }
 
-/* Responsividade: mostrar menu-toggle no mobile e esconder links */
+.menu-toggle mat-icon {
+  font-size: 2rem; /* Tamanho maior para o ícone de menu */
+}
+
+/* Responsividade para mostrar o botão de menu no celular */
 @media (max-width: 768px) {
-  nav {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-  }
-  nav a,
-  .user-button {
-    display: none;
-  }
   .menu-toggle {
     display: flex;
   }
-  /* Se quiser, aqui você pode controlar a abertura do menu via classe */
+
+  .nav-link {
+    font-size: 0.9rem; /* Ajuste no tamanho da fonte em telas pequenas */
+  }
+
+  .user-button {
+    font-size: 0.9rem; /* Ajuste no tamanho da fonte para o menu de usuário */
+  }
 }

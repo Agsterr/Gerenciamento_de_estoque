@@ -12,15 +12,16 @@
 
 /* ---------- Título ---------- */
 .titulo-gestao {
-  text-align: left ;
+  text-align: left;           /* Texto alinhado à esquerda */
   color: #333;
   margin-bottom: 20px;
   font-size: 1.8rem;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
+  justify-content: flex-start; /* Alinha o conteúdo à esquerda */
+  gap: 10px;                   /* Espaço entre ícone e texto */
 }
+
 
 /* ---------- Ações ---------- */
 .acoes-container {
