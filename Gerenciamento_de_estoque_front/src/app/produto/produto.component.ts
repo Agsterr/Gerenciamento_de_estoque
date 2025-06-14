@@ -56,6 +56,7 @@ export class ProdutoComponent implements OnInit {
     this.carregarCategorias();
     this.verificarEstoqueBaixo();
   }
+  
 
   
 

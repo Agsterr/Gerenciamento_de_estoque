@@ -1,40 +1,68 @@
-<!-- src/app/app.component.html -->
 <div class="container">
   <h1>{{ title }}</h1>
 
   <nav>
-    <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-link">
-      <mat-icon>home</mat-icon> Home
+    <a
+      routerLink="/home"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="nav-link"
+    >
+      <mat-icon>home</mat-icon>
+      Home
     </a>
 
-    <ng-container *ngIf="!isLoggedIn">
-      <a routerLink="/login" routerLinkActive="active" class="nav-link">
-        <mat-icon>login</mat-icon> Login
-      </a>
+    <!-- Menu visível apenas se authService está disponível -->
+    <ng-container *ngIf="authService">
+      
+      <!-- Mostrar login apenas se não logado -->
+      <ng-container *ngIf="!isLoggedIn">
+        <a routerLink="/login" routerLinkActive="active" class="nav-link">
+          <mat-icon>login</mat-icon>
+          Login
+        </a>
+      </ng-container>
 
+      <!-- Register sempre visível -->
       <a routerLink="/register" routerLinkActive="active" class="nav-link">
-        <mat-icon>person_add</mat-icon> Register
-      </a>
-    </ng-container>
-
-    <ng-container *ngIf="isLoggedIn">
-      <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
-        <mat-icon>dashboard</mat-icon> Dashboard
+        <mat-icon>person_add</mat-icon>
+        Register
       </a>
 
-      <!-- Dropdown usuário -->
-      <button mat-button [matMenuTriggerFor]="menu" aria-label="Menu do usuário" class="user-button">
-        <mat-icon>account_circle</mat-icon> {{ userName }}
-        <mat-icon>arrow_drop_down</mat-icon>
-      </button>
-      <mat-menu #menu="matMenu">
-        <button mat-menu-item (click)="logout()">
-          <mat-icon>logout</mat-icon> Logout
+      <!-- Dashboard e usuário se estiver logado -->
+      <ng-container *ngIf="isLoggedIn">
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-link dashboard-link">
+          <mat-icon>dashboard</mat-icon>
+          Dashboard
+        </a>
+
+        <!-- Menu do usuário -->
+        <button
+          mat-button
+          [matMenuTriggerFor]="menu"
+          aria-label="Menu do usuário"
+          class="user-button"
+        >
+          <mat-icon>account_circle</mat-icon>
+          {{ userName }}
+          <mat-icon>arrow_drop_down</mat-icon>
         </button>
-      </mat-menu>
+
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            Logout
+          </button>
+        </mat-menu>
+      </ng-container>
     </ng-container>
 
-    <button class="menu-toggle" (click)="menuAberto = !menuAberto" aria-label="Toggle menu">
+    <!-- Botão de toggle (útil para mobile) -->
+    <button
+      class="menu-toggle"
+      (click)="menuAberto = !menuAberto"
+      aria-label="Alternar menu"
+    >
       <mat-icon>{{ menuAberto ? 'close' : 'menu' }}</mat-icon>
     </button>
   </nav>

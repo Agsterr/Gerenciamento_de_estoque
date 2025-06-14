@@ -9,14 +9,14 @@ import { ConsumersComponent } from './consumidor/consumidor.component';
 import { EntregasComponent } from './entregas/entregas.component';
 import { CategoriaComponent } from './categoria/categoria.component';
 import { HomeComponent } from './home/home.component'; // Importe o HomeComponent
-import { AuthGuard } from './guards/Auth.Guard';
+import { AdminGuard } from './guards/admin.guard'; 
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' }, // Redireciona para home por padrão
   { path: 'home', component: HomeComponent }, // Rota para o componente Home
   
   { path: 'login', component: LoginComponent },
-  { path: 'register', component: RegisterComponent, canActivate: [AuthGuard] },
+  { path: 'register', component: RegisterComponent, canActivate: [AdminGuard] },
 
   {
     path: 'dashboard',

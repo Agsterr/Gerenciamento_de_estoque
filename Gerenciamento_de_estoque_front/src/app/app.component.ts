@@ -27,18 +27,18 @@ export class AppComponent {
 
   constructor(public authService: AuthService) {}
 
-  // Getter para o estado do login (evita chamar método diretamente no template)
+  // Verifica se o usuário está logado
   get isLoggedIn(): boolean {
     return this.authService.isLoggedIn();
   }
 
-  // Getter para o nome do usuário
+  // Obtém o nome do usuário logado, com fallback
   get userName(): string {
     const user = this.authService.getLoggedUser();
-    // Certifique-se de que o objeto retornado está correto
     return user?.username || 'Usuário';
   }
 
+  // Faz logout
   logout(): void {
     this.authService.logout();
   }
