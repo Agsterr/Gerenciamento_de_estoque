@@ -1,25 +1,42 @@
 /* Estilo geral para os links do menu */
 .nav-link {
-  display: flex;
+  display: inline-flex;  /* Mudança para inline-flex, permitindo que o link seja apenas do tamanho do conteúdo */
   align-items: center;
   gap: 8px; /* Espaçamento entre o ícone e o texto */
   text-decoration: none;
   color: #333;
   font-size: 1.1rem;
+  padding: 10px 15px;  /* Adicionando padding */
+  border-radius: 5px;   /* Bordas arredondadas para dar um visual mais moderno */
+  transition: background-color 0.3s ease; /* Transição suave para o hover */
 }
 
 .nav-link mat-icon {
   font-size: 1.5rem; /* Tamanho do ícone */
 }
 
+/* Estilo para os links quando o cursor está sobre eles (hover) */
+.nav-link:hover {
+  background-color: #f8f8f8; /* Cor de fundo clara ao passar o mouse */
+  color: #007bff; /* Cor do texto quando hover */
+}
+
 /* Estilo do menu de usuário */
 .user-button {
-  display: flex;
+  display: inline-flex;  /* Mudança para inline-flex, permitindo que o botão seja apenas do tamanho do conteúdo */
   align-items: center;
   gap: 8px;
   background: none;
   border: none;
   cursor: pointer;
+  padding: 10px 15px; /* Ajuste no padding */
+  border-radius: 5px;
+  transition: background-color 0.3s ease; /* Transição suave para o hover */
+}
+
+.user-button:hover {
+  background-color: #f8f8f8; /* Cor de fundo clara ao passar o mouse */
+  color: #007bff; /* Cor do texto quando hover */
 }
 
 .user-button mat-icon {

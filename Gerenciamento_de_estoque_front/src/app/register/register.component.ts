@@ -109,8 +109,8 @@ export class RegisterComponent implements OnInit {
   }
 
   cancel(): void {
-    this.registerForm.reset();
-    this.successMessage = '';
-    this.errorMessage = '';
+    this.registerForm.reset(); // Limpa os campos do formulário
+    this.successMessage = ''; // Limpa a mensagem de sucesso
+    this.errorMessage = ''; // Limpa a mensagem de erro
   }
 }

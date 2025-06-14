@@ -23,12 +23,20 @@ export class AuthService {
           localStorage.setItem('jwtToken', response.token);
 
           // Decodificar o token JWT
-          const decodedToken: any = jwtDecode(response.token); // Usando jwtDecode corretamente
+          const decodedToken: any = jwtDecode(response.token);
+          
+          // Adicionando log para verificar o conteúdo do decodedToken
+          console.log('Token Decodificado:', decodedToken);  // Verifique se as roles estão presentes no decodedToken
+          
           const userInfo = {
-            username: decodedToken.sub, // 'sub' é o nome do usuário no JWT
-            userId: decodedToken.user_id, // user_id extraído do JWT
-            orgId: decodedToken.org_id, // org_id extraído do JWT
+            username: decodedToken.sub,  // 'sub' é o nome do usuário no JWT
+            userId: decodedToken.user_id,  // user_id extraído do JWT
+            orgId: decodedToken.org_id,  // org_id extraído do JWT
+            roles: decodedToken.roles || []  // Certifique-se de que as roles sejam extraídas e armazenadas
           };
+
+          // Logando as informações do usuário
+          console.log('Informações do Usuário:', userInfo); // Verifique as informações armazenadas
 
           // Armazenando o usuário no localStorage
           localStorage.setItem('loggedUser', JSON.stringify(userInfo));
@@ -41,7 +49,7 @@ export class AuthService {
         console.error('Erro ao fazer login:', err);
         window.alert('Erro ao tentar fazer login. Verifique suas credenciais.');
         this.router.navigate(['/login']);
-        return of({ token: '', roles: [] }); // resposta vazia válida
+        return of({ token: '', roles: [] });  // resposta vazia válida
       })
     );
   }
@@ -58,6 +66,9 @@ export class AuthService {
    */
   getLoggedUser(): any {
     const userData = localStorage.getItem('loggedUser');
+    // Adicionando log para verificar o que está sendo recuperado do localStorage
+    console.log('Dados do Usuário Recuperados do localStorage:', userData);
+
     return userData ? JSON.parse(userData) : null;
   }
 
@@ -74,6 +85,10 @@ export class AuthService {
    * Verifica se o usuário está autenticado.
    */
   isLoggedIn(): boolean {
-    return !!localStorage.getItem('jwtToken');
+    const loggedIn = !!localStorage.getItem('jwtToken');
+    // Log para verificar se o usuário está autenticado
+    console.log('Usuário Logado:', loggedIn);
+
+    return loggedIn;
   }
 }

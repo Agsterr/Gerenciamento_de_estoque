@@ -12,7 +12,7 @@
 
 /* Título */
 .entrega-container h2 {
-  text-align: center;
+  text-align: left;  /* Título alinhado à esquerda */
   color: #333;
   margin-bottom: 20px;
   font-size: 1.5rem;
@@ -43,12 +43,12 @@
   border: 1px solid #f5c6cb;
 }
 
-/* Botões de ação */
+/* Botões de ação alinhados à esquerda */
 .action-buttons {
   display: flex;
-  justify-content: center;
   gap: 15px;
   margin-bottom: 20px;
+  align-items: center;
   flex-wrap: wrap;
 }
 
@@ -70,7 +70,7 @@
 }
 
 .action-buttons .btn-success {
-  background-color: #28a745;
+  background-color:  #007bff;
   color: #fff;
 }
 
@@ -79,17 +79,14 @@
   transform: scale(1.05);
 }
 
-/* Campo de busca */
+/* Campo de busca alinhado à esquerda */
 .search-input {
   width: 100%;
-  max-width: 500px;
-  padding: 10px 12px;
-  margin: 0 auto 25px;
+  max-width: 400px;
+  padding: 10px;
   border: 1px solid #ddd;
   border-radius: 5px;
   font-size: 1rem;
-  transition: border-color 0.3s ease;
-  display: block;
 }
 
 .search-input:focus {
