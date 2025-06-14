@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { RoleService } from '../services/role.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar'; // Importando MatSnackBar para mostrar mensagens
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 
@@ -24,7 +25,8 @@ export class RegisterComponent implements OnInit {
     private fb: FormBuilder,
     private router: Router,
     private authService: AuthService,
-    private roleService: RoleService
+    private roleService: RoleService,
+    private snackBar: MatSnackBar // Injetando MatSnackBar
   ) {
     this.registerForm = this.fb.group({
       username: ['', Validators.required],
@@ -51,6 +53,10 @@ export class RegisterComponent implements OnInit {
       error: (err: HttpErrorResponse) => {
         console.error('Erro ao carregar roles:', err);
         this.errorMessage = 'Erro ao carregar roles.';
+        this.snackBar.open(this.errorMessage, 'Fechar', {
+          duration: 3000,
+          panelClass: ['error-snackbar'],
+        });
       }
     });
   }
@@ -62,6 +68,10 @@ export class RegisterComponent implements OnInit {
       // Verifica se pelo menos uma role foi selecionada
       if (roles.length === 0) {
         this.errorMessage = 'Você precisa selecionar pelo menos uma role.';
+        this.snackBar.open(this.errorMessage, 'Fechar', {
+          duration: 3000,
+          panelClass: ['error-snackbar'],
+        });
         return;
       }
 
@@ -72,17 +82,29 @@ export class RegisterComponent implements OnInit {
           next: (response) => {
             console.log('Registro bem-sucedido:', response);
             this.successMessage = 'Usuário registrado com sucesso!';
+            this.snackBar.open(this.successMessage, 'Fechar', {
+              duration: 3000,
+              panelClass: ['success-snackbar'],
+            });
             this.errorMessage = '';
             this.router.navigate(['/login']); // Redireciona para a tela de login
           },
           error: (err: HttpErrorResponse) => {
             console.error('Erro ao registrar:', err);
             this.errorMessage = 'Erro ao registrar. Verifique os dados.';
+            this.snackBar.open(this.errorMessage, 'Fechar', {
+              duration: 3000,
+              panelClass: ['error-snackbar'],
+            });
             this.successMessage = '';
           },
         });
     } else {
       this.errorMessage = 'Por favor, preencha todos os campos corretamente.';
+      this.snackBar.open(this.errorMessage, 'Fechar', {
+        duration: 3000,
+        panelClass: ['error-snackbar'],
+      });
     }
   }
 

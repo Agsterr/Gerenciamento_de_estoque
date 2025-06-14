@@ -1,19 +1,16 @@
-// src/app/services/auth.service.ts
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, of, tap, catchError } from 'rxjs';
 import { ApiService } from './api.service';
 import { LoginRequest } from '../models/login-request.model';
-import { LoginResponse, Role } from '../models/login-response.model';
+import { LoginResponse } from '../models/login-response.model';
+import { jwtDecode } from 'jwt-decode';  // Importando jwt-decode corretamente
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  constructor(
-    private apiService: ApiService,
-    private router: Router
-  ) {}
+  constructor(private apiService: ApiService, private router: Router) {}
 
   /**
    * Realiza o login e armazena os dados recebidos (token, usuário e roles).
@@ -25,22 +22,15 @@ export class AuthService {
           // Armazena o token JWT
           localStorage.setItem('jwtToken', response.token);
 
-          // Garante que roles é array antes de mapear
-          const rolesArray = Array.isArray(response.roles) ? response.roles : [];
-
-          // Armazena dados do usuário logado, incluindo roles e username
+          // Decodificar o token JWT
+          const decodedToken: any = jwtDecode(response.token); // Usando jwtDecode corretamente
           const userInfo = {
-            username: response.username || '',
-            userId: response.userId || null,
-            roles: rolesArray.map((role: Role) => ({
-              id: role.id,
-              nome: role.nome,
-              orgId: role.org.id,
-              orgNome: role.org.nome,
-              orgAtivo: role.org.ativo
-            }))
+            username: decodedToken.sub, // 'sub' é o nome do usuário no JWT
+            userId: decodedToken.user_id, // user_id extraído do JWT
+            orgId: decodedToken.org_id, // org_id extraído do JWT
           };
 
+          // Armazenando o usuário no localStorage
           localStorage.setItem('loggedUser', JSON.stringify(userInfo));
 
           // Redireciona para o dashboard
@@ -54,6 +44,13 @@ export class AuthService {
         return of({ token: '', roles: [] }); // resposta vazia válida
       })
     );
+  }
+
+  /**
+   * Realiza o registro de um novo usuário.
+   */
+  register(data: any): Observable<any> {
+    return this.apiService.post('/auth/register', data);  // Envia a requisição para o back-end
   }
 
   /**
@@ -78,32 +75,5 @@ export class AuthService {
    */
   isLoggedIn(): boolean {
     return !!localStorage.getItem('jwtToken');
-  }
-
-  /**
-   * Registra um novo usuário.
-   */
-  register(data: any): Observable<any> {
-    return this.apiService.post('/auth/register', data);
-  }
-
-  /**
-   * Retorna a organização ativa do usuário logado, se houver.
-   */
-  getActiveOrg(): { id: number; nome: string } | null {
-    const user = this.getLoggedUser();
-
-    if (user && Array.isArray(user.roles)) {
-      const activeRole = user.roles.find((role: any) => role.orgAtivo === true);
-
-      if (activeRole) {
-        return {
-          id: activeRole.orgId,
-          nome: activeRole.orgNome
-        };
-      }
-    }
-
-    return null;
   }
 }

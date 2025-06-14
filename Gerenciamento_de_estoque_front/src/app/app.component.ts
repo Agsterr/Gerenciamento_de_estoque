@@ -27,7 +27,7 @@ export class AppComponent {
 
   constructor(public authService: AuthService) {}
 
-  // Getter para o estado do login (evita chamar método direto no template)
+  // Getter para o estado do login (evita chamar método diretamente no template)
   get isLoggedIn(): boolean {
     return this.authService.isLoggedIn();
   }
@@ -35,6 +35,7 @@ export class AppComponent {
   // Getter para o nome do usuário
   get userName(): string {
     const user = this.authService.getLoggedUser();
+    // Certifique-se de que o objeto retornado está correto
     return user?.username || 'Usuário';
   }
 
