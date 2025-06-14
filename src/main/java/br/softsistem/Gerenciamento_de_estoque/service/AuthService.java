@@ -1,3 +1,4 @@
+// src/main/java/br/softsistem/Gerenciamento_de_estoque/service/AuthService.java
 package br.softsistem.Gerenciamento_de_estoque.service;
 
 import br.softsistem.Gerenciamento_de_estoque.dto.login.LoginRequestDto;
@@ -18,9 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/**
- * AuthService: concentre aqui toda a lógica de login e registro.
- */
 @Service
 public class AuthService {
 
@@ -42,70 +40,54 @@ public class AuthService {
         this.roleRepository = roleRepository;
     }
 
-    /**
-     * Executa o login para um usuário em uma organização específica.
-     * @param request contém username, senha e orgId (multitenant).
-     * @return DTO contendo token JWT com userId + orgId embutidos.
-     */
     @Transactional(readOnly = true)
     public LoginResponseDto login(LoginRequestDto request) {
-        // 1) Buscar o usuário pelo username e orgId
         Usuario usuario = usuarioRepository
                 .findByUsernameAndOrgId(request.username(), request.orgId())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado ou não pertence à organização"));
 
-        // 2) Verificar se o usuário está ativo
         if (!usuario.getAtivo()) {
             throw new UsuarioDesativadoException("Usuário foi desativado");
         }
-
-        // 3) Verificar senha
         if (!passwordEncoder.matches(request.senha(), usuario.getSenha())) {
             throw new RuntimeException("Senha incorreta");
         }
 
-        // 4) Extrair userId e orgId (já validado pela consulta acima)
         Long userId = usuario.getId();
         Long orgId  = request.orgId();
+        List<String> roleNames = usuario.getRoles().stream()
+                .map(Role::getNome)
+                .toList();
 
-        // 5) Gerar token JWT contendo userId + orgId
-        String token = jwtService.generateToken((UserDetails) usuario, userId, orgId);
+        String token = jwtService.generateToken(
+                (UserDetails) usuario,
+                userId,
+                orgId,
+                roleNames
+        );
 
         return new LoginResponseDto(token);
     }
 
-    /**
-     * Executa o registro de um novo usuário em uma organização.
-     * @param usuarioRequestDto contém username, senha, email, roles e orgId.
-     * @return DTO do usuário criado (sem expor senha).
-     */
     @Transactional
-    public UsuarioDto register(UsuarioRequestDto usuarioRequestDto) {
-        Long orgId = usuarioRequestDto.orgId();
-
-        // 1) Buscar a organização por ID usando OrgRepository
-        Org orgEntity = orgRepository.findById(orgId)
+    public UsuarioDto register(UsuarioRequestDto dto) {
+        Org org = orgRepository.findById(dto.orgId())
                 .orElseThrow(() -> new RuntimeException("Organização não encontrada"));
 
-        // 2) Processar roles: converter nomes para entidades persistentes
-        List<Role> rolesPersistidas = usuarioRequestDto.roles().stream()
-                .map(nomeRole -> roleRepository.findByNome(nomeRole)
-                        .orElseGet(() -> roleRepository.save(new Role(nomeRole))))
+        List<Role> roles = dto.roles().stream()
+                .map(name -> roleRepository.findByNome(name)
+                        .orElseGet(() -> roleRepository.save(new Role(name))))
                 .toList();
 
-        // 3) Montar entidade Usuario
-        Usuario usuario = new Usuario();
-        usuario.setUsername(usuarioRequestDto.username());
-        usuario.setSenha(passwordEncoder.encode(usuarioRequestDto.senha()));
-        usuario.setEmail(usuarioRequestDto.email());
-        usuario.setRoles(rolesPersistidas);
-        usuario.setAtivo(true);
-        usuario.setOrg(orgEntity);  // associa ao objeto de Org correto
+        Usuario u = new Usuario();
+        u.setUsername(dto.username());
+        u.setSenha(passwordEncoder.encode(dto.senha()));
+        u.setEmail(dto.email());
+        u.setOrg(org);
+        u.setRoles(roles);
+        u.setAtivo(true);
 
-        // 4) Salvar no banco
-        Usuario salvo = usuarioRepository.save(usuario);
-
-        // 5) Retornar DTO
-        return new UsuarioDto(salvo);
+        Usuario saved = usuarioRepository.save(u);
+        return new UsuarioDto(saved);
     }
 }

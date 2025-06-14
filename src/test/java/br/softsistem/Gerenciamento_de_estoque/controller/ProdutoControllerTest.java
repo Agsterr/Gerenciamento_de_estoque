@@ -1,7 +1,7 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
 import br.softsistem.Gerenciamento_de_estoque.config.JwtAuthenticationFilter;
-import br.softsistem.Gerenciamento_de_estoque.dto.produtoDto.ProdutoDto;
+import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
 import br.softsistem.Gerenciamento_de_estoque.dto.produtoDto.ProdutoRequest;
 import br.softsistem.Gerenciamento_de_estoque.model.Categoria;
 import br.softsistem.Gerenciamento_de_estoque.model.Org;
@@ -11,6 +11,7 @@ import br.softsistem.Gerenciamento_de_estoque.service.OrgService;
 import br.softsistem.Gerenciamento_de_estoque.service.ProdutoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -22,7 +23,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -50,10 +50,8 @@ class ProdutoControllerTest {
     @MockBean
     private JwtService jwtService;
 
-
     @MockBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
-
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -64,31 +62,43 @@ class ProdutoControllerTest {
         Page<Produto> page = new PageImpl<>(java.util.List.of(produto));
         Mockito.when(produtoService.listarTodos(anyLong(), any(Pageable.class))).thenReturn(page);
 
-        mockMvc.perform(get("/produtos")
-                        .param("orgId", "1")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].nome").value("Produto Teste"));
+        try (MockedStatic<SecurityUtils> mockedStatic = Mockito.mockStatic(SecurityUtils.class)) {
+            mockedStatic.when(SecurityUtils::getCurrentOrgId).thenReturn(1L);
+
+            mockMvc.perform(get("/produtos")
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content[0].nome").value("Produto Teste"));
+        }
     }
 
     @Test
     void criarProduto_deveRetornarMensagemSucesso() throws Exception {
         ProdutoRequest request = criarProdutoRequest();
-        Mockito.when(produtoService.salvar(any(ProdutoRequest.class), anyLong())).thenReturn(new Produto());
 
-        mockMvc.perform(post("/produtos")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Produto criado ou atualizado com sucesso!"));
+        try (MockedStatic<SecurityUtils> mockedStatic = Mockito.mockStatic(SecurityUtils.class)) {
+            mockedStatic.when(SecurityUtils::getCurrentOrgId).thenReturn(1L);
+
+            Mockito.when(produtoService.salvar(any(ProdutoRequest.class), eq(1L)))
+                    .thenReturn(new Produto());
+
+            mockMvc.perform(post("/produtos")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.message").value("Produto criado ou atualizado com sucesso!"));
+        }
     }
 
     @Test
     void excluir_deveRetornarMensagemSucesso() throws Exception {
-        mockMvc.perform(delete("/produtos/1")
-                        .param("orgId", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Produto excluído com sucesso."));
+        try (MockedStatic<SecurityUtils> mockedStatic = Mockito.mockStatic(SecurityUtils.class)) {
+            mockedStatic.when(SecurityUtils::getCurrentOrgId).thenReturn(1L);
+
+            mockMvc.perform(delete("/produtos/1"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.message").value("Produto excluído com sucesso."));
+        }
     }
 
     @Test
@@ -96,11 +106,35 @@ class ProdutoControllerTest {
         Produto produto = criarProduto();
         Mockito.when(produtoService.buscarPorId(1L, 1L)).thenReturn(produto);
 
-        mockMvc.perform(get("/produtos/1")
-                        .param("orgId", "1")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nome").value("Produto Teste"));
+        try (MockedStatic<SecurityUtils> mockedStatic = Mockito.mockStatic(SecurityUtils.class)) {
+            mockedStatic.when(SecurityUtils::getCurrentOrgId).thenReturn(1L);
+
+            mockMvc.perform(get("/produtos/1")
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.nome").value("Produto Teste"));
+        }
+    }
+
+    @Test
+    void listarProdutosComEstoqueBaixo_deveRetornarProdutosFiltrados() throws Exception {
+        Produto produto = criarProduto();
+        produto.setQuantidade(3);
+        produto.setQuantidadeMinima(5);
+
+        Mockito.when(produtoService.listarProdutosComEstoqueBaixo(1L))
+                .thenReturn(java.util.List.of(produto));
+
+        try (MockedStatic<SecurityUtils> mockedStatic = Mockito.mockStatic(SecurityUtils.class)) {
+            mockedStatic.when(SecurityUtils::getCurrentOrgId).thenReturn(1L);
+
+            mockMvc.perform(get("/produtos/estoque-baixo")
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[0].nome").value("Produto Teste"))
+                    .andExpect(jsonPath("$[0].quantidade").value(3))
+                    .andExpect(jsonPath("$[0].quantidadeMinima").value(5));
+        }
     }
 
     // Métodos auxiliares
@@ -116,18 +150,16 @@ class ProdutoControllerTest {
         produto.setCriadoEm(LocalDateTime.now());
         produto.setAtivo(true);
 
-        // Criar e configurar Org
         Org org = new Org();
         org.setId(1L);
         org.setNome("Org");
         produto.setOrg(org);
 
-        // Criar e configurar Categoria
         Categoria categoria = new Categoria();
         categoria.setId(1L);
         categoria.setNome("Categoria");
         categoria.setDescricao("Descrição categoria");
-        categoria.setOrg(org); // Relacionamento obrigatório
+        categoria.setOrg(org);
         produto.setCategoria(categoria);
 
         return produto;
@@ -144,24 +176,4 @@ class ProdutoControllerTest {
         request.setOrgId(1L);
         return request;
     }
-
-    @Test
-    void listarProdutosComEstoqueBaixo_deveRetornarProdutosFiltrados() throws Exception {
-        Produto produto = criarProduto();
-        // Simula que o estoque está abaixo do mínimo
-        produto.setQuantidade(3);
-        produto.setQuantidadeMinima(5);
-
-        Mockito.when(produtoService.listarProdutosComEstoqueBaixo(1L))
-                .thenReturn(java.util.List.of(produto));
-
-        mockMvc.perform(get("/produtos/estoque-baixo")
-                        .param("orgId", "1")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].nome").value("Produto Teste"))
-                .andExpect(jsonPath("$[0].quantidade").value(3))
-                .andExpect(jsonPath("$[0].quantidadeMinima").value(5));
-    }
-
 }

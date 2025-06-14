@@ -13,6 +13,7 @@ import br.softsistem.Gerenciamento_de_estoque.repository.RoleRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.List;
 import java.util.Optional;
@@ -43,7 +44,10 @@ class AuthServiceTest {
 
     @Test
     void login_deveRetornarTokenComCredenciaisValidas() {
+        // Montagem do request
         LoginRequestDto request = new LoginRequestDto("user", "senha123", 1L);
+
+        // Usuário mockado pelo repository
         Usuario usuario = new Usuario();
         usuario.setId(10L);
         usuario.setUsername("user");
@@ -52,16 +56,41 @@ class AuthServiceTest {
         Org org = new Org();
         org.setId(1L);
         usuario.setOrg(org);
+        // Vamos supor que o usuário tenha a role ROLE_ADMIN
+        Role roleAdmin = new Role();
+        roleAdmin.setNome("ROLE_ADMIN");
+        usuario.setRoles(List.of(roleAdmin));
 
-        when(usuarioRepository.findByUsernameAndOrgId("user", 1L)).thenReturn(Optional.of(usuario));
-        when(passwordEncoder.matches("senha123", "hashed_senha")).thenReturn(true);
-        when(jwtService.generateToken(any(), eq(10L), eq(1L))).thenReturn("fake-jwt");
+        when(usuarioRepository.findByUsernameAndOrgId("user", 1L))
+                .thenReturn(Optional.of(usuario));
+        when(passwordEncoder.matches("senha123", "hashed_senha"))
+                .thenReturn(true);
 
+        // Mock do JWT: agora inclui a lista de nomes de roles
+        List<String> expectedRoles = List.of("ROLE_ADMIN");
+        when(jwtService.generateToken(
+                any(UserDetails.class),
+                eq(10L),
+                eq(1L),
+                eq(expectedRoles)
+        )).thenReturn("fake-jwt");
+
+        // Executa
         LoginResponseDto response = authService.login(request);
 
+        // Verificações
         assertNotNull(response);
         assertEquals("fake-jwt", response.token());
+
+        // Também podemos verificar que o service foi chamado corretamente:
+        verify(jwtService).generateToken(
+                any(UserDetails.class),
+                eq(10L),
+                eq(1L),
+                eq(expectedRoles)
+        );
     }
+
 
     @Test
     void login_deveLancarExcecaoSeUsuarioDesativado() {
