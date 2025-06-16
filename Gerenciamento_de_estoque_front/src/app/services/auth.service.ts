@@ -58,8 +58,9 @@ export class AuthService {
    * Realiza o registro de um novo usuário.
    */
   register(data: any): Observable<any> {
-    return this.apiService.post('/auth/register', data);  // Envia a requisição para o back-end
-  }
+  return this.apiService.postWithAuth('/auth/register', data);
+}
+
 
   /**
    * Retorna os dados do usuário logado a partir do localStorage.
