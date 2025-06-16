@@ -50,7 +50,9 @@
           <td>{{ entrega.nomeProduto }}</td>
           <td>{{ entrega.nomeEntregador }}</td>
           <td>{{ entrega.quantidade }}</td>
-          <td>{{ entrega.horarioEntrega }}</td>
+        <td>{{ formatarDataHoraBrasil(entrega.horarioEntrega) }}</td>
+
+
           <td>
             <!-- Botões de Ação: apenas ícones -->
             <button (click)="editEntrega(entrega.id)" class="btn btn-primary btn-sm" title="Editar">
