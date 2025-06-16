@@ -1,5 +1,7 @@
 package br.softsistem.Gerenciamento_de_estoque.config;
 
+import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
+import br.softsistem.Gerenciamento_de_estoque.repository.UsuarioRepository;
 import br.softsistem.Gerenciamento_de_estoque.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -8,8 +10,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -26,12 +26,12 @@ import java.util.stream.Collectors;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
+    private final UsuarioRepository usuarioRepository;
 
     public JwtAuthenticationFilter(JwtService jwtService,
-                                   UserDetailsService userDetailsService) {
+                                   UsuarioRepository usuarioRepository) {
         this.jwtService = jwtService;
-        this.userDetailsService = userDetailsService;
+        this.usuarioRepository = usuarioRepository;
     }
 
     @Override
@@ -51,25 +51,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         Long orgId = jwtService.extractOrgId(jwt);
         Long userId = jwtService.extractUserId(jwt);
 
-        if (username != null &&
-                SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            UserDetails userDetails =
-                    userDetailsService.loadUserByUsername(username);
+            Usuario usuario = usuarioRepository
+                    .findByUsernameAndOrgId(username, orgId)
+                    .orElse(null);
 
-            if (jwtService.isTokenValid(jwt, userDetails)) {
-                // Extrai as roles do token e converte em GrantedAuthority
+            if (usuario != null && jwtService.isTokenValid(jwt, usuario)) {
                 List<String> roleNames = jwtService.extractRoles(jwt);
                 List<GrantedAuthority> authorities = roleNames.stream()
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
-                // Cria CustomAuthenticationToken com principal, userId, orgId e authorities
                 var authToken = new CustomAuthenticationToken(
-                        userDetails,     // principal = UserDetails
-                        userId,          // credentials (não usado)
-                        orgId,           // detalhe da org
-                        authorities      // roles como GrantedAuthority
+                        usuario,  // principal
+                        userId,   // userId (usado como "credentials" customizado)
+                        orgId,    // orgId
+                        authorities
                 );
                 authToken.setDetails(
                         new WebAuthenticationDetailsSource()

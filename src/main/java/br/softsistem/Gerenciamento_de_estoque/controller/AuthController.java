@@ -7,6 +7,7 @@ import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioRequestDto;
 import br.softsistem.Gerenciamento_de_estoque.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -38,6 +39,7 @@ public class AuthController {
      * Recebe JSON com { username, senha, email, roles, orgId },
      * repassa para o AuthService e retorna o DTO do usuário criado.
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/register")
     public ResponseEntity<UsuarioDto> register(
             @RequestBody @Valid UsuarioRequestDto usuarioRequestDto
