@@ -284,13 +284,13 @@ export class ProdutoComponent implements OnInit {
   }
 
   carregarCategorias(): void {
-    this.categoriaService.listarCategorias().subscribe({
-      next: (data) => this.categorias = data,
-      error: (error: any) => {
-        this.mensagemErro = 'Erro ao carregar categorias.';
-        console.error('Erro ao carregar categorias:', error);
-      }
-    });
+   this.categoriaService.listarCategorias().subscribe({
+  next: (data) => this.categorias = data.content,  // data.content é o array Categoria[]
+  error: (error: any) => {
+    this.mensagemErro = 'Erro ao carregar categorias.';
+    console.error('Erro ao carregar categorias:', error);
+  }
+});
   }
 
  verificarEstoqueBaixo(): void {

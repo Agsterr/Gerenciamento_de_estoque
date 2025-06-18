@@ -1,54 +1,55 @@
+<mat-card class="login-container">
+  <h2 class="login-title">Acesso ao Sistema</h2>
 
-<div class="container">
-  <h2>Login</h2>
-  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-    <div>
-      <label for="username">Username:</label>
-      <input
-        id="username"
-        formControlName="username"
-        type="text"
-        placeholder="Enter your username"
-        required
-      />
-      <div *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched" class="error">
-        Username é obrigatório
-      </div>
-    </div>
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
 
-    <div>
-      <label for="senha">Senha:</label>
+    <!-- Campo: Usuário -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Usuário</mat-label>
+      <input matInput formControlName="username" placeholder="Digite seu usuário" required />
+      <mat-error *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.hasError('required')">
+        Usuário é obrigatório
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Campo: Senha com ícone -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Senha</mat-label>
       <input
-        id="senha"
+        matInput
+        [type]="hidePassword ? 'password' : 'text'"
         formControlName="senha"
-        type="password"
-        placeholder="Enter your password"
+        placeholder="Digite sua senha"
         required
       />
-      <div *ngIf="loginForm.get('senha')?.invalid && loginForm.get('senha')?.touched" class="error">
+      <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+        <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+      </button>
+      <mat-error *ngIf="loginForm.get('senha')?.touched && loginForm.get('senha')?.hasError('required')">
         Senha é obrigatória
-      </div>
-    </div>
+      </mat-error>
+    </mat-form-field>
 
-    <div>
-      <label for="orgId">ID da Organização:</label>
-      <input
-        id="orgId"
-        formControlName="orgId"
-        type="text"
-        placeholder="Enter your organization ID"
-        required
-      />
-      <div *ngIf="loginForm.get('orgId')?.invalid && loginForm.get('orgId')?.touched" class="error">
+    <!-- Campo: ID da Organização -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>ID da Organização</mat-label>
+      <input matInput type="number" formControlName="orgId" placeholder="Ex: 1" required />
+      <mat-error *ngIf="loginForm.get('orgId')?.touched && loginForm.get('orgId')?.hasError('required')">
         ID da organização é obrigatório
-      </div>
-    </div>
+      </mat-error>
+      <mat-error *ngIf="loginForm.get('orgId')?.hasError('pattern')">
+        Apenas números válidos são permitidos
+      </mat-error>
+    </mat-form-field>
 
-    <button type="submit" [disabled]="loginForm.invalid">Login</button>
+    <!-- Botão -->
+    <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid" class="full-width">
+      Entrar
+    </button>
 
-    <!-- Exibição de Mensagem de Erro -->
-    <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
+    <!-- Erro geral -->
+    <mat-error *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </mat-error>
   </form>
-</div>
-
-
+</mat-card>

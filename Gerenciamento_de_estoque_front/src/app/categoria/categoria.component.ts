@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { PageCategoriaResponse } from '../models/page-categoria-response.model';
 
 @Component({
   selector: 'app-categoria',
@@ -23,6 +24,11 @@ export class CategoriaComponent implements OnInit {
   showNovaCategoriaInput = false;
   orgId: string = '';
 
+  size = 10;
+  number = 0;
+  totalElements = 0;
+  totalPages = 0;
+
   constructor(
     private categoriaService: CategoriaService,
     private fb: FormBuilder,
@@ -37,7 +43,7 @@ export class CategoriaComponent implements OnInit {
   ngOnInit(): void {
     try {
       this.orgId = this.categoriaService.getOrgId();
-      this.carregarCategorias();
+      this.carregarCategorias(this.number);
     } catch (error) {
       console.error('Erro ao obter orgId:', error);
       this.mensagemErro = 'OrgId não encontrado. O usuário precisa estar autenticado.';
@@ -45,30 +51,36 @@ export class CategoriaComponent implements OnInit {
     }
   }
 
-  /** Carrega as categorias da API */
-  carregarCategorias(): void {
-    this.categoriaService.listarCategorias().subscribe({
-      next: (categorias: Categoria[]) => {
-        this.categorias = categorias;
-      },
-      error: (error: HttpErrorResponse) => {
-        this.mensagemErro = 'Erro ao carregar categorias.';
-        console.error('Erro ao carregar categorias:', error);
-      }
-    });
-  }
+  /** Carrega categorias com paginação */
+   carregarCategorias(pagina: number = 0): void {
+  this.limparMensagens();
 
-  /** Mostra ou esconde o formulário de criação */
+  this.categoriaService.listarCategorias(pagina, this.size).subscribe({
+    next: (data: PageCategoriaResponse) => {
+      this.categorias = data.content; // só o array de categorias
+      this.number = data.page.number;
+      this.totalPages = data.page.totalPages;
+      this.totalElements = data.page.totalElements;
+      this.size = data.page.size;
+    },
+    error: (error: HttpErrorResponse) => {
+      this.mensagemErro = 'Erro ao carregar categorias.';
+      console.error('Erro ao carregar categorias:', error);
+    }
+  });
+}
+
+
+
   toggleNovaCategoriaForm(): void {
     this.showNovaCategoriaInput = !this.showNovaCategoriaInput;
-    this.mensagemErro = '';
-    this.mensagem = '';
-    this.mensagemTipo = '';
+    this.limparMensagens();
     this.categoriaForm.reset();
   }
 
-  /** Cria nova categoria após validações */
   criarCategoria(): void {
+    this.limparMensagens();
+
     if (this.categoriaForm.valid) {
       const nome = this.categoriaForm.get('nome')?.value.trim();
       const descricao = this.categoriaForm.get('descricao')?.value?.trim() || '';
@@ -80,12 +92,12 @@ export class CategoriaComponent implements OnInit {
       }
 
       this.categoriaService.criarCategoria(nome, descricao).subscribe({
-        next: (categoria) => {
+        next: () => {
           this.mensagem = 'Categoria criada com sucesso!';
           this.mensagemTipo = 'sucesso';
           this.categoriaForm.reset();
           this.showNovaCategoriaInput = false;
-          this.carregarCategorias();
+          this.carregarCategorias(this.number); // recarrega a página atual
         },
         error: (error: HttpErrorResponse) => {
           this.mensagemErro = 'Erro ao criar categoria.';
@@ -99,14 +111,13 @@ export class CategoriaComponent implements OnInit {
     }
   }
 
-  /** Deleta uma categoria após confirmação */
   deletarCategoria(id: number): void {
     if (confirm('Tem certeza que deseja deletar esta categoria?')) {
       this.categoriaService.deletarCategoria(id).subscribe({
         next: () => {
           this.mensagem = 'Categoria deletada com sucesso!';
           this.mensagemTipo = 'sucesso';
-          this.categorias = this.categorias.filter(cat => cat.id !== id);
+          this.carregarCategorias(this.number); // atualiza a lista da página
         },
         error: (error: HttpErrorResponse) => {
           this.mensagemErro = 'Erro ao deletar categoria.';
@@ -115,5 +126,24 @@ export class CategoriaComponent implements OnInit {
         }
       });
     }
+  }
+
+  paginaAnterior(): void {
+    if (this.number > 0) {
+      this.carregarCategorias(this.number - 1);
+    }
+  }
+
+  proximaPagina(): void {
+    if (this.number + 1 < this.totalPages) {
+      this.carregarCategorias(this.number + 1);
+    }
+  }
+
+  /** Limpa as mensagens de status */
+  private limparMensagens(): void {
+    this.mensagem = '';
+    this.mensagemErro = '';
+    this.mensagemTipo = '';
   }
 }

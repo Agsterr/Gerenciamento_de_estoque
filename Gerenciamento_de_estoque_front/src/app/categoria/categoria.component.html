@@ -1,62 +1,101 @@
 <!-- src/app/components/categoria.component.html -->
 <div class="categoria-container">
-  <h2>Gerenciamento de Categorias</h2>
+
+  <h2 class="titulo-lista">
+    <i class="fas fa-list-alt"></i> Lista de Categorias
+  </h2>
 
   <!-- Mensagens de Sucesso ou Erro -->
   <div *ngIf="mensagem" class="mensagem mensagem--sucesso" role="alert" aria-live="assertive">
-    {{ mensagem }}
+    <i class="fas fa-check-circle"></i> {{ mensagem }}
   </div>
   <div *ngIf="mensagemErro" class="mensagem mensagem--erro" role="alert" aria-live="assertive">
-    {{ mensagemErro }}
+    <i class="fas fa-exclamation-triangle"></i> {{ mensagemErro }}
   </div>
 
   <!-- Botão para Adicionar Nova Categoria -->
-  <div class="categoria-menu">
+  <div class="acoes-container">
     <button (click)="toggleNovaCategoriaForm()" type="button" class="btn btn--primario">
       <i class="fas fa-plus-circle"></i> Nova Categoria
     </button>
   </div>
 
+  <!-- Formulário de Criação -->
+  <div *ngIf="showNovaCategoriaInput" class="categoria-formulario">
+    <h3 class="titulo-form">
+      <i class="fas fa-folder-plus"></i> Criar Nova Categoria
+    </h3>
+
+    <form [formGroup]="categoriaForm" (ngSubmit)="criarCategoria()" aria-labelledby="form-nova-categoria">
+      <div class="form-group">
+        <label for="nome">
+          <i class="fas fa-tag"></i> Nome da Categoria:
+        </label>
+        <input
+          id="nome"
+          type="text"
+          formControlName="nome"
+          placeholder="Digite o nome"
+          class="categoria-formulario__input"
+          aria-required="true"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="descricao">
+          <i class="fas fa-align-left"></i> Descrição:
+        </label>
+        <input
+          id="descricao"
+          type="text"
+          formControlName="descricao"
+          placeholder="Digite uma descrição"
+          class="categoria-formulario__input"
+        />
+      </div>
+
+      <button type="submit" [disabled]="categoriaForm.invalid" class="btn btn--salvar">
+        <i class="fas fa-save"></i> Salvar
+      </button>
+    </form>
+  </div>
+
   <!-- Lista de Categorias -->
   <div class="categoria-lista">
-    <h3>Categorias Existentes</h3>
+    <h3><i class="fas fa-folder-open"></i> Categorias Existentes</h3>
     <table class="categoria-tabela" role="table">
       <thead>
         <tr>
-          <th scope="col">Nome</th>
-          <th scope="col">Ações</th>
+          <th><i class="fas fa-tag"></i> Nome</th>
+          <th><i class="fas fa-cogs"></i> Ações</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let categoria of categorias">
           <td>{{ categoria.nome }}</td>
           <td>
-            <button type="button" class="btn btn--deletar" (click)="deletarCategoria(categoria.id)">
-              <i class="fas fa-trash-alt"></i> Deletar
+            <button type="button" class="btn btn--deletar" (click)="deletarCategoria(categoria.id)" title="Excluir">
+              <i class="fas fa-trash-alt"></i>
             </button>
           </td>
         </tr>
       </tbody>
     </table>
-  </div>
 
-  <!-- Formulário de Criação -->
-  <div *ngIf="showNovaCategoriaInput" class="categoria-formulario">
-    <h3>Criar Nova Categoria</h3>
-    <form [formGroup]="categoriaForm" (ngSubmit)="criarCategoria()" aria-labelledby="form-nova-categoria">
-      <label for="nome" class="categoria-formulario__label">Nome da Categoria:</label>
-      <input
-        id="nome"
-        type="text"
-        formControlName="nome"
-        placeholder="Digite o nome"
-        class="categoria-formulario__input"
-        aria-required="true"
-      />
+    <!-- Paginação -->
+<div class="pagination" *ngIf="totalPages > 0">
+  <button (click)="paginaAnterior()" [disabled]="number === 0">
+    <i class="fas fa-chevron-left"></i> Anterior
+  </button>
 
-      <button type="submit" [disabled]="categoriaForm.invalid" class="btn btn--salvar">
-        <i class="fas fa-check"></i> Criar
-      </button>
-    </form>
+  <button (click)="proximaPagina()" [disabled]="number + 1 >= totalPages">
+    Próxima <i class="fas fa-chevron-right"></i>
+  </button>
+
+  <p>
+    <i class="fas fa-file-alt"></i> Página {{ number + 1 }} de {{ totalPages }}
+  </p>
+</div>
+
   </div>
 </div>
