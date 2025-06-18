@@ -3,7 +3,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { Categoria } from '../models/categoria.model';
 import { catchError, map } from 'rxjs/operators';
-
+import { HttpParams } from '@angular/common/http'; // não esqueça de importar no início
+import { PageCategoriaResponse } from '../models/page-categoria-response.model';
 @Injectable({
   providedIn: 'root',
 })
@@ -37,18 +38,23 @@ export class CategoriaService {
   }
 
   /** Lista categorias da organização atual */
-  listarCategorias(): Observable<Categoria[]> {
-    const orgId = this.getOrgId();
-    const headers = this.getAuthHeaders();
+ listarCategorias(page: number = 0, size: number = 10): Observable<PageCategoriaResponse> {
+  const orgId = this.getOrgId();
+  const headers = this.getAuthHeaders();
 
-    return this.http.get<any>(`${this.apiUrl}/${orgId}`, { headers }).pipe(
-      map(response => response.content as Categoria[]),
-      catchError(error => {
-        console.error('Erro ao listar categorias:', error);
-        return throwError(() => new Error('Falha ao carregar categorias.'));
-      })
-    );
-  }
+  // Monta os parâmetros da query string para paginação
+  const params = new HttpParams()
+    .set('page', page.toString())
+    .set('size', size.toString());
+
+  // Ajusta a URL conforme seu padrão (org no caminho)
+  return this.http.get<PageCategoriaResponse>(`${this.apiUrl}/org/${orgId}`, { headers, params }).pipe(
+    catchError(error => {
+      console.error('Erro ao listar categorias paginadas:', error);
+      return throwError(() => new Error('Falha ao carregar categorias paginadas.'));
+    })
+  );
+}
 
   /** Cria uma nova categoria com nome e descrição */
   criarCategoria(nome: string, descricao: string = ''): Observable<Categoria> {
@@ -57,7 +63,8 @@ export class CategoriaService {
 
     const body = { nome, descricao };
 
-    return this.http.post<Categoria>(`${this.apiUrl}/${orgId}`, body, { headers }).pipe(
+    // NOVA ROTA ajustada
+    return this.http.post<Categoria>(`${this.apiUrl}/org/${orgId}`, body, { headers }).pipe(
       catchError(error => {
         console.error('Erro ao criar categoria:', error);
         return throwError(() => new Error('Falha ao criar categoria.'));
@@ -70,7 +77,8 @@ export class CategoriaService {
     const orgId = this.getOrgId();
     const headers = this.getAuthHeaders();
 
-    return this.http.delete<void>(`${this.apiUrl}/${orgId}/${id}`, { headers }).pipe(
+    // NOVA ROTA ajustada
+    return this.http.delete<void>(`${this.apiUrl}/org/${orgId}/${id}`, { headers }).pipe(
       catchError(error => {
         console.error('Erro ao deletar categoria:', error);
         return throwError(() => new Error('Falha ao deletar categoria.'));
