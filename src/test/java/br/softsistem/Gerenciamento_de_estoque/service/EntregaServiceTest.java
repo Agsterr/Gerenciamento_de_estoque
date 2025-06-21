@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -265,17 +266,20 @@ class EntregaServiceTest {
         entrega.setEntregador(entregador); // Adicionando o entregador!!
         entrega.setOrg(org);
 
+        // Criando um mock de Page para simular a resposta do repositório
+        Page<Entrega> pageMock = new PageImpl<>(List.of(entrega), PageRequest.of(0, 10), 1);
+
         // Mock da consulta no repositório
-        when(entregaRepository.findByHorarioEntregaBetweenAndOrgId(any(), any(), anyLong()))
-                .thenReturn(List.of(entrega));
+        when(entregaRepository.findByHorarioEntregaBetweenAndOrgId(any(), any(), anyLong(), any(Pageable.class)))
+                .thenReturn(pageMock);
 
         // Chamada do método
-        List<EntregaResponseDto> resultado = entregaService.listarEntregasPorDia(dia);
+        Page<EntregaResponseDto> resultado = entregaService.listarEntregasPorDia(dia, PageRequest.of(0, 10));
 
         // Verificações
-        assertNotNull(resultado);
-        assertEquals(1, resultado.size());
-        assertEquals("Entregador Teste", resultado.get(0).nomeEntregador()); // Verificando se o entregador foi mapeado corretamente
+        assertNotNull(resultado); // Verifica se o resultado não é nulo
+        assertEquals(1, resultado.getTotalElements()); // Verifica se há 1 elemento na página
+        assertEquals("Entregador Teste", resultado.getContent().get(0).nomeEntregador()); // Verificando se o entregador foi mapeado corretamente
     }
 
 
@@ -315,18 +319,23 @@ class EntregaServiceTest {
         entrega.setEntregador(entregador); // Correção: adicionando o entregador
         entrega.setOrg(org);
 
+        // Criando um mock de Page para simular a resposta do repositório
+        Page<Entrega> pageMock = new PageImpl<>(List.of(entrega), PageRequest.of(0, 10), 1);
+
         // Mock da consulta no repositório
-        when(entregaRepository.findByHorarioEntregaBetweenAndOrgId(any(), any(), anyLong()))
-                .thenReturn(List.of(entrega));
+        when(entregaRepository.findByHorarioEntregaBetweenAndOrgId(any(), any(), anyLong(), any(Pageable.class)))
+                .thenReturn(pageMock);
 
         // Chamada do método
-        List<EntregaResponseDto> resultado = entregaService.listarEntregasPorPeriodo(inicio, fim);
+        Page<EntregaResponseDto> resultado = entregaService.listarEntregasPorPeriodo(inicio, fim, PageRequest.of(0, 10));
 
         // Verificações
-        assertNotNull(resultado);
-        assertEquals(1, resultado.size());
-        assertEquals("Entregador Teste", resultado.get(0).nomeEntregador()); // Verifica o nome do entregador
+        assertNotNull(resultado); // Verifica se o resultado não é nulo
+        assertEquals(1, resultado.getTotalElements()); // Verifica se há 1 elemento na página
+        assertEquals("Entregador Teste", resultado.getContent().get(0).nomeEntregador()); // Verifica o nome do entregador
     }
+
+
 
     @Test
     void listarEntregasPorMes() {
@@ -364,18 +373,22 @@ class EntregaServiceTest {
         entrega.setEntregador(entregador); // Correção: setando entregador
         entrega.setOrg(org);
 
-        // Mock do repositório
-        when(entregaRepository.findByHorarioEntregaBetweenAndOrgId(any(), any(), anyLong()))
-                .thenReturn(List.of(entrega));
+        // Criando um mock de Page para simular a resposta paginada do repositório
+        Page<Entrega> pageMock = new PageImpl<>(List.of(entrega), PageRequest.of(0, 10), 1);
+
+        // Mock da consulta no repositório
+        when(entregaRepository.findByHorarioEntregaBetweenAndOrgId(any(), any(), anyLong(), any(Pageable.class)))
+                .thenReturn(pageMock);
 
         // Chamada do método
-        List<EntregaResponseDto> resultado = entregaService.listarEntregasPorMes(mes, ano);
+        Page<EntregaResponseDto> resultado = entregaService.listarEntregasPorMes(mes, ano, PageRequest.of(0, 10));
 
         // Verificações
-        assertNotNull(resultado);
-        assertEquals(1, resultado.size());
-        assertEquals("Entregador Teste", resultado.get(0).nomeEntregador()); // Verifica se o nome do entregador foi mapeado
+        assertNotNull(resultado); // Verifica se o resultado não é nulo
+        assertEquals(1, resultado.getTotalElements()); // Verifica se há 1 elemento na página
+        assertEquals("Entregador Teste", resultado.getContent().get(0).nomeEntregador()); // Verifica o nome do entregador
     }
+
 
 
 

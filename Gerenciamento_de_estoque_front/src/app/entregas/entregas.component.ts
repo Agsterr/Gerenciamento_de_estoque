@@ -73,17 +73,28 @@ export class EntregasComponent implements OnInit {
     }
   }
 
-  fetchEntregas(page: number): void {
-    this.entregasService.listarEntregas(page, this.pageSize).subscribe({
-      next: (data: PageEntregaResponse) => {
-        this.entregas = data.content;
-        this.currentPage = data.page.number;
-        this.totalPages = data.page.totalPages;
-        this.applyFilter();
-      },
-      error: () => this.mensagemErro = 'Erro ao carregar entregas.'
-    });
-  } 
+ 
+fetchEntregas(page: number): void {
+  this.entregasService.listarEntregas(page, this.pageSize).subscribe({
+    next: (data: PageEntregaResponse) => {
+      console.log(data);  // Log para verificar a estrutura da resposta
+
+      // Atualizando a lógica para usar os dados corretamente sem acessar 'page'
+      this.entregas = data.content;  // A lista de entregas
+      this.currentPage = data.number;  // O número da página atual
+      this.totalPages = data.totalPages;  // Total de páginas
+
+      // Aplicar o filtro
+      this.applyFilter();
+    },
+    error: () => {
+      this.mensagemErro = 'Erro ao carregar entregas.';
+      console.error(this.mensagemErro);
+    }
+  });
+}
+
+
 
 
  formatarDataHoraBrasil(dataIso: string | undefined): string {
@@ -109,6 +120,12 @@ export class EntregasComponent implements OnInit {
     this.mensagemErro = 'Todos os campos são obrigatórios.';
     return;
   }
+
+  setTimeout(() => {
+  this.mensagem = '';
+  this.mensagemErro = '';
+}, 5000); // Esconde a mensagem após 5 segundos
+
 
   const payload: EntregaRequest = {
     produtoId: this.novaEntrega.produtoId!,

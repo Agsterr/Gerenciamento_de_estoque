@@ -7,6 +7,7 @@ import br.softsistem.Gerenciamento_de_estoque.model.Consumidor;
 import br.softsistem.Gerenciamento_de_estoque.model.Entrega;
 import br.softsistem.Gerenciamento_de_estoque.model.Produto;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
+import br.softsistem.Gerenciamento_de_estoque.repository.UsuarioRepository;
 import br.softsistem.Gerenciamento_de_estoque.service.EntregaService;
 import br.softsistem.Gerenciamento_de_estoque.service.JwtService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,6 +22,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -29,9 +31,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -57,6 +59,10 @@ class EntregaControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockBean
+    private UsuarioRepository usuarioRepository;
+
 
     @MockBean
     private JwtService jwtService;
@@ -230,12 +236,22 @@ class EntregaControllerTest {
         LocalDate dia = LocalDate.now();
         Entrega entregaMock = gerarEntregaMock();
 
-        Mockito.when(entregaService.listarEntregasPorDia(any(LocalDate.class))).thenReturn(List.of(entregaMock).stream().map(EntregaResponseDto::fromEntity).toList());
+        // Criar uma página de entregas mockada
+        Page<EntregaResponseDto> pageMock = new PageImpl<>(List.of(entregaMock).stream()
+                .map(EntregaResponseDto::fromEntity)
+                .collect(Collectors.toList()), PageRequest.of(0, 10), 1);
 
+        // Mock do serviço com paginação
+        Mockito.when(entregaService.listarEntregasPorDia(eq(dia), any(Pageable.class)))
+                .thenReturn(pageMock);
+
+        // Chamada do mockMvc
         mockMvc.perform(get("/entregas/por-dia")
-                        .param("dia", dia.toString()))
+                        .param("dia", dia.toString())
+                        .param("page", "0") // Página 0
+                        .param("size", "10")) // Tamanho da página 10
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1L));
+                .andExpect(jsonPath("$.content[0].id").value(1L)); // Verificando a primeira entrega
     }
 
     @Test
@@ -244,14 +260,25 @@ class EntregaControllerTest {
         LocalDateTime fim = LocalDateTime.of(2025, 6, 30, 23, 59);
         Entrega entregaMock = gerarEntregaMock();
 
-        Mockito.when(entregaService.listarEntregasPorPeriodo(any(), any())).thenReturn(List.of(entregaMock).stream().map(EntregaResponseDto::fromEntity).toList());
+        // Criar uma página de entregas mockada
+        Page<EntregaResponseDto> pageMock = new PageImpl<>(List.of(entregaMock).stream()
+                .map(EntregaResponseDto::fromEntity)
+                .collect(Collectors.toList()), PageRequest.of(0, 10), 1);
 
+        // Mock do serviço com paginação
+        Mockito.when(entregaService.listarEntregasPorPeriodo(eq(inicio), eq(fim), any(Pageable.class)))
+                .thenReturn(pageMock);
+
+        // Chamada do mockMvc
         mockMvc.perform(get("/entregas/por-periodo")
                         .param("inicio", inicio.toString())
-                        .param("fim", fim.toString()))
+                        .param("fim", fim.toString())
+                        .param("page", "0") // Página 0
+                        .param("size", "10")) // Tamanho da página 10
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1L));
+                .andExpect(jsonPath("$.content[0].id").value(1L)); // Verificando a primeira entrega
     }
+
 
     @Test
     void porMes() throws Exception {
@@ -259,38 +286,74 @@ class EntregaControllerTest {
         int ano = 2025;
         Entrega entregaMock = gerarEntregaMock();
 
-        Mockito.when(entregaService.listarEntregasPorMes(any(Integer.class), any(Integer.class))).thenReturn(List.of(entregaMock).stream().map(EntregaResponseDto::fromEntity).toList());
+        // Criar uma página mockada de entregas
+        Page<EntregaResponseDto> pageMock = new PageImpl<>(List.of(entregaMock).stream()
+                .map(EntregaResponseDto::fromEntity)
+                .collect(Collectors.toList()), PageRequest.of(0, 10), 1);
 
+        // Mock do serviço com paginação
+        Mockito.when(entregaService.listarEntregasPorMes(eq(mes), eq(ano), any(Pageable.class)))
+                .thenReturn(pageMock);
+
+        // Chamada do mockMvc
         mockMvc.perform(get("/entregas/por-mes")
                         .param("mes", String.valueOf(mes))
-                        .param("ano", String.valueOf(ano)))
+                        .param("ano", String.valueOf(ano))
+                        .param("page", "0") // Página 0
+                        .param("size", "10")) // Tamanho da página 10
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1L));
+                .andExpect(jsonPath("$.content[0].id").value(1L)); // Verificando o id da primeira entrega na página
     }
+
+
+
 
     @Test
     void porAno() throws Exception {
         int ano = 2025;
         Entrega entregaMock = gerarEntregaMock();
 
-        Mockito.when(entregaService.listarEntregasPorAno(any(Integer.class))).thenReturn(List.of(entregaMock).stream().map(EntregaResponseDto::fromEntity).toList());
+        // Criar uma página mockada de entregas
+        Page<EntregaResponseDto> pageMock = new PageImpl<>(List.of(entregaMock).stream()
+                .map(EntregaResponseDto::fromEntity)
+                .collect(Collectors.toList()), PageRequest.of(0, 10), 1);
 
+        // Mock do serviço com paginação
+        Mockito.when(entregaService.listarEntregasPorAno(eq(ano), any(Pageable.class)))
+                .thenReturn(pageMock);
+
+        // Chamada do mockMvc
         mockMvc.perform(get("/entregas/por-ano")
-                        .param("ano", String.valueOf(ano)))
+                        .param("ano", String.valueOf(ano))
+                        .param("page", "0") // Página 0
+                        .param("size", "10")) // Tamanho da página 10
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1L));
+                .andExpect(jsonPath("$.content[0].id").value(1L)); // Verificando o id da primeira entrega na página
     }
+
+
 
     @Test
     void porConsumidor() throws Exception {
         Entrega entregaMock = gerarEntregaMock();
 
-        Mockito.when(entregaService.listarEntregasPorConsumidor(anyLong())).thenReturn(List.of(entregaMock).stream().map(EntregaResponseDto::fromEntity).toList());
+        // Criar uma página mockada de entregas
+        Page<EntregaResponseDto> pageMock = new PageImpl<>(List.of(entregaMock).stream()
+                .map(EntregaResponseDto::fromEntity)
+                .collect(Collectors.toList()), PageRequest.of(0, 10), 1);
 
-        mockMvc.perform(get("/entregas/por-consumidor/1"))
+        // Mock do serviço com paginação
+        Mockito.when(entregaService.listarEntregasPorConsumidor(eq(1L), any(Pageable.class)))
+                .thenReturn(pageMock);
+
+        // Chamada do mockMvc
+        mockMvc.perform(get("/entregas/por-consumidor/1")
+                        .param("page", "0") // Página 0
+                        .param("size", "10")) // Tamanho da página 10
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1L));
+                .andExpect(jsonPath("$.content[0].id").value(1L)); // Verificando o id da primeira entrega na página
     }
+
 
     @Test
     void porConsumidorPeriodo() throws Exception {
@@ -298,12 +361,25 @@ class EntregaControllerTest {
         LocalDateTime fim = LocalDateTime.of(2025, 6, 30, 23, 59);
         Entrega entregaMock = gerarEntregaMock();
 
-        Mockito.when(entregaService.listarEntregasPorConsumidorPorPeriodo(anyLong(), any(), any())).thenReturn(List.of(entregaMock).stream().map(EntregaResponseDto::fromEntity).toList());
+        // Criando uma página mockada de entregas
+        Page<EntregaResponseDto> pageMock = new PageImpl<>(List.of(entregaMock).stream()
+                .map(EntregaResponseDto::fromEntity)
+                .collect(Collectors.toList()), PageRequest.of(0, 10), 1);
 
+        // Mock do serviço com paginação
+        Mockito.when(entregaService.listarEntregasPorConsumidorPorPeriodo(eq(1L), eq(inicio), eq(fim), any(Pageable.class)))
+                .thenReturn(pageMock);
+
+        // Chamada do mockMvc com parâmetros de página
         mockMvc.perform(get("/entregas/por-consumidor/1/periodo")
                         .param("inicio", inicio.toString())
-                        .param("fim", fim.toString()))
+                        .param("fim", fim.toString())
+                        .param("page", "0") // Página 0
+                        .param("size", "10")) // Tamanho da página 10
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1L));
+                .andExpect(jsonPath("$.content[0].id").value(1L)); // Verificando o id da primeira entrega na página
     }
+
+
+
 }

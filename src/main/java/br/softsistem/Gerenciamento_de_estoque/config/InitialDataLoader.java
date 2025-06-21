@@ -31,6 +31,7 @@ public class InitialDataLoader {
     @Bean
     public CommandLineRunner initDatabase() {
         return args -> {
+            // Lógica de inicialização do banco de dados
             final Org defaultOrg;
 
             Optional<Org> existingOrg = orgRepository.findByNome("SoftSistem Principal");

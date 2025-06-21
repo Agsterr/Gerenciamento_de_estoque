@@ -58,6 +58,7 @@
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease;
 }
+
 .btn i {
   margin: 0; /* remove margem extra do ícone */
 }
@@ -99,6 +100,7 @@
 .categoria-container__lista {
   margin-top: 20px;
 }
+
 .categoria-container__lista h3 {
   margin-bottom: 10px;
   font-size: 1.5rem;
@@ -133,11 +135,17 @@
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   margin-top: 20px;
+  width: 100%;
+  max-width: 600px;  /* Limitar a largura máxima */
+  margin-left: auto; /* Centralizar */
+  margin-right: auto; /* Centralizar */
 }
+
 .categoria-container__formulario h3 {
   margin-bottom: 15px;
   font-size: 1.5rem;
   color: #333;
+  text-align: center; /* Centralizar título */
 }
 
 form {
@@ -155,6 +163,7 @@ input {
   font-size: 1rem;
   border: 1px solid #ccc;
   border-radius: 5px;
+  width: 100%; /* Garantir que o input ocupe 100% da largura */
 }
 
 button:focus-visible,
@@ -208,17 +217,18 @@ input:focus-visible {
   }
 
   /* ---------- Paginação ---------- */
+ 
 .pagination {
   margin-top: 20px;
   display: flex;
   gap: 10px;
-  justify-content: center;
+  justify-content: center; /* Centralizar a paginação */
   align-items: center;
 }
 
 .pagination button {
   padding: 8px 16px;
-  background-color: #007bff;
+  background-color: #007bff; /* Azul igual ao botão primário */
   color: white;
   border: none;
   border-radius: 5px;
@@ -230,18 +240,20 @@ input:focus-visible {
 }
 
 .pagination button:disabled {
-  background-color: #6c757d;
+  background-color: #6c757d; /* Cinza para botões desabilitados */
   cursor: not-allowed;
 }
 
 .pagination button:hover:not(:disabled) {
-  background-color: #0056b3;
-  transform: scale(1.05);
+  background-color: #0056b3; /* Azul escuro no hover */
+  transform: scale(1.05); /* Animação suave de aumento ao passar o mouse */
 }
 
 .pagination p {
   margin: 0;
   font-size: 14px;
+  color: #333; /* Cor do texto da páginação */
 }
+
 
 }

@@ -74,25 +74,27 @@ public class EntregaController {
      * Lista todas as entregas detalhadas de um dia específico.
      * GET /entregas/por-dia?dia=YYYY-MM-DD
      */
+
     @GetMapping("/por-dia")
-    public ResponseEntity<List<EntregaResponseDto>> porDia(
-            @RequestParam("dia") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dia
-    ) {
-        List<EntregaResponseDto> lista = entregaService.listarEntregasPorDia(dia);
-        return ResponseEntity.ok(lista);
+    public ResponseEntity<Page<EntregaResponseDto>> porDia(
+            @RequestParam("dia") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dia,
+            Pageable pageable) {
+        Page<EntregaResponseDto> pageDto = entregaService.listarEntregasPorDia(dia, pageable);
+        return ResponseEntity.ok(pageDto);
     }
 
     /**
      * Lista todas as entregas detalhadas em um intervalo de data/hora.
      * GET /entregas/por-periodo?inicio=YYYY-MM-DDTHH:MM:SS&fim=YYYY-MM-DDTHH:MM:SS
      */
+
     @GetMapping("/por-periodo")
-    public ResponseEntity<List<EntregaResponseDto>> porPeriodo(
+    public ResponseEntity<Page<EntregaResponseDto>> porPeriodo(
             @RequestParam("inicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
-            @RequestParam("fim")    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fim
-    ) {
-        List<EntregaResponseDto> lista = entregaService.listarEntregasPorPeriodo(inicio, fim);
-        return ResponseEntity.ok(lista);
+            @RequestParam("fim")    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fim,
+            Pageable pageable) {
+        Page<EntregaResponseDto> pageDto = entregaService.listarEntregasPorPeriodo(inicio, fim, pageable);
+        return ResponseEntity.ok(pageDto);
     }
 
     /**
@@ -100,36 +102,39 @@ public class EntregaController {
      * GET /entregas/por-mes?mes=MM&ano=YYYY
      */
     @GetMapping("/por-mes")
-    public ResponseEntity<List<EntregaResponseDto>> porMes(
+    public ResponseEntity<Page<EntregaResponseDto>> porMes(
             @RequestParam("mes") int mes,
-            @RequestParam("ano") int ano
-    ) {
-        List<EntregaResponseDto> lista = entregaService.listarEntregasPorMes(mes, ano);
-        return ResponseEntity.ok(lista);
+            @RequestParam("ano") int ano,
+            Pageable pageable) {
+        Page<EntregaResponseDto> pageDto = entregaService.listarEntregasPorMes(mes, ano, pageable);
+        return ResponseEntity.ok(pageDto);
     }
+
 
     /**
      * Lista todas as entregas detalhadas de um ano inteiro.
      * GET /entregas/por-ano?ano=YYYY
      */
+
     @GetMapping("/por-ano")
-    public ResponseEntity<List<EntregaResponseDto>> porAno(
-            @RequestParam("ano") int ano
-    ) {
-        List<EntregaResponseDto> lista = entregaService.listarEntregasPorAno(ano);
-        return ResponseEntity.ok(lista);
+    public ResponseEntity<Page<EntregaResponseDto>> porAno(
+            @RequestParam("ano") int ano,
+            Pageable pageable) {
+        Page<EntregaResponseDto> pageDto = entregaService.listarEntregasPorAno(ano, pageable);
+        return ResponseEntity.ok(pageDto);
     }
 
     /**
      * Lista todas as entregas detalhadas de um consumidor específico (sem filtro de data).
      * GET /entregas/por-consumidor/{consumidorId}
      */
+
     @GetMapping("/por-consumidor/{consumidorId}")
-    public ResponseEntity<List<EntregaResponseDto>> porConsumidor(
-            @PathVariable Long consumidorId
-    ) {
-        List<EntregaResponseDto> lista = entregaService.listarEntregasPorConsumidor(consumidorId);
-        return ResponseEntity.ok(lista);
+    public ResponseEntity<Page<EntregaResponseDto>> porConsumidor(
+            @PathVariable Long consumidorId,
+            Pageable pageable) {
+        Page<EntregaResponseDto> pageDto = entregaService.listarEntregasPorConsumidor(consumidorId, pageable);
+        return ResponseEntity.ok(pageDto);
     }
 
     /**
@@ -137,14 +142,15 @@ public class EntregaController {
      * GET /entregas/por-consumidor/{consumidorId}/periodo?inicio=...&fim=...
      */
     @GetMapping("/por-consumidor/{consumidorId}/periodo")
-    public ResponseEntity<List<EntregaResponseDto>> porConsumidorPeriodo(
+    public ResponseEntity<Page<EntregaResponseDto>> porConsumidorPeriodo(
             @PathVariable Long consumidorId,
             @RequestParam("inicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
-            @RequestParam("fim")    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fim
-    ) {
-        List<EntregaResponseDto> lista = entregaService.listarEntregasPorConsumidorPorPeriodo(consumidorId, inicio, fim);
-        return ResponseEntity.ok(lista);
+            @RequestParam("fim")    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fim,
+            Pageable pageable) {
+        Page<EntregaResponseDto> pageDto = entregaService.listarEntregasPorConsumidorPorPeriodo(consumidorId, inicio, fim, pageable);
+        return ResponseEntity.ok(pageDto);
     }
+
 
 
 }

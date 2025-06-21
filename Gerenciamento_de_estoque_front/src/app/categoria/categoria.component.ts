@@ -51,17 +51,18 @@ export class CategoriaComponent implements OnInit {
     }
   }
 
-  /** Carrega categorias com paginação */
-   carregarCategorias(pagina: number = 0): void {
+
+/** Carrega categorias com paginação */
+carregarCategorias(pagina: number = 0): void {
   this.limparMensagens();
 
   this.categoriaService.listarCategorias(pagina, this.size).subscribe({
     next: (data: PageCategoriaResponse) => {
-      this.categorias = data.content; // só o array de categorias
-      this.number = data.page.number;
-      this.totalPages = data.page.totalPages;
-      this.totalElements = data.page.totalElements;
-      this.size = data.page.size;
+      this.categorias = data.content; // Apenas o array de categorias
+      this.number = data.number; // Número da página atual
+      this.totalPages = data.totalPages; // Número total de páginas
+      this.totalElements = data.totalElements; // Número total de elementos
+      this.size = data.size; // Tamanho da página
     },
     error: (error: HttpErrorResponse) => {
       this.mensagemErro = 'Erro ao carregar categorias.';
@@ -69,6 +70,7 @@ export class CategoriaComponent implements OnInit {
     }
   });
 }
+
 
 
 
