@@ -9,7 +9,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Repository
 public interface EntregaRepository extends JpaRepository<Entrega, Long> {
@@ -50,7 +49,7 @@ public interface EntregaRepository extends JpaRepository<Entrega, Long> {
     );
 
     // ======================================================
-    // DETALHAMENTO: listar entregas em intervalo genérico
+    // DETALHAMENTO: listar entregas em intervalo genérico com paginação
     // ======================================================
     @Query("SELECT e " +
             "FROM Entrega e " +
@@ -58,31 +57,33 @@ public interface EntregaRepository extends JpaRepository<Entrega, Long> {
             "  AND e.horarioEntrega <= :fim " +
             "  AND e.org.id = :orgId " +
             "ORDER BY e.horarioEntrega ASC")
-    List<Entrega> findByHorarioEntregaBetweenAndOrgId(
+    Page<Entrega> findByHorarioEntregaBetweenAndOrgId(
             @Param("inicio") LocalDateTime inicio,
             @Param("fim")    LocalDateTime fim,
-            @Param("orgId")  Long orgId
+            @Param("orgId")  Long orgId,
+            Pageable pageable
     );
 
     // ======================================================
-    // NOVOS MÉTODOS PARA BUSCAR POR CONSUMIDOR (DETALHADO)
+    // NOVOS MÉTODOS PARA BUSCAR POR CONSUMIDOR (DETALHADO) COM PAGINAÇÃO
     // ======================================================
 
     /**
-     * Retorna todas as entregas de um consumidor em toda organização (sem intervalo de data).
+     * Retorna todas as entregas de um consumidor em toda organização (sem intervalo de data) com paginação.
      */
     @Query("SELECT e " +
             "FROM Entrega e " +
             "WHERE e.consumidor.id = :consumidorId " +
             "  AND e.org.id = :orgId " +
             "ORDER BY e.horarioEntrega ASC")
-    List<Entrega> findByConsumidorIdAndOrgId(
+    Page<Entrega> findByConsumidorIdAndOrgId(
             @Param("consumidorId") Long consumidorId,
-            @Param("orgId")        Long orgId
+            @Param("orgId")        Long orgId,
+            Pageable pageable
     );
 
     /**
-     * Retorna todas as entregas de um consumidor em um intervalo de data/hora, filtrando pela organização.
+     * Retorna todas as entregas de um consumidor em um intervalo de data/hora, filtrando pela organização com paginação.
      */
     @Query("SELECT e " +
             "FROM Entrega e " +
@@ -91,10 +92,28 @@ public interface EntregaRepository extends JpaRepository<Entrega, Long> {
             "  AND e.horarioEntrega <= :fim " +
             "  AND e.org.id = :orgId " +
             "ORDER BY e.horarioEntrega ASC")
-    List<Entrega> findByConsumidorIdAndHorarioEntregaBetweenAndOrgId(
+    Page<Entrega> findByConsumidorIdAndHorarioEntregaBetweenAndOrgId(
             @Param("consumidorId") Long consumidorId,
             @Param("inicio")       LocalDateTime inicio,
             @Param("fim")          LocalDateTime fim,
-            @Param("orgId")        Long orgId
+            @Param("orgId")        Long orgId,
+            Pageable pageable
+    );
+
+    // ======================================================
+    // NOVO MÉTODO PARA BUSCAR POR PRODUTO E ORGANIZAÇÃO COM PAGINAÇÃO
+    // ======================================================
+    /**
+     * Retorna todas as entregas de uma organização que contenham um produto específico com paginação.
+     */
+    @Query("SELECT e " +
+            "FROM Entrega e " +
+            "WHERE e.produto.id = :produtoId " + // Agora estamos filtrando pelo produto diretamente
+            "  AND e.org.id = :orgId " + // Garantindo que a entrega pertença à organização correta
+            "ORDER BY e.horarioEntrega ASC")
+    Page<Entrega> findByProdutoIdAndOrgId(
+            @Param("produtoId") Long produtoId,
+            @Param("orgId")     Long orgId,
+            Pageable pageable
     );
 }

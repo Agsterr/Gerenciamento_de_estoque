@@ -37,8 +37,8 @@ export class CategoriaService {
     return JSON.parse(payload);
   }
 
-  /** Lista categorias da organização atual */
- listarCategorias(page: number = 0, size: number = 10): Observable<PageCategoriaResponse> {
+ /** Lista categorias da organização atual */
+listarCategorias(page: number = 0, size: number = 10): Observable<PageCategoriaResponse> {
   const orgId = this.getOrgId();
   const headers = this.getAuthHeaders();
 
@@ -55,6 +55,7 @@ export class CategoriaService {
     })
   );
 }
+
 
   /** Cria uma nova categoria com nome e descrição */
   criarCategoria(nome: string, descricao: string = ''): Observable<Categoria> {

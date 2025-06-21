@@ -44,45 +44,47 @@ export class ConsumidorService {
   /* ---------- Operações ---------- */
 
   /** Apenas o array de consumidores (sem metadados) */
-  listarConsumidores(
-    page: number = 0,
-    size: number = 10
-  ): Observable<Consumer[]> {
-    const headers = this.getAuthHeaders();
-    const params  = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString());
+ listarConsumidores(
+  page: number = 0,
+  size: number = 10
+): Observable<Consumer[]> {
+  const headers = this.getAuthHeaders();
+  const params  = new HttpParams()
+    .set('page', page.toString())
+    .set('size', size.toString());
 
-    return this.http
-      .get<{ content: Consumer[] }>(this.apiUrl, { headers, params })
-      .pipe(
-        map(resp => resp.content),
-        catchError(err => {
-          console.error('Erro ao listar consumidores:', err);
-          return throwError(() => new Error('Falha ao carregar consumidores.'));
-        })
-      );
-  }
+  return this.http
+    .get<{ content: Consumer[] }>(this.apiUrl, { headers, params })
+    .pipe(
+      map(resp => resp.content), // Extrai o array 'content' de consumidores
+      catchError(err => {
+        console.error('Erro ao listar consumidores:', err);
+        return throwError(() => new Error('Falha ao carregar consumidores.'));
+      })
+    );
+}
+
 
   /** Array + metadados de paginação (resolve NaN) */
   listarConsumidoresPaged(
-    page: number = 0,
-    size: number = 10
-  ): Observable<ConsumerPagedResponse> {
-    const headers = this.getAuthHeaders();
-    const params  = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString());
+  page: number = 0,
+  size: number = 10
+): Observable<ConsumerPagedResponse> {
+  const headers = this.getAuthHeaders();
+  const params  = new HttpParams()
+    .set('page', page.toString())
+    .set('size', size.toString());
 
-    return this.http
-      .get<ConsumerPagedResponse>(this.apiUrl, { headers, params })
-      .pipe(
-        catchError(err => {
-          console.error('Erro ao listar consumidores paginados:', err);
-          return throwError(() => new Error('Falha ao carregar consumidores.'));
-        })
-      );
-  }
+  return this.http
+    .get<ConsumerPagedResponse>(this.apiUrl, { headers, params })
+    .pipe(
+      catchError(err => {
+        console.error('Erro ao listar consumidores paginados:', err);
+        return throwError(() => new Error('Falha ao carregar consumidores.'));
+      })
+    );
+}
+
 
   getById(id: number): Observable<Consumer> {
     const headers = this.getAuthHeaders();

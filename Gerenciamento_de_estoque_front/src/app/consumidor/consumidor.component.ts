@@ -50,26 +50,33 @@ export class ConsumersComponent implements OnInit {
   }
 
   /** Busca paginada de consumidores */
-  fetchConsumers(page: number = 0): void {
-    this.consumidorService
-      .listarConsumidoresPaged(page, this.pageSize)
-      .subscribe({
-        next: (resp: ConsumerPagedResponse) => {
-          const p = resp.page;
-          this.currentPage   = p.number;
-          this.pageSize      = p.size;
-          this.totalPages    = p.totalPages;
-          this.totalElements = p.totalElements;
+ fetchConsumers(page: number = 0): void {
+  this.consumidorService
+    .listarConsumidoresPaged(page, this.pageSize)  // Chama o método que retorna a resposta paginada
+    .subscribe({
+      next: (resp: ConsumerPagedResponse) => {
+        // Atualizando os metadados de paginação
+        this.currentPage   = resp.number;           // Página atual
+        this.pageSize      = resp.size;             // Tamanho da página
+        this.totalPages    = resp.totalPages;       // Total de páginas
+        this.totalElements = resp.totalElements;    // Total de consumidores
 
-          this.consumers = resp.content.sort((a, b) =>
-            a.nome.localeCompare(b.nome)
-          );
-          this.applyFilter();
-          // <-- remover: this.onSuccess('Lista carregada com sucesso');
-        },
-        error: () => this.onError('Erro ao buscar consumidores!')
-      });
-  }
+        // Ordenando os consumidores pelo nome
+        this.consumers = resp.content.sort((a, b) => a.nome.localeCompare(b.nome));
+
+        // Aplicando filtro (se houver algum)
+        this.applyFilter();  // Função para aplicar filtros nos consumidores
+
+        // Mensagem de sucesso pode ser removida, se não for necessária.
+        // this.onSuccess('Lista carregada com sucesso');
+      },
+      error: () => {
+        // Em caso de erro, exibe uma mensagem de erro
+        this.onError('Erro ao buscar consumidores!');
+      }
+    });
+}
+
 
   /** Mostrar lista */
   toggleList(): void {

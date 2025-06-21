@@ -18,10 +18,10 @@ public record ConsumidorDtoRequest(
         @Pattern(regexp = "\\d{11}", message = "CPF inválido. Deve ter 11 dígitos.")
         String cpf,
 
-        @NotNull(message = "Endereço não pode ser nulo")
+
         String endereco,
 
-        @NotNull(message = "ID da organização não pode ser nulo")
+
         Long orgId
 ) {
 

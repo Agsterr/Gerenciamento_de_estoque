@@ -206,71 +206,99 @@ public class EntregaService {
     // ================================
     // MÉTODOS PARA RESPOSTAS DETALHADAS
     // ================================
-    public List<EntregaResponseDto> listarEntregasPorDia(LocalDate dia) {
+    public Page<EntregaResponseDto> listarEntregasPorDia(LocalDate dia, Pageable pageable) {
         Long orgId = SecurityUtils.getCurrentOrgId();
+        if (orgId == null) {
+            throw new OrganizacaoNaoEncontradaException("Organização não encontrada no contexto de segurança");
+        }
+
         LocalDateTime inicioDia = dia.atStartOfDay();
         LocalDateTime fimDia = dia.atTime(23, 59, 59);
 
-        return entregaRepository
-                .findByHorarioEntregaBetweenAndOrgId(inicioDia, fimDia, orgId)
-                .stream()
-                .map(EntregaResponseDto::fromEntity)
-                .collect(Collectors.toList());
+        // Usando o método do repositório com paginação
+        Page<Entrega> entregasPage = entregaRepository.findByHorarioEntregaBetweenAndOrgId(inicioDia, fimDia, orgId, pageable);
+
+        // Convertendo cada entidade para DTO
+        return entregasPage.map(EntregaResponseDto::fromEntity);
     }
 
-    public List<EntregaResponseDto> listarEntregasPorPeriodo(LocalDateTime inicio, LocalDateTime fim) {
+    public Page<EntregaResponseDto> listarEntregasPorPeriodo(LocalDateTime inicio, LocalDateTime fim, Pageable pageable) {
         Long orgId = SecurityUtils.getCurrentOrgId();
+        if (orgId == null) {
+            throw new OrganizacaoNaoEncontradaException("Organização não encontrada no contexto de segurança");
+        }
 
-        return entregaRepository
-                .findByHorarioEntregaBetweenAndOrgId(inicio, fim, orgId)
-                .stream()
-                .map(EntregaResponseDto::fromEntity)
-                .collect(Collectors.toList());
+        // Usando o método do repositório com paginação
+        Page<Entrega> entregasPage = entregaRepository.findByHorarioEntregaBetweenAndOrgId(inicio, fim, orgId, pageable);
+
+        // Convertendo cada entidade para DTO
+        return entregasPage.map(EntregaResponseDto::fromEntity);
     }
 
-    public List<EntregaResponseDto> listarEntregasPorMes(int mes, int ano) {
+
+    public Page<EntregaResponseDto> listarEntregasPorMes(int mes, int ano, Pageable pageable) {
         Long orgId = SecurityUtils.getCurrentOrgId();
+        if (orgId == null) {
+            throw new OrganizacaoNaoEncontradaException("Organização não encontrada no contexto de segurança");
+        }
+
+        // Definindo o intervalo do mês
         LocalDateTime inicioMes = LocalDate.of(ano, mes, 1).atStartOfDay();
         LocalDateTime fimMes = inicioMes.plusMonths(1).minusSeconds(1);
 
-        return entregaRepository
-                .findByHorarioEntregaBetweenAndOrgId(inicioMes, fimMes, orgId)
-                .stream()
-                .map(EntregaResponseDto::fromEntity)
-                .collect(Collectors.toList());
+        // Usando o método do repositório com paginação
+        Page<Entrega> entregasPage = entregaRepository.findByHorarioEntregaBetweenAndOrgId(inicioMes, fimMes, orgId, pageable);
+
+        // Convertendo cada entidade para DTO
+        return entregasPage.map(EntregaResponseDto::fromEntity);
     }
 
-    public List<EntregaResponseDto> listarEntregasPorAno(int ano) {
+
+    public Page<EntregaResponseDto> listarEntregasPorAno(int ano, Pageable pageable) {
         Long orgId = SecurityUtils.getCurrentOrgId();
+        if (orgId == null) {
+            throw new OrganizacaoNaoEncontradaException("Organização não encontrada no contexto de segurança");
+        }
+
+        // Definindo o intervalo do ano
         LocalDateTime inicioAno = LocalDate.of(ano, 1, 1).atStartOfDay();
         LocalDateTime fimAno = inicioAno.plusYears(1).minusSeconds(1);
 
-        return entregaRepository
-                .findByHorarioEntregaBetweenAndOrgId(inicioAno, fimAno, orgId)
-                .stream()
-                .map(EntregaResponseDto::fromEntity)
-                .collect(Collectors.toList());
+        // Usando o método do repositório com paginação
+        Page<Entrega> entregasPage = entregaRepository.findByHorarioEntregaBetweenAndOrgId(inicioAno, fimAno, orgId, pageable);
+
+        // Convertendo cada entidade para DTO
+        return entregasPage.map(EntregaResponseDto::fromEntity);
     }
 
-    public List<EntregaResponseDto> listarEntregasPorConsumidor(Long consumidorId) {
+    public Page<EntregaResponseDto> listarEntregasPorConsumidor(Long consumidorId, Pageable pageable) {
         Long orgId = SecurityUtils.getCurrentOrgId();
-        return entregaRepository
-                .findByConsumidorIdAndOrgId(consumidorId, orgId)
-                .stream()
-                .map(EntregaResponseDto::fromEntity)
-                .collect(Collectors.toList());
+        if (orgId == null) {
+            throw new OrganizacaoNaoEncontradaException("Organização não encontrada no contexto de segurança");
+        }
+
+        // Usando o método do repositório com paginação
+        Page<Entrega> entregasPage = entregaRepository.findByConsumidorIdAndOrgId(consumidorId, orgId, pageable);
+
+        // Convertendo cada entidade para DTO
+        return entregasPage.map(EntregaResponseDto::fromEntity);
     }
 
-    public List<EntregaResponseDto> listarEntregasPorConsumidorPorPeriodo(
-            Long consumidorId, LocalDateTime inicio, LocalDateTime fim
-    ) {
+
+    public Page<EntregaResponseDto> listarEntregasPorConsumidorPorPeriodo(
+            Long consumidorId, LocalDateTime inicio, LocalDateTime fim, Pageable pageable) {
         Long orgId = SecurityUtils.getCurrentOrgId();
-        return entregaRepository
-                .findByConsumidorIdAndHorarioEntregaBetweenAndOrgId(consumidorId, inicio, fim, orgId)
-                .stream()
-                .map(EntregaResponseDto::fromEntity)
-                .collect(Collectors.toList());
+        if (orgId == null) {
+            throw new OrganizacaoNaoEncontradaException("Organização não encontrada no contexto de segurança");
+        }
+
+        // Usando o método do repositório com paginação
+        Page<Entrega> entregasPage = entregaRepository.findByConsumidorIdAndHorarioEntregaBetweenAndOrgId(consumidorId, inicio, fim, orgId, pageable);
+
+        // Convertendo cada entidade para DTO
+        return entregasPage.map(EntregaResponseDto::fromEntity);
     }
+
 
     // ================================
     // (Métodos de soma mantidos, mas não expostos)

@@ -1,20 +1,26 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
+
+import br.softsistem.Gerenciamento_de_estoque.config.JwtAuthenticationFilter;
 import br.softsistem.Gerenciamento_de_estoque.dto.login.LoginRequestDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.login.LoginResponseDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioRequestDto;
+import br.softsistem.Gerenciamento_de_estoque.repository.*;
 import br.softsistem.Gerenciamento_de_estoque.service.AuthService;
-import br.softsistem.Gerenciamento_de_estoque.service.JwtService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -25,8 +31,17 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(AuthController.class)
-// Desabilita os filtros de segurança (para não carregar JwtAuthenticationFilter, etc.)
+@WebMvcTest(
+        controllers = AuthController.class, // Corrigido para o controlador correto
+        excludeFilters = @ComponentScan.Filter(
+                type = FilterType.ASSIGNABLE_TYPE,
+                classes = JwtAuthenticationFilter.class
+        ),
+        excludeAutoConfiguration = {
+                SecurityAutoConfiguration.class,
+                SecurityFilterAutoConfiguration.class
+        }
+)
 @AutoConfigureMockMvc(addFilters = false)
 class AuthControllerTest {
 
@@ -36,26 +51,44 @@ class AuthControllerTest {
     @MockBean
     private AuthService authService;
 
-    // Registramos um mock também para JwtService, caso algum outro componente tente injetá-lo.
-    @MockBean
-    private JwtService jwtService;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
+    // DTOs de teste
     private LoginRequestDto requisicaoLoginValida;
     private LoginResponseDto respostaLogin;
-
     private UsuarioRequestDto requisicaoRegistroValida;
     private UsuarioDto respostaRegistro;
 
+    @MockBean
+    private OrgRepository orgRepository;
+
+    @MockBean
+    private RoleRepository roleRepository;
+
+    @MockBean
+    UsuarioRepository usuarioRepository;
+
+    @MockBean
+    private CategoriaRepository categoriaRepository;
+
+    @MockBean
+    private ConsumidorRepository consumidorRepository;
+
+
+    @MockBean
+    private EntregaRepository entregaRepository;
+
+    @MockBean
+    private ProdutoRepository produtoRepository;
+
+    @MockBean
+    private MovimentacaoProdutoRepository  movimentacaoProdutoRepository;
+
+
     @BeforeEach
     void configurar() {
-        // DTO de login: username, senha, orgId
+        // Inicialização dos DTOs de login e registro
         requisicaoLoginValida = new LoginRequestDto("joao123", "senhaSegura", 2L);
         respostaLogin = new LoginResponseDto("jwt-token-abc-123");
 
-        // DTO de registro: username, senha, email, roles, orgId
         requisicaoRegistroValida = new UsuarioRequestDto(
                 "maria123",
                 "senhaForte",
@@ -63,7 +96,7 @@ class AuthControllerTest {
                 List.of("ROLE_USER"),
                 2L
         );
-        // DTO de resposta ao registrar: id, username, email, ativo, roles
+
         respostaRegistro = new UsuarioDto(
                 42L,
                 "maria123",
@@ -80,7 +113,7 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requisicaoLoginValida)))
+                        .content(new ObjectMapper().writeValueAsString(requisicaoLoginValida)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.token", is("jwt-token-abc-123")));
@@ -95,8 +128,7 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requisicaoLoginValida)))
-                // Aguardamos 400 Bad Request em vez de 500
+                        .content(new ObjectMapper().writeValueAsString(requisicaoLoginValida)))
                 .andExpect(status().isBadRequest());
 
         Mockito.verify(authService).login(ArgumentMatchers.refEq(requisicaoLoginValida));
@@ -109,7 +141,7 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requisicaoRegistroValida)))
+                        .content(new ObjectMapper().writeValueAsString(requisicaoRegistroValida)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id", is(42)))
@@ -128,8 +160,7 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requisicaoRegistroValida)))
-                // Aguardamos 400 Bad Request em vez de 500
+                        .content(new ObjectMapper().writeValueAsString(requisicaoRegistroValida)))
                 .andExpect(status().isBadRequest());
 
         Mockito.verify(authService).register(ArgumentMatchers.refEq(requisicaoRegistroValida));
