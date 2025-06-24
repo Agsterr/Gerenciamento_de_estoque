@@ -257,3 +257,41 @@ input:focus-visible {
 
 
 }
+
+/* ---------- Paginação ---------- */
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: center; /* Centralizar a paginação */
+  align-items: center;
+}
+
+.pagination button {
+  padding: 8px 16px;
+  background-color: #007bff; /* Azul igual ao botão primário */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.pagination button:disabled {
+  background-color: #6c757d; /* Cinza para botões desabilitados */
+  cursor: not-allowed;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: #0056b3; /* Azul escuro no hover */
+  transform: scale(1.05); /* Animação suave de aumento ao passar o mouse */
+}
+
+.pagination p {
+  margin: 0;
+  font-size: 14px;
+  color: #333; /* Cor do texto da paginação */
+}
