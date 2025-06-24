@@ -116,4 +116,16 @@ public interface EntregaRepository extends JpaRepository<Entrega, Long> {
             @Param("orgId")     Long orgId,
             Pageable pageable
     );
+
+    @Query("SELECT COALESCE(SUM(e.valor), 0) " +
+            "FROM Entrega e " +
+            "WHERE e.horarioEntrega >= :inicio " +
+            "  AND e.horarioEntrega < :fim " +
+            "  AND e.org.id = :orgId")
+    java.math.BigDecimal totalPorDia(
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fim") LocalDateTime fim,
+            @Param("orgId") Long orgId
+    );
+
 }
