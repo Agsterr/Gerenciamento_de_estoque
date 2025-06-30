@@ -124,7 +124,7 @@ export class ConsumersComponent implements OnInit {
   }
 
   deleteConsumer(id: number): void {
-    if (!confirm('Confirma exclusão?')) return;
+    if (!confirm('Confirma exclusão do consumidor?')) return;
     this.consumidorService.deletarConsumidor(id).subscribe({
       next: () => this.onSuccess('Consumidor deletado!'),
       error: () => this.onError('Erro ao deletar consumidor!')

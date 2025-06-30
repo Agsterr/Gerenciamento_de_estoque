@@ -262,7 +262,10 @@ export class ProdutoComponent implements OnInit {
     }
   }
 
-  deletarProduto(produtoId: number): void {
+ deletarProduto(produtoId: number): void {
+  const confirmacao = window.confirm('Tem certeza que deseja excluir este produto?');
+
+  if (confirmacao) {
     this.produtoService.deletarProduto(produtoId).subscribe({
       next: () => {
         this.mensagem = `Produto deletado com sucesso.`;
@@ -273,7 +276,12 @@ export class ProdutoComponent implements OnInit {
         console.error('Erro ao deletar produto:', error);
       }
     });
+  } else {
+    // Se o usuário cancelar, você pode fazer algo, por exemplo, exibir uma mensagem
+    console.log('A exclusão do produto foi cancelada.');
   }
+}
+
 
   paginaAnterior(): void {
     if (this.currentPage > 0) this.carregarProdutos(this.currentPage - 1);

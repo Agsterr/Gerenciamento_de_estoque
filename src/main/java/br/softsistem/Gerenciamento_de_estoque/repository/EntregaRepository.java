@@ -128,4 +128,28 @@ public interface EntregaRepository extends JpaRepository<Entrega, Long> {
             @Param("orgId") Long orgId
     );
 
+    @Query("SELECT COALESCE(COUNT(e), 0) " +
+            "FROM Entrega e " +
+            "WHERE e.org.id = :orgId")
+    Integer totalEntregasRealizadas(@Param("orgId") Long orgId);
+
+
+    @Query("SELECT COALESCE(COUNT(e), 0) " +
+            "FROM Entrega e " +
+            "WHERE e.consumidor.id = :consumidorId " +
+            "  AND e.org.id = :orgId")
+    Integer totalEntregasPorConsumidor(@Param("consumidorId") Long consumidorId, @Param("orgId") Long orgId);
+
+
+    @Query("SELECT COALESCE(COUNT(e), 0) " +
+            "FROM Entrega e " +
+            "WHERE e.produto.id = :produtoId " +
+            "  AND e.org.id = :orgId")
+    Integer totalEntregasPorProduto(@Param("produtoId") Long produtoId, @Param("orgId") Long orgId);
+
+
+
+
+
+
 }

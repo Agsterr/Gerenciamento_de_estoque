@@ -284,6 +284,13 @@ public class EntregaService {
         return entregasPage.map(EntregaResponseDto::fromEntity);
     }
 
+    // Método no serviço para listar entregas por produto
+    public Page<EntregaResponseDto> listarEntregasPorProduto(Long produtoId, Long orgId, Pageable pageable) {
+        Page<Entrega> entregas = entregaRepository.findByProdutoIdAndOrgId(produtoId, orgId, pageable);
+        return entregas.map(EntregaResponseDto::fromEntity);  // Convertendo para DTO
+    }
+
+
 
     public Page<EntregaResponseDto> listarEntregasPorConsumidorPorPeriodo(
             Long consumidorId, LocalDateTime inicio, LocalDateTime fim, Pageable pageable) {

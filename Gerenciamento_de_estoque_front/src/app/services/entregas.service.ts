@@ -133,4 +133,21 @@ export class EntregasService {
       catchError(this.handleError)
     );
   }
+  
+    // Método para listar entregas por produto
+  porProduto(produtoId: number, orgId: number, page: number, size: number): Observable<PageEntregaResponse> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString())
+      .set('orgId', orgId.toString());
+
+    return this.http.get<PageEntregaResponse>(`${this.apiUrl}/por-produto/${produtoId}`, {
+      headers: this.getAuthHeaders(),
+      params
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+
 }

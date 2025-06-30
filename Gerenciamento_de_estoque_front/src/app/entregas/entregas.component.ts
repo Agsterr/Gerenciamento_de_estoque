@@ -25,6 +25,7 @@ export class EntregasComponent implements OnInit {
 
   produtos: any[] = [];
   consumidores: any[] = [];
+  porDia: EntregaResponse[] = [];
 
   novaEntrega: Partial<EntregaRequest> = {};
   currentPage = 0;
@@ -198,6 +199,19 @@ fetchEntregas(page: number): void {
         this.applyFilter();
       },
       error: () => alert('Erro ao deletar entrega.')
+    });
+  }
+
+  /** Método para buscar as entregas de um dia */
+  fetchEntregasPorDia(dia: string): void {
+    this.entregasService.porDia(dia).subscribe({
+      next: (entregas: EntregaResponse[]) => {
+        this.porDia = entregas; // Armazena as entregas do dia
+      },
+      error: (error) => {
+        this.mensagemErro = 'Erro ao buscar entregas para o dia especificado!';
+        console.error(error);
+      }
     });
   }
 
