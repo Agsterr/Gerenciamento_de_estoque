@@ -31,54 +31,8 @@
       class="search-input"
     />
 
-    <table class="entrega-table">
-      <thead>
-        <tr>
-          <th><i class="fas fa-hashtag"></i> ID</th>
-          <th><i class="fas fa-user"></i> Consumidor</th>
-          <th><i class="fas fa-box"></i> Produto</th>
-          <th><i class="fas fa-truck"></i> Entregador</th>
-          <th><i class="fas fa-layer-group"></i> Quantidade</th>
-          <th><i class="fas fa-clock"></i> Horário</th>
-          <th><i class="fas fa-cogs"></i> Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let entrega of filteredEntregas">
-          <td>{{ entrega.id }}</td>
-          <td>{{ entrega.nomeConsumidor }}</td>
-          <td>{{ entrega.nomeProduto }}</td>
-          <td>{{ entrega.nomeEntregador }}</td>
-          <td>{{ entrega.quantidade }}</td>
-        <td>{{ formatarDataHoraBrasil(entrega.horarioEntrega) }}</td>
 
-
-          <td>
-            <!-- Botões de Ação: apenas ícones -->
-            <button (click)="editEntrega(entrega.id)" class="btn btn-primary btn-sm" title="Editar">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button (click)="deleteEntrega(entrega.id)" class="btn btn-danger btn-sm" title="Deletar">
-              <i class="fas fa-trash-alt"></i>
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <!-- Paginação -->
-    <div class="pagination">
-      <button (click)="paginaAnterior()" [disabled]="currentPage === 0">
-        <i class="fas fa-chevron-left"></i> Anterior
-      </button>
-      <button (click)="proximaPagina()" [disabled]="currentPage >= totalPages - 1 || totalPages === 0">
-        Próxima <i class="fas fa-chevron-right"></i>
-      </button>
-      <p>Página {{ currentPage + 1 }} de {{ totalPages > 0 ? totalPages : 1 }}</p>
-    </div>
-  </div>
-
-  <!-- Formulário de Adição de Entrega -->
+    <!-- Formulário de Adição de Entrega -->
   <div *ngIf="showAddForm" class="add-form-section">
     <h3>
       <i class="fas fa-pencil-alt"></i>
@@ -217,3 +171,56 @@
     </form>
   </div>
 </div>
+
+
+
+
+
+    <table class="entrega-table">
+      <thead>
+        <tr>
+          <th><i class="fas fa-hashtag"></i> ID</th>
+          <th><i class="fas fa-user"></i> Consumidor</th>
+          <th><i class="fas fa-box"></i> Produto</th>
+          <th><i class="fas fa-truck"></i> Entregador</th>
+          <th><i class="fas fa-layer-group"></i> Quantidade</th>
+          <th><i class="fas fa-clock"></i> Horário</th>
+          <th><i class="fas fa-cogs"></i> Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let entrega of filteredEntregas">
+          <td>{{ entrega.id }}</td>
+          <td>{{ entrega.nomeConsumidor }}</td>
+          <td>{{ entrega.nomeProduto }}</td>
+          <td>{{ entrega.nomeEntregador }}</td>
+          <td>{{ entrega.quantidade }}</td>
+        <td>{{ formatarDataHoraBrasil(entrega.horarioEntrega) }}</td>
+
+
+          <td>
+            <!-- Botões de Ação: apenas ícones -->
+            <button (click)="editEntrega(entrega.id)" class="btn btn-primary btn-sm" title="Editar">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button (click)="deleteEntrega(entrega.id)" class="btn btn-danger btn-sm" title="Deletar">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Paginação -->
+    <div class="pagination">
+      <button (click)="paginaAnterior()" [disabled]="currentPage === 0">
+        <i class="fas fa-chevron-left"></i> Anterior
+      </button>
+      <button (click)="proximaPagina()" [disabled]="currentPage >= totalPages - 1 || totalPages === 0">
+        Próxima <i class="fas fa-chevron-right"></i>
+      </button>
+      <p>Página {{ currentPage + 1 }} de {{ totalPages > 0 ? totalPages : 1 }}</p>
+    </div>
+  </div>
+
+  

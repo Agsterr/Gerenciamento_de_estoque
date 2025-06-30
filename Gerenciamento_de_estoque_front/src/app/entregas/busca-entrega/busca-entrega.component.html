@@ -1,0 +1,15 @@
+<!-- src/app/busca-entrega/busca-entrega.component.html -->
+<div class="search-form">
+  <h3>Buscar Entregas por Período</h3>
+  <form (ngSubmit)="onSubmit()">
+    <div class="form-group">
+      <label for="inicio">Data Início:</label>
+      <input type="date" id="inicio" [(ngModel)]="dataInicio" name="inicio" required class="form-control" />
+    </div>
+    <div class="form-group">
+      <label for="fim">Data Fim:</label>
+      <input type="date" id="fim" [(ngModel)]="dataFim" name="fim" required class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Buscar</button>
+  </form>
+</div>

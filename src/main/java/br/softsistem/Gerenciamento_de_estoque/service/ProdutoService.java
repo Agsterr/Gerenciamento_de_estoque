@@ -60,10 +60,16 @@ public class ProdutoService {
         produto.setNome(produtoRequest.getNome());
         produto.setDescricao(produtoRequest.getDescricao());
         produto.setPreco(produtoRequest.getPreco());
-        produto.setQuantidade(
-                isNovo ? produtoRequest.getQuantidade() :
-                        produto.getQuantidade() + produtoRequest.getQuantidade()
-        );
+
+        // Se o produto estava inativo, reativa ele e ajusta a quantidade
+        if (produto.getAtivo() != null && !produto.getAtivo()) {
+            produto.setAtivo(true);
+            produto.setQuantidade(produtoRequest.getQuantidade()); // Define a quantidade informada
+        } else {
+            // Se o produto não estava inativo, apenas soma a quantidade
+            produto.setQuantidade(produto.getQuantidade() + produtoRequest.getQuantidade());
+        }
+
         produto.setQuantidadeMinima(produtoRequest.getQuantidadeMinima());
         produto.setCategoria(categoria);
         produto.setOrg(org);
@@ -82,6 +88,7 @@ public class ProdutoService {
 
         return salvo;
     }
+
 
 
     public Page<Produto> listarTodos(Long orgId, Pageable pageable) {

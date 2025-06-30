@@ -97,6 +97,18 @@ public class EntregaController {
         return ResponseEntity.ok(pageDto);
     }
 
+    // Método para listar entregas por produto
+    @GetMapping("/por-produto/{produtoId}")
+    public ResponseEntity<Page<EntregaResponseDto>> porProduto(
+            @PathVariable Long produtoId,
+            @RequestParam("orgId") Long orgId,
+            Pageable pageable) {
+        Page<EntregaResponseDto> pageDto = entregaService.listarEntregasPorProduto(produtoId, orgId, pageable);
+        return ResponseEntity.ok(pageDto);
+    }
+
+
+
     /**
      * Lista todas as entregas detalhadas de um mês e ano.
      * GET /entregas/por-mes?mes=MM&ano=YYYY
