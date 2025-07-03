@@ -1,0 +1,132 @@
+.busca-entrega {
+  padding: 20px;
+  max-width: 600px;
+  margin: auto;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+  color: #333;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  display: block;
+  color: #333;
+}
+
+input.form-control {
+  width: 100%;
+  padding: 8px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  margin-bottom: 10px;
+}
+
+button.btn {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 4px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  
+  &:hover {
+    background-color: #0056b3;
+  }
+}
+
+.resultados {
+  margin-top: 30px;
+}
+
+.resultados ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.resultados li {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.alert {
+  margin-top: 20px;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.alert-warning {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .busca-entrega {
+    padding: 15px;
+    width: 90%;
+  }
+
+  h2 {
+    font-size: 20px;
+  }
+
+  input.form-control {
+    font-size: 14px;
+  }
+
+  button.btn {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .busca-entrega {
+    padding: 10px;
+    width: 95%;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+
+  label {
+    font-size: 12px;
+  }
+
+  input.form-control {
+    font-size: 12px;
+  }
+
+  button.btn {
+    font-size: 12px;
+  }
+
+  .resultados ul {
+    padding: 0;
+  }
+
+  .resultados li {
+    font-size: 14px;
+  }
+}
