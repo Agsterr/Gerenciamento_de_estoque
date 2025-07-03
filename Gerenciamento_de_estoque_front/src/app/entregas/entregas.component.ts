@@ -7,11 +7,13 @@ import { ConsumidorService } from '../services/consumidor.service';
 import { EntregaResponse } from '../models/src/app/models/entrega/entrega-response.model';
 import { PageEntregaResponse } from '../models/src/app/models/entrega/PageEntregaResponse.model';
 import { EntregaRequest } from '../models/src/app/models/entrega/entrega-request.model';
+import { BuscaEntregaComponent } from './busca-entrega/busca-entrega.component';  // Verifique o caminho
+
 
 @Component({
   selector: 'app-entregas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,  BuscaEntregaComponent],
   templateUrl: './entregas.component.html',
   styleUrls: ['./entregas.component.scss']
 })
@@ -22,6 +24,8 @@ export class EntregasComponent implements OnInit {
   showList = false;
   showAddForm = false;
   showEditForm = false;
+  // Variável para controlar a exibição do componente de busca
+showBuscaEntrega: boolean = false;
 
   produtos: any[] = [];
   consumidores: any[] = [];
@@ -49,6 +53,14 @@ export class EntregasComponent implements OnInit {
   this.carregarConsumidores();
   this.showList = true;       // garante que a lista fique visível
   this.fetchEntregas(this.currentPage);
+}
+
+
+// Método para capturar o evento emitido pelo BuscaEntregaComponent
+onBuscarEntregas(event: { filtro: string; entregas: EntregaResponse[] }): void {
+  // Atualiza a lista de entregas com os resultados da busca
+  this.entregas = event.entregas;
+  this.applyFilter();  // Aplica o filtro localmente, se necessário
 }
 
 

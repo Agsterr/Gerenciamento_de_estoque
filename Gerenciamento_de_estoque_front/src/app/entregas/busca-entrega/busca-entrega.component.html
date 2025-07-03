@@ -1,15 +1,59 @@
-<!-- src/app/busca-entrega/busca-entrega.component.html -->
-<div class="search-form">
-  <h3>Buscar Entregas por Período</h3>
-  <form (ngSubmit)="onSubmit()">
-    <div class="form-group">
-      <label for="inicio">Data Início:</label>
-      <input type="date" id="inicio" [(ngModel)]="dataInicio" name="inicio" required class="form-control" />
-    </div>
-    <div class="form-group">
-      <label for="fim">Data Fim:</label>
-      <input type="date" id="fim" [(ngModel)]="dataFim" name="fim" required class="form-control" />
-    </div>
-    <button type="submit" class="btn btn-primary">Buscar</button>
-  </form>
+<div class="busca-entrega">
+  <h2>Buscar Entregas</h2>
+
+  <!-- Formulário para buscar por período -->
+  <div class="form-group">
+    <label for="dataInicio">Data Início:</label>
+    <input type="date" id="dataInicio" [(ngModel)]="dataInicio" class="form-control" />
+
+    <label for="dataFim">Data Fim:</label>
+    <input type="date" id="dataFim" [(ngModel)]="dataFim" class="form-control" />
+
+    <button (click)="onSubmit()" class="btn btn-primary">Buscar por Período</button>
+  </div>
+
+  <!-- Formulário para buscar por mês e ano -->
+  <div class="form-group">
+    <label for="mes">Mês:</label>
+    <input type="number" id="mes" [(ngModel)]="mes" class="form-control" min="1" max="12" />
+
+    <label for="ano">Ano:</label>
+    <input type="number" id="ano" [(ngModel)]="ano" class="form-control" />
+
+    <button (click)="onSubmitMesAno()" class="btn btn-primary">Buscar por Mês e Ano</button>
+  </div>
+
+  <!-- Formulário para buscar por produto -->
+  <div class="form-group">
+    <label for="produtoId">Produto ID:</label>
+    <input type="number" id="produtoId" [(ngModel)]="produtoId" class="form-control" />
+
+    <button (click)="onBuscarPorProduto()" class="btn btn-primary">Buscar por Produto</button>
+  </div>
+
+  <!-- Formulário para buscar por consumidor -->
+  <div class="form-group">
+    <label for="consumidorId">Consumidor ID:</label>
+    <input type="number" id="consumidorId" [(ngModel)]="consumidorId" class="form-control" />
+
+    <button (click)="onBuscarPorConsumidor()" class="btn btn-primary">Buscar por Consumidor</button>
+  </div>
+
+  <!-- Exibir as entregas -->
+  <div *ngIf="entregas.length > 0" class="resultados">
+    <h3>Resultados da Busca</h3>
+    <ul>
+      <li *ngFor="let entrega of entregas">
+        <strong>{{ entrega.nomeConsumidor }}</strong> - {{ entrega.nomeProduto }} - {{ entrega.horarioEntrega }}
+      </li>
+    </ul>
+  </div>
+
+  <!-- Mensagem de "Nenhuma entrega encontrada" -->
+  <div *ngIf="entregas.length === 0" class="alert alert-warning">
+    Nenhuma entrega encontrada.
+  </div>
+
+  <!-- Botão para limpar os filtros -->
+  <button type="button" class="btn btn-warning" (click)="limparFiltros()">Limpar Filtros</button>
 </div>
