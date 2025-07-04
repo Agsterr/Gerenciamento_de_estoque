@@ -9,7 +9,6 @@ import { PageEntregaResponse } from '../models/src/app/models/entrega/PageEntreg
 import { EntregaRequest } from '../models/src/app/models/entrega/entrega-request.model';
 import { BuscaEntregaComponent } from './busca-entrega/busca-entrega.component';  // Verifique o caminho
 
-
 @Component({
   selector: 'app-entregas',
   standalone: true,
@@ -24,8 +23,7 @@ export class EntregasComponent implements OnInit {
   showList = false;
   showAddForm = false;
   showEditForm = false;
-  // Variável para controlar a exibição do componente de busca
-showBuscaEntrega: boolean = false;
+  showBuscaEntrega: boolean = false;
 
   produtos: any[] = [];
   consumidores: any[] = [];
@@ -39,7 +37,6 @@ showBuscaEntrega: boolean = false;
   mensagem = '';
   mensagemErro = '';
 
-  // Guarda o ID da entrega que será editada
   idEntregaParaEditar: number | null = null;
 
   constructor(
@@ -48,23 +45,20 @@ showBuscaEntrega: boolean = false;
     private consumidorService: ConsumidorService
   ) {}
 
- ngOnInit(): void {
-  this.carregarProdutos();
-  this.carregarConsumidores();
-  this.showList = true;       // garante que a lista fique visível
-  this.fetchEntregas(this.currentPage);
-}
+  ngOnInit(): void {
+    this.carregarProdutos();
+    this.carregarConsumidores();
+    this.showList = true;
+    this.fetchEntregas(this.currentPage);
+  }
 
+  // Método para capturar o evento emitido pelo BuscaEntregaComponent
+  onBuscarEntregas(event: { filtro: string; entregas: EntregaResponse[] }): void {
+    this.entregas = event.entregas;  // Atualiza a lista de entregas com os resultados da busca
+    this.applyFilter();  // Aplica o filtro localmente
+  }
 
-// Método para capturar o evento emitido pelo BuscaEntregaComponent
-onBuscarEntregas(event: { filtro: string; entregas: EntregaResponse[] }): void {
-  // Atualiza a lista de entregas com os resultados da busca
-  this.entregas = event.entregas;
-  this.applyFilter();  // Aplica o filtro localmente, se necessário
-}
-
-
-
+  // Método para carregar os produtos
   carregarProdutos(): void {
     this.produtoService.listarProdutos(0, 100).subscribe({
       next: data => this.produtos = data.content,
@@ -72,6 +66,7 @@ onBuscarEntregas(event: { filtro: string; entregas: EntregaResponse[] }): void {
     });
   }
 
+  // Método para carregar os consumidores
   carregarConsumidores(): void {
     this.consumidorService.listarConsumidores().subscribe({
       next: data => this.consumidores = data,
@@ -79,6 +74,7 @@ onBuscarEntregas(event: { filtro: string; entregas: EntregaResponse[] }): void {
     });
   }
 
+  // Alterna a exibição da lista de entregas
   toggleList(): void {
     this.showList = !this.showList;
     if (this.showList) {
@@ -86,81 +82,71 @@ onBuscarEntregas(event: { filtro: string; entregas: EntregaResponse[] }): void {
     }
   }
 
- 
-fetchEntregas(page: number): void {
-  this.entregasService.listarEntregas(page, this.pageSize).subscribe({
-    next: (data: PageEntregaResponse) => {
-      console.log(data);  // Log para verificar a estrutura da resposta
-
-      // Atualizando a lógica para usar os dados corretamente sem acessar 'page'
-      this.entregas = data.content;  // A lista de entregas
-      this.currentPage = data.number;  // O número da página atual
-      this.totalPages = data.totalPages;  // Total de páginas
-
-      // Aplicar o filtro
-      this.applyFilter();
-    },
-    error: () => {
-      this.mensagemErro = 'Erro ao carregar entregas.';
-      console.error(this.mensagemErro);
-    }
-  });
-}
-
-
-
-
- formatarDataHoraBrasil(dataIso: string | undefined): string {
-  if (!dataIso) return '';
-
-  const data = new Date(dataIso);
-
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    timeZone: 'America/Sao_Paulo'
-  }).format(data);
-}
-
-
-
- submitAddForm(): void {
-  if (!this.novaEntrega.produtoId || !this.novaEntrega.consumidorId || !this.novaEntrega.quantidade) {
-    this.mensagemErro = 'Todos os campos são obrigatórios.';
-    return;
+  // Método para buscar entregas e aplicar paginação
+  fetchEntregas(page: number): void {
+    this.entregasService.listarEntregas(page, this.pageSize).subscribe({
+      next: (data: PageEntregaResponse) => {
+        this.entregas = data.content;  // A lista de entregas
+        this.currentPage = data.number;  // Número da página atual
+        this.totalPages = data.totalPages;  // Total de páginas
+        this.applyFilter();  // Aplica o filtro
+      },
+      error: () => {
+        this.mensagemErro = 'Erro ao carregar entregas.';
+        console.error(this.mensagemErro);
+      }
+    });
   }
 
-  setTimeout(() => {
-  this.mensagem = '';
-  this.mensagemErro = '';
-}, 5000); // Esconde a mensagem após 5 segundos
+  // Formatar data e hora no formato Brasileiro
+  formatarDataHoraBrasil(dataIso: string | undefined): string {
+    if (!dataIso) return '';
 
+    const data = new Date(dataIso);
 
-  const payload: EntregaRequest = {
-    produtoId: this.novaEntrega.produtoId!,
-    quantidade: this.novaEntrega.quantidade!,
-    consumidorId: this.novaEntrega.consumidorId!,
-    horarioEntrega: this.novaEntrega.horarioEntrega
-  };
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZone: 'America/Sao_Paulo'
+    }).format(data);
+  }
 
-  this.entregasService.criarEntrega(payload).subscribe({
-    next: response => {
-      this.mensagem = response.mensagemEstoqueBaixo || 'Entrega criada com sucesso!';
-      this.showAddForm = false;
-      this.fetchEntregas(this.currentPage);
-    },
-    error: () => this.mensagemErro = 'Erro ao registrar entrega.'
-  });
-}
+  // Método para adicionar uma nova entrega
+  submitAddForm(): void {
+    if (!this.novaEntrega.produtoId || !this.novaEntrega.consumidorId || !this.novaEntrega.quantidade) {
+      this.mensagemErro = 'Todos os campos são obrigatórios.';
+      return;
+    }
 
+    setTimeout(() => {
+      this.mensagem = '';
+      this.mensagemErro = '';
+    }, 5000);  // Esconde a mensagem após 5 segundos
 
+    const payload: EntregaRequest = {
+      produtoId: this.novaEntrega.produtoId!,
+      quantidade: this.novaEntrega.quantidade!,
+      consumidorId: this.novaEntrega.consumidorId!,
+      horarioEntrega: this.novaEntrega.horarioEntrega
+    };
+
+    this.entregasService.criarEntrega(payload).subscribe({
+      next: response => {
+        this.mensagem = response.mensagemEstoqueBaixo || 'Entrega criada com sucesso!';
+        this.showAddForm = false;
+        this.fetchEntregas(this.currentPage);
+      },
+      error: () => this.mensagemErro = 'Erro ao registrar entrega.'
+    });
+  }
+
+  // Método para editar a entrega
   editEntrega(id: number): void {
     const entrega = this.entregas.find(e => e.id === id);
-
     if (entrega) {
       this.novaEntrega = {
         produtoId: entrega.produtoId,
@@ -168,13 +154,13 @@ fetchEntregas(page: number): void {
         consumidorId: entrega.consumidorId,
         horarioEntrega: entrega.horarioEntrega
       };
-
       this.idEntregaParaEditar = entrega.id;
       this.showEditForm = true;
       this.showAddForm = false;
     }
   }
 
+  // Submeter o formulário de edição
   submitEditForm(): void {
     if (!this.novaEntrega.produtoId || !this.novaEntrega.consumidorId || !this.novaEntrega.quantidade) {
       this.mensagemErro = 'Todos os campos são obrigatórios.';
@@ -202,23 +188,24 @@ fetchEntregas(page: number): void {
     }
   }
 
+  // Método para excluir uma entrega
   deleteEntrega(id: number): void {
     if (!confirm('Deseja realmente excluir esta entrega?')) return;
 
     this.entregasService.deletarEntrega(id).subscribe({
       next: () => {
         this.entregas = this.entregas.filter(e => e.id !== id);
-        this.applyFilter();
+        this.applyFilter();  // Aplica o filtro após a exclusão
       },
       error: () => alert('Erro ao deletar entrega.')
     });
   }
 
-  /** Método para buscar as entregas de um dia */
+  // Buscar entregas por dia
   fetchEntregasPorDia(dia: string): void {
     this.entregasService.porDia(dia).subscribe({
       next: (entregas: EntregaResponse[]) => {
-        this.porDia = entregas; // Armazena as entregas do dia
+        this.porDia = entregas;
       },
       error: (error) => {
         this.mensagemErro = 'Erro ao buscar entregas para o dia especificado!';
@@ -227,18 +214,21 @@ fetchEntregas(page: number): void {
     });
   }
 
+  // Navegar para a próxima página
   proximaPagina(): void {
     if (this.currentPage < this.totalPages - 1) {
       this.fetchEntregas(this.currentPage + 1);
     }
   }
 
+  // Navegar para a página anterior
   paginaAnterior(): void {
     if (this.currentPage > 0) {
       this.fetchEntregas(this.currentPage - 1);
     }
   }
 
+  // Método para aplicar filtros na lista de entregas
   applyFilter(): void {
     const term = this.searchTerm.toLowerCase();
     this.filteredEntregas = this.searchTerm
