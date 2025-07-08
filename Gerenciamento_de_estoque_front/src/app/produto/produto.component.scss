@@ -331,4 +331,62 @@
   .tabela-produtos th {
     border-color: #444;
   }
+
+ 
+
 }
+
+/* Estilo para o contêiner do campo de busca */
+.search-box {
+  margin: 20px 0; /* Adiciona espaçamento superior e inferior */
+  display: flex; /* Alinha o input e o botão (se houver) */
+  justify-content: flex-start; /* Alinha o conteúdo à esquerda */
+}
+
+/* Estilo para o input de busca */
+.search-box input {
+  width: 320px; /* Ajuste o tamanho conforme necessário */
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s ease;
+  outline: none; /* Remove a borda padrão ao focar */
+}
+
+/* Estilo quando o input estiver em foco */
+.search-box input:focus {
+  border-color: #007bff; /* Altera a cor da borda para azul */
+}
+
+/* Estilo do placeholder */
+.search-box input::placeholder {
+  color: #999;
+  font-style: italic;
+}
+
+/* Estilo de botão de busca (caso você deseje adicionar) */
+.search-box button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-left: 10px; /* Espaçamento à esquerda */
+  transition: background-color 0.3s ease;
+}
+
+/* Hover do botão de busca */
+.search-box button:hover {
+  background-color: #0056b3;
+}
+
+/* Botão de busca desabilitado */
+.search-box button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+

@@ -13,22 +13,31 @@
   <div *ngIf="mensagem" class="mensagem sucesso">{{ mensagem }}</div>
   <div *ngIf="mensagemErro" class="mensagem erro">{{ mensagemErro }}</div>
 
-    <!-- Lista de Produtos -->
+  <!-- Lista de Produtos -->
   <div *ngIf="exibirLista" class="produto-lista">
     <h2><i class="fas fa-box"></i> Produtos Cadastrados</h2>
 
+    <!-- Menu de Ações -->
+    <div class="menu">
+      <button (click)="exibirListaProdutos()">
+        <i class="fas fa-list"></i> Lista de Produtos
+      </button>
+      <button (click)="exibirCriarProduto()">
+        <i class="fas fa-plus-circle"></i> Criar Novo Produto
+      </button>
+    </div>
 
-  <!-- Menu de Ações -->
-  <div class="menu">
-    <button (click)="exibirListaProdutos()">
-      <i class="fas fa-list"></i> Lista de Produtos
-    </button>
-    <button (click)="exibirCriarProduto()">
-      <i class="fas fa-plus-circle"></i> Criar Novo Produto
-    </button>
-  </div>
+    <!-- Campo de busca -->
+    <div class="search-box">
+      <input 
+        type="text" 
+        [(ngModel)]="searchTerm" 
+        placeholder="Buscar por nome ou descrição" 
+        (input)="filtrarProdutos()" 
+      />
+    </div>
 
-
+    <!-- Tabela de Produtos -->
     <table class="tabela-produtos">
       <thead>
         <tr>
@@ -41,7 +50,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let produto of produtos">
+        <tr *ngFor="let produto of produtosFiltrados">
           <td>{{ produto.nome }}</td>
           <td>{{ produto.descricao }}</td>
           <td>{{ produto.preco | currency }}</td>
@@ -155,4 +164,5 @@
       <i class="fas fa-arrow-left"></i> Voltar
     </button>
   </div>
+
 </div>
