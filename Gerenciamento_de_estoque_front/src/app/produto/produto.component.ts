@@ -21,6 +21,8 @@ import { CommonModule } from '@angular/common';
 })
 export class ProdutoComponent implements OnInit {
   produtos: Produto[] = [];
+  produtosFiltrados: Produto[] = [];
+  searchTerm: string = ''; // Variável de busca
   categorias: Categoria[] = [];
   produtoForm: FormGroup;
   mensagem = '';
@@ -124,19 +126,23 @@ export class ProdutoComponent implements OnInit {
     return JSON.parse(payload);
   }
 
-  carregarProdutos(page: number = 0): void {
-    this.produtoService.listarProdutos(page).subscribe({
-      next: (data) => {
-        this.produtos = data.content;
-        this.currentPage = data.currentPage || 0;
-        this.totalPages = data.totalPages || 1;
-      },
-      error: (error: any) => {
-        this.mensagemErro = 'Erro ao carregar produtos.';
-        console.error('Erro ao carregar produtos:', error);
-      }
-    });
-  }
+carregarProdutos(page: number = 0): void {
+  this.produtoService.listarProdutos(page).subscribe({
+    next: (data) => {
+      this.produtos = data.content;
+      this.produtosFiltrados = [...this.produtos]; // Inicia a lista filtrada com todos os produtos
+      this.currentPage = data.currentPage || 0;
+      this.totalPages = data.totalPages || 1;
+      this.filtrarProdutos();  // Aplica o filtro após carregar produtos
+    },
+    error: (error: any) => {
+      this.mensagemErro = 'Erro ao carregar produtos.';
+      console.error('Erro ao carregar produtos:', error);
+    }
+  });
+}
+
+
 
  
   // Método que será chamado para atualizar o produto já carregado no formulário
@@ -311,6 +317,22 @@ export class ProdutoComponent implements OnInit {
     }
   });
 }
+
+// Método para filtrar os produtos com base no texto de busca
+filtrarProdutos(): void {
+  if (this.searchTerm.trim() === '') {
+    // Se o campo de busca estiver vazio, exibe todos os produtos
+    this.produtosFiltrados = [...this.produtos]; 
+  } else {
+    // Se houver texto no campo de busca, filtra os produtos
+    this.produtosFiltrados = this.produtos.filter(produto =>
+      produto.nome.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+      produto.descricao.toLowerCase().includes(this.searchTerm.toLowerCase())
+    );
+  }
+}
+
+
 
 
   fecharAlertaEstoque(): void {
