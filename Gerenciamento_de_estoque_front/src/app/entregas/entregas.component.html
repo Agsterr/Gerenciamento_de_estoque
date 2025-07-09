@@ -11,17 +11,13 @@
 
   <!-- Botões de Ação -->
   <div class="action-buttons">
-    <button (click)="toggleList()" class="btn btn-primary">
-      <i class="fas fa-list"></i>
-      {{ showList ? 'Ocultar Lista' : 'Mostrar Lista de Entregas' }}
-    </button>
     <button (click)="showAddForm = !showAddForm; mensagem=''; mensagemErro=''; novaEntrega={}" class="btn btn-success">
       <i [class]="showAddForm ? 'fas fa-times-circle' : 'fas fa-plus-circle'"></i>
       {{ showAddForm ? 'Cancelar Adição' : 'Adicionar Nova Entrega' }}
     </button>
 
     <!-- Botão para mostrar o componente BuscaEntregaComponent -->
-    <button (click)="showBuscaEntrega = !showBuscaEntrega" class="btn btn-info">
+    <button (click)="showBuscaEntrega = !showBuscaEntrega; showAddForm = false;" class="btn btn-info">
       <i class="fas fa-search"></i> Buscar Entregas
     </button>
   </div>
@@ -30,7 +26,7 @@
   <app-busca-entrega *ngIf="showBuscaEntrega" (buscar)="onBuscarEntregas($event)"></app-busca-entrega>
 
   <!-- Lista de Entregas -->
-  <div *ngIf="showList" class="list-section">
+  <div class="list-section">
     <input
       type="text"
       [(ngModel)]="searchTerm"

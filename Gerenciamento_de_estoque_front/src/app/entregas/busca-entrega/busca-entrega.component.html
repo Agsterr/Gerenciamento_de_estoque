@@ -39,18 +39,8 @@
     <button (click)="onBuscarPorConsumidor()" class="btn btn-primary">Buscar por Consumidor</button>
   </div>
 
-  <!-- Exibir as entregas -->
-  <div *ngIf="entregas.length > 0" class="resultados">
-    <h3>Resultados da Busca</h3>
-    <ul>
-      <li *ngFor="let entrega of entregas">
-        <strong>{{ entrega.nomeConsumidor }}</strong> - {{ entrega.nomeProduto }} - {{ entrega.horarioEntrega }}
-      </li>
-    </ul>
-  </div>
-
   <!-- Mensagem de "Nenhuma entrega encontrada" -->
-  <div *ngIf="entregas.length === 0" class="alert alert-warning">
+  <div *ngIf="isSearched && entregas.length === 0" class="alert alert-warning">
     Nenhuma entrega encontrada.
   </div>
 

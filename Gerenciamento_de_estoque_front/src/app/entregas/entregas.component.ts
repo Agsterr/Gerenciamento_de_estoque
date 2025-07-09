@@ -7,7 +7,7 @@ import { ConsumidorService } from '../services/consumidor.service';
 import { EntregaResponse } from '../models/src/app/models/entrega/entrega-response.model';
 import { PageEntregaResponse } from '../models/src/app/models/entrega/PageEntregaResponse.model';
 import { EntregaRequest } from '../models/src/app/models/entrega/entrega-request.model';
-import { BuscaEntregaComponent } from './busca-entrega/busca-entrega.component';  // Verifique o caminho
+import { BuscaEntregaComponent } from './busca-entrega/busca-entrega.component';
 
 @Component({
   selector: 'app-entregas',
@@ -238,5 +238,13 @@ export class EntregasComponent implements OnInit {
           e.nomeEntregador.toLowerCase().includes(term)
         )
       : [...this.entregas];
+  }
+
+  // Método para alternar o componente de busca
+  toggleBuscaEntrega() {
+    this.showBuscaEntrega = !this.showBuscaEntrega;
+    if (this.showBuscaEntrega) {
+      this.showAddForm = false;  // Fecha o formulário de nova entrega se o de busca for aberto
+    }
   }
 }
