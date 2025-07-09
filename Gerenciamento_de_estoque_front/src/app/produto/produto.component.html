@@ -41,6 +41,7 @@
     <table class="tabela-produtos">
       <thead>
         <tr>
+          <th><i class="fas fa-hashtag"></i> ID</th> <!-- Adicionada a coluna ID -->
           <th><i class="fas fa-tag"></i> Nome</th>
           <th><i class="fas fa-align-left"></i> Descrição</th>
           <th><i class="fas fa-dollar-sign"></i> Preço</th>
@@ -51,6 +52,7 @@
       </thead>
       <tbody>
         <tr *ngFor="let produto of produtosFiltrados">
+          <td>{{ produto.id }}</td> <!-- Exibe o ID do produto -->
           <td>{{ produto.nome }}</td>
           <td>{{ produto.descricao }}</td>
           <td>{{ produto.preco | currency }}</td>

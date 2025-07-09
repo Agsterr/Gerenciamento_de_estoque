@@ -1,7 +1,7 @@
 <div class="consumidor-container">
 
    <h2 class="titulo-lista"><i class="fas fa-list-alt"></i> Lista de Consumidores</h2>
- 
+
   <!-- Botões -->
   <div class="acoes-container">
     <button class="botao-listar" (click)="toggleList()">
@@ -64,6 +64,7 @@
     <table class="tabela-consumidores">
       <thead>
         <tr>
+          <th><i class="fas fa-hashtag"></i> ID</th> <!-- Adicionada a coluna ID -->
           <th><i class="fas fa-id-badge"></i> Nome</th>
           <th><i class="fas fa-address-card"></i> CPF</th>
           <th><i class="fas fa-map-marker-alt"></i> Endereço</th>
@@ -73,6 +74,7 @@
 
       <tbody>
         <tr *ngFor="let consumer of filteredConsumers">
+          <td>{{ consumer.id }}</td> <!-- Exibe o ID do consumidor -->
           <td>{{ consumer.nome }}</td>
           <td>{{ consumer.cpf }}</td>
           <td>{{ consumer.endereco }}</td>
