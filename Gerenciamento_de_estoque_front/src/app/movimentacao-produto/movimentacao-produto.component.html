@@ -1,0 +1,67 @@
+<div>
+  <h1><i class="fas fa-exchange-alt"></i> Movimentações de Produtos</h1>
+
+  <!-- Filtros -->
+  <div class="filters">
+    <label for="tipo">
+      <i class="fas fa-arrow-circle-up"></i> Tipo de Movimentação:
+    </label>
+    <select [(ngModel)]="tipoMovimentacao" id="tipo" (change)="buscarMovimentacoes()">
+      <option value="ENTRADA">Entrada</option>
+      <option value="SAIDA">Saída</option>
+    </select>
+
+    <label for="data">
+      <i class="fas fa-calendar-alt"></i> Data:
+    </label>
+    <input type="date" [(ngModel)]="data" id="data" (change)="buscarMovimentacoes()" />
+
+    <label for="inicio">
+      <i class="fas fa-calendar-day"></i> Data Início:
+    </label>
+    <input type="datetime-local" [(ngModel)]="inicio" id="inicio" (change)="buscarMovimentacoes()" />
+
+    <label for="fim">
+      <i class="fas fa-calendar-day"></i> Data Fim:
+    </label>
+    <input type="datetime-local" [(ngModel)]="fim" id="fim" (change)="buscarMovimentacoes()" />
+
+    <label for="ano">
+      <i class="fas fa-calendar-year"></i> Ano:
+    </label>
+    <input type="number" [(ngModel)]="ano" id="ano" (change)="buscarMovimentacoes()" />
+
+    <label for="mes">
+      <i class="fas fa-calendar-month"></i> Mês:
+    </label>
+    <input type="number" [(ngModel)]="mes" id="mes" (change)="buscarMovimentacoes()" />
+  </div>
+
+  <button (click)="registrarMovimentacao()">
+    <i class="fas fa-plus-circle"></i> Registrar Movimentação
+  </button>
+
+  <div *ngIf="movimentacoes.length > 0">
+    <h2><i class="fas fa-list-alt"></i> Movimentações Encontradas</h2>
+    <table>
+      <thead>
+        <tr>
+          <th><i class="fas fa-id-badge"></i> ID</th>
+          <th><i class="fas fa-cogs"></i> Produto</th>
+          <th><i class="fas fa-exchange-alt"></i> Tipo</th>
+          <th><i class="fas fa-sort-numeric-up"></i> Quantidade</th>
+          <th><i class="fas fa-clock"></i> Data</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let movimentacao of movimentacoes">
+          <td>{{ movimentacao.id }}</td>
+          <td>{{ movimentacao.nomeProduto }}</td>
+          <td>{{ movimentacao.tipo }}</td>
+          <td>{{ movimentacao.quantidade }}</td>
+          <td>{{ movimentacao.dataHora | date }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
