@@ -44,7 +44,6 @@ public class ProdutoService {
 
 
 
-
     public Produto salvar(ProdutoRequest produtoRequest, Long orgId) {
         Categoria categoria = categoriaRepository.findById(produtoRequest.getCategoriaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada."));
@@ -57,23 +56,29 @@ public class ProdutoService {
         Produto produto = (produtoExistente != null) ? produtoExistente : new Produto();
         boolean isNovo = produto.getId() == null;
 
+        // Setando os valores do produto
         produto.setNome(produtoRequest.getNome());
         produto.setDescricao(produtoRequest.getDescricao());
         produto.setPreco(produtoRequest.getPreco());
 
+        // Garantir que a quantidade não seja null antes de atribuí-la
+        if (produtoRequest.getQuantidade() == null) {
+            produtoRequest.setQuantidade(0);  // Se não for passado, atribui 0
+        }
+
+        // Definindo a quantidade no objeto produto
+        produto.setQuantidade(produtoRequest.getQuantidade());  // Atribui a quantidade
+
         // Se o produto estava inativo, reativa ele e ajusta a quantidade
         if (produto.getAtivo() != null && !produto.getAtivo()) {
             produto.setAtivo(true);
-            produto.setQuantidade(produtoRequest.getQuantidade()); // Define a quantidade informada
-        } else {
-            // Se o produto não estava inativo, apenas soma a quantidade
-            produto.setQuantidade(produto.getQuantidade() + produtoRequest.getQuantidade());
         }
 
         produto.setQuantidadeMinima(produtoRequest.getQuantidadeMinima());
         produto.setCategoria(categoria);
         produto.setOrg(org);
 
+        // Salvando o produto no banco
         Produto salvo = repository.save(produto);
 
         // Registrar movimentação de ENTRADA
@@ -84,10 +89,14 @@ public class ProdutoService {
         movimentacao.setTipo(TipoMovimentacao.ENTRADA);
         movimentacao.setOrg(org);
 
+        // Salvando a movimentação de produto
         movimentacaoProdutoRepository.save(movimentacao);
 
         return salvo;
     }
+
+
+
 
 
 
