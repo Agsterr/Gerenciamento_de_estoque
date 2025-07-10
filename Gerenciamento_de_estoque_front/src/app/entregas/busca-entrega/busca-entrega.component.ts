@@ -150,8 +150,9 @@ export class BuscaEntregaComponent {
     this.ano = null;
     this.produtoId = null;
     this.consumidorId = null;
-    this.entregas = [];
     this.isSearched = false;  // Marca como não buscado
+    
+    // Emite o evento para o componente pai recarregar as entregas
     this.emitirResultados('limpar');
   }
 
