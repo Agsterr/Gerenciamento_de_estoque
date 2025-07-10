@@ -74,14 +74,6 @@ export class EntregasComponent implements OnInit {
     });
   }
 
-  // Alterna a exibição da lista de entregas
-  toggleList(): void {
-    this.showList = !this.showList;
-    if (this.showList) {
-      this.fetchEntregas(this.currentPage);
-    }
-  }
-
   // Método para buscar entregas e aplicar paginação
   fetchEntregas(page: number): void {
     this.entregasService.listarEntregas(page, this.pageSize).subscribe({

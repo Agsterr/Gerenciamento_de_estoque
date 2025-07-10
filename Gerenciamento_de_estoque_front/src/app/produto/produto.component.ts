@@ -251,22 +251,47 @@ carregarProdutos(page: number = 0): void {
     this.exibirListaProdutos();
   }
 
-  criarProduto(): void {
-    if (this.produtoForm.valid) {
-      this.produtoService.criarProduto(this.produtoForm.value).subscribe({
-        next: () => {
-          this.mensagem = 'Produto criado com sucesso!';
-          this.carregarProdutos();
-          this.produtoForm.reset();
-          this.exibirListaProdutos();
-        },
-        error: (error: any) => {
-          this.mensagemErro = 'Erro ao criar produto.';
-          console.error('Erro ao criar produto:', error);
-        }
-      });
+ criarProduto(): void {
+  if (this.produtoForm.valid) {
+    // Copia os valores do formulário para o objeto produto
+    const produtoData = { ...this.produtoForm.value };
+
+    // Garantir que a quantidade não seja null ou undefined, e atribuir valor padrão 0 se necessário
+    if (produtoData.quantidade === null || produtoData.quantidade === undefined) {
+      produtoData.quantidade = 0;  // Valor padrão
     }
+
+    // Caso algum outro campo obrigatório tenha valor inválido, atribuir valor padrão ou notificar
+    if (produtoData.nome.trim() === '') {
+      this.mensagemErro = 'O nome do produto é obrigatório.';
+      return;
+    }
+
+    // Envia a requisição para o serviço
+    this.produtoService.criarProduto(produtoData).subscribe({
+      next: () => {
+        this.mensagem = 'Produto criado com sucesso!';
+        this.carregarProdutos();  // Recarrega os produtos após a criação
+        this.produtoForm.reset();  // Limpa o formulário
+        this.exibirListaProdutos();  // Retorna para a lista de produtos
+      },
+      error: (error: any) => {
+        // Exibe uma mensagem de erro caso a requisição falhe
+        this.mensagemErro = 'Erro ao criar produto. Verifique os dados e tente novamente.';
+        console.error('Erro ao criar produto:', error);
+
+        // Detalha mais informações do erro no console
+        if (error.error) {
+          console.error('Detalhes do erro:', error.error);
+        }
+      }
+    });
+  } else {
+    // Caso o formulário não seja válido, exibe um erro genérico
+    this.mensagemErro = 'Por favor, preencha todos os campos obrigatórios.';
   }
+}
+
 
  deletarProduto(produtoId: number): void {
   const confirmacao = window.confirm('Tem certeza que deseja excluir este produto?');
