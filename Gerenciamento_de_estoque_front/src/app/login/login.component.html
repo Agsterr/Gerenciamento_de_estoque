@@ -1,12 +1,16 @@
 <mat-card class="login-container">
+  <mat-icon class="login-icon">account_circle</mat-icon>
   <h2 class="login-title">Acesso ao Sistema</h2>
 
   <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
-
     <!-- Campo: Usuário -->
     <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Usuário</mat-label>
+      <mat-label>
+        <mat-icon class="field-icon">person</mat-icon>
+        Usuário
+      </mat-label>
       <input matInput formControlName="username" placeholder="Digite seu usuário" required />
+      <mat-icon matSuffix>account_box</mat-icon>
       <mat-error *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.hasError('required')">
         Usuário é obrigatório
       </mat-error>
@@ -14,7 +18,10 @@
 
     <!-- Campo: Senha com ícone -->
     <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Senha</mat-label>
+      <mat-label>
+        <mat-icon class="field-icon">lock</mat-icon>
+        Senha
+      </mat-label>
       <input
         matInput
         [type]="hidePassword ? 'password' : 'text'"
@@ -32,8 +39,12 @@
 
     <!-- Campo: ID da Organização -->
     <mat-form-field appearance="outline" class="full-width">
-      <mat-label>ID da Organização</mat-label>
+      <mat-label>
+        <mat-icon class="field-icon">business</mat-icon>
+        ID da Organização
+      </mat-label>
       <input matInput type="number" formControlName="orgId" placeholder="Ex: 1" required />
+      <mat-icon matSuffix>domain</mat-icon>
       <mat-error *ngIf="loginForm.get('orgId')?.touched && loginForm.get('orgId')?.hasError('required')">
         ID da organização é obrigatório
       </mat-error>
@@ -42,13 +53,23 @@
       </mat-error>
     </mat-form-field>
 
+    <!-- Checkbox para salvar credenciais -->
+    <div class="lembrar-credenciais">
+      <mat-checkbox formControlName="lembrarCredenciais">
+        <mat-icon class="checkbox-icon">save</mat-icon>
+        Lembrar usuário, senha e organização
+      </mat-checkbox>
+    </div>
+
     <!-- Botão -->
     <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid" class="full-width">
+      <mat-icon>login</mat-icon>
       Entrar
     </button>
 
     <!-- Erro geral -->
     <mat-error *ngIf="errorMessage" class="error-message">
+      <mat-icon>error</mat-icon>
       {{ errorMessage }}
     </mat-error>
   </form>
