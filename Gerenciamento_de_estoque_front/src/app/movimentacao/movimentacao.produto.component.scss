@@ -1,465 +1,37 @@
-/* Estilo geral */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Arial', sans-serif;
-}
-
-/* Estilo específico para os ícones Font Awesome */
-i {
-  font-family: "Font Awesome 5 Free" !important;  /* Força a aplicação do Font Awesome */
-  font-weight: 900 !important; /* Garantir que os ícones apareçam corretamente */
-  margin-right: 5px;
-}
-
-
-/* Container principal */
-div {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  color: #000;
-}
-
-/* Cabeçalho */
-h1 {
-  font-size: 2.5rem;
-  color: #333;
-  margin-bottom: 20px;
-}
-
-h2 {
-  font-size: 1.8rem;
-  color: #333;
-  margin-bottom: 15px;
-  font-weight: 600;
-}
-
-/* Filtros */
-.filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin-bottom: 30px;
-
-  .filter-group {
-    flex: 1 1 45%;
-    min-width: 250px;
-
-    mat-form-field {
-      width: 100%;
-      
-      .time-input {
-        margin-top: 8px;
-        width: 120px;
-      }
-    }
-  }
-}
-
-/* Material Design Customização */
-::ng-deep {
-  .mat-form-field {
-    width: 100%;
-    margin-bottom: 1rem;
-  }
-
-  .mat-form-field-appearance-fill {
-    .mat-form-field-flex {
-      background-color: rgba(0, 0, 0, 0.02);
-      border-radius: 8px 8px 0 0;
-      padding: 0.75em 0.75em 0 0.75em;
-    }
-
-    &:hover .mat-form-field-flex {
-      background-color: rgba(0, 0, 0, 0.04);
-    }
-  }
-
-  .mat-mdc-form-field {
-    .mat-mdc-form-field-icon-suffix {
-      align-self: flex-end;
-      padding-bottom: 4px;
-    }
-
-    .mat-icon {
-      color: rgba(0, 0, 0, 0.54);
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-    }
-
-    .mat-datepicker-toggle {
-      color: rgba(0, 0, 0, 0.54);
-      
-      &:hover {
-        color: #1976d2;
-      }
-
-      .mat-datepicker-toggle-default-icon {
-        width: 24px;
-        height: 24px;
-      }
-    }
-  }
-
-  .mat-calendar {
-    .mat-calendar-body-selected {
-      background-color: #1976d2;
-      color: #fff;
-    }
-  }
-
-  .filter-actions {
-    .mat-raised-button {
-      height: 48px;
-      font-size: 16px;
-      
-      &.mat-accent {
-        background-color: #f5f5f5;
-        color: rgba(0, 0, 0, 0.87);
-        
-        &:hover {
-          background-color: #e0e0e0;
-        }
-      }
-    }
-  }
-}
-
-/* Estilos de validação */
-mat-form-field.ng-touched.ng-invalid {
-  .mat-form-field-label {
-    color: #f44336;
-  }
-  .mat-form-field-outline {
-    color: #f44336;
-  }
-}
-
-/* Botões e ações */
-.actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 20px;
-  justify-content: flex-end;
-
-  button {
-    &.mat-button {
-      min-width: 120px;
-    }
-  }
-}
-
-/* Datepicker styles */
-::ng-deep {
-  .mat-datepicker-toggle {
-    color: rgba(0, 0, 0, 0.54);
-  }
-
-  .mat-calendar {
-    .mat-calendar-body-selected {
-      background-color: #1976d2;
-      color: #fff;
-    }
-  }
-}
-
-/* Foco nos campos de entrada */
-select:focus, input[type="date"]:focus, input[type="datetime-local"]:focus, input[type="number"]:focus, input[type="text"]:focus {
-  border-color: #4CAF50;
-  background-color: #f9f9f9;
-  outline: none;
-  box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
-}
-
-/* Botões */
-button {
-  background-color: #4CAF50;
-  color: white;
-  padding: 12px 20px;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
-  margin-top: 15px;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-button:hover {
-  background-color: #45a049;
-  transform: scale(1.05);
-}
-
-button:focus {
-  outline: none;
-  box-shadow: 0 0 8px rgba(76, 175, 80, 0.7);
-}
-
-/* Botões de ação */
-.buttons {
-  display: flex;
-  justify-content: flex-start;
-  gap: 15px;
-}
-
-/* Tabela de Movimentações */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-  transition: background-color 0.3s ease;
-}
-
-table th,
-table td {
-  padding: 12px 15px;
-  text-align: left;
-  border: 1px solid #ddd;
-  font-size: 1rem;
-}
-
-/* Cabeçalho da tabela */
-table th {
-  background-color: #007bff; /* Cor de fundo azul */
-  color: #fff; /* Cor do texto branco */
-  font-weight: 600;
-}
-
-/* Linhas pares (mesmo índice) */
-table tbody tr:nth-child(even) {
-  background-color: #f9f9f9; /* Cor de fundo cinza claro */
-}
-
-/* Efeito hover nas linhas da tabela */
-table tbody tr:hover {
-  background-color: #e9ecef; /* Cor de fundo cinza claro */
-  transition: background-color 0.3s ease;
-}
-
-/* Responsividade */
-@media (max-width: 768px) {
-  .filters {
-    flex-direction: column;
-  }
-
-  .filter-group {
-    flex: 1 1 100%;
-  }
-
-  button {
-    width: 100%;
-  }
-
-  table {
-    font-size: 0.9rem;
-    margin-top: 20px;
-  }
-
-  table th, table td {
-    padding: 12px;
-  }
-}
-
-@media (max-width: 480px) {
-  h1 {
-    font-size: 1.8rem;
-  }
-
-  h2 {
-    font-size: 1.4rem;
-  }
-
-  .buttons {
-    flex-direction: column;
-  }
-
-  table th, table td {
-    font-size: 0.8rem;
-    padding: 10px;
-  }
-
-  table {
-    margin-top: 15px;
-  }
-}
-
-/* Estilos adicionais de feedback e mensagem */
-p {
-  font-size: 1rem;
-  color: #444;
-}
-
-i {
-  margin-right: 5px;
-}
-
-/* Template para carregando */
-ng-template {
-  color: #333;
-  font-size: 1rem;
-}
-
+/* ===== LAYOUT PRINCIPAL ===== */
 .container {
   padding: 20px;
   max-width: 1400px;
   margin: 0 auto;
-
-  .header {
-    margin-bottom: 20px;
-    h1 {
-      color: #333;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      i {
-        color: #1976d2;
-      }
-    }
-  }
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  color: #333; /* Garantir cor base para todo o container */
 }
 
-.filters-card {
+/* Garantir que todo texto seja visível */
+* {
+  color: inherit;
+}
+
+/* Estilos específicos para garantir visibilidade */
+p, span, div, td, th {
+  color: #333 !important;
+}
+
+.page-header {
   margin-bottom: 20px;
   
-  .filters {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-    margin-bottom: 20px;
-
-    .filter-group {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-
-      mat-form-field {
-        width: 100%;
-      }
-    }
-  }
-
-  .action-buttons {
+  h1 {
+    color: #333;
+    font-size: 2rem;
     display: flex;
-    gap: 16px;
-    justify-content: flex-end;
-    margin-top: 16px;
-
-    button {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      
-      i {
-        font-size: 18px;
-      }
-    }
-  }
-}
-
-.results-card {
-  mat-card-header {
-    margin-bottom: 16px;
-
-    .mat-card-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 1.2em;
-
-      i {
-        color: #1976d2;
-      }
-
-      .total-count {
-        font-size: 0.9em;
-        color: #666;
-        margin-left: 10px;
-      }
-    }
-  }
-
-  table {
-    width: 100%;
-    
-    .mat-header-cell {
-      background-color: #f5f5f5;
-      font-weight: bold;
-      color: #333;
-
-      i {
-        margin-right: 8px;
-        color: #1976d2;
-      }
-    }
-
-    .mat-row:nth-child(even) {
-      background-color: #fafafa;
-    }
-
-    .mat-row:hover {
-      background-color: #f0f0f0;
-    }
-
-    .entrada {
-      color: #4caf50;
-      font-weight: 500;
-    }
-
-    .saida {
-      color: #f44336;
-      font-weight: 500;
-    }
-  }
-
-  mat-paginator {
-    margin-top: 16px;
-    border-top: 1px solid #e0e0e0;
-  }
-}
-
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-  
-  mat-spinner {
-    margin-bottom: 16px;
-  }
-
-  p {
-    color: #666;
-    font-size: 1.1em;
-  }
-}
-
-.no-results-card {
-  text-align: center;
-  padding: 40px;
-
-  mat-card-content {
-    display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 16px;
-
+    gap: 10px;
+    margin: 0;
+    
     i {
-      font-size: 48px;
-      color: #666;
-    }
-
-    p {
-      color: #666;
-      font-size: 1.1em;
-      margin: 0;
+      color: #1976d2;
     }
   }
 }
@@ -470,134 +42,426 @@ ng-template {
   margin-top: 20px;
 }
 
+/* ===== PAINEL DE FILTROS ===== */
 .filters-panel {
-  flex: 0 0 300px;
+  flex: 0 0 350px;
   background: white;
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: fit-content;
 }
 
+.panel-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 12px 12px 0 0;
+  text-align: center;
+  
+  h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    
+    i {
+      margin-right: 0.5rem;
+      color: #ffd700;
+    }
+  }
+  
+  .filter-info {
+    display: block;
+    font-size: 0.85rem;
+    opacity: 0.9;
+    line-height: 1.4;
+    
+    i {
+      margin-right: 0.25rem;
+      color: #ffd700;
+    }
+  }
+}
+
+.filter-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.filter-section {
+  h4 {
+    color: #555;
+    font-size: 1rem;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+}
+
+.filter-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  
+  .filter-btn {
+    margin-top: 0.5rem;
+    align-self: flex-start;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+/* Campos de ano e mês lado a lado */
+.period-inputs {
+  display: flex;
+  gap: 12px;
+  
+  mat-form-field {
+    flex: 1;
+  }
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+/* Botões de ação */
+.filter-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+  
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 48px;
+    font-weight: 500;
+    
+    i {
+      font-size: 16px;
+    }
+  }
+}
+
+/* ===== PAINEL DE RESULTADOS ===== */
 .results-panel {
   flex: 1;
   background: white;
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-height: 400px; /* Altura mínima menor */
   display: flex;
   flex-direction: column;
-  min-height: 600px; // Altura mínima fixa para o painel
+  overflow: hidden; /* Evita scroll desnecessário */
+}
 
-  // Centraliza os estados de loading e vazio
-  .loading-state, .empty-state {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 400px; // Altura mínima consistente
+/* Garantir que o container da tabela se adapte ao conteúdo */
+.results-panel .table-container {
+  flex: 0 1 auto !important; /* Não cresce, pode encolher, tamanho automático */
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 200px !important;
+  max-height: 600px !important;
+}
+
+/* Estados de loading e vazio */
+.loading-state, .empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px; /* Altura mínima menor */
+  max-height: 400px; /* Altura máxima para não ficar muito grande */
+  text-align: center;
+  
+  i {
+    font-size: 48px;
+    color: #666;
+    margin-bottom: 16px;
+  }
+  
+  p {
+    color: #666;
+    font-size: 1.1rem;
+    margin: 8px 0;
+  }
+  
+  small {
+    color: #999;
+    font-size: 0.9rem;
   }
 }
 
+.spinner {
+  margin-bottom: 16px;
+  
+  i {
+    font-size: 32px;
+    color: #1976d2;
+  }
+}
+
+/* ===== TABELA ===== */
 .table-container {
-  width: 100%;
-  overflow-x: auto;
-  min-height: 400px; // Altura mínima para manter consistência
   display: flex;
   flex-direction: column;
-
-  .mat-paginator {
-    margin-top: auto; // Empurra o paginador para baixo
-    border-radius: 4px;
-    background-color: #f8f9fa;
-  }
+  min-height: 200px; /* Altura mínima menor */
+  max-height: 600px; /* Altura máxima para não ficar muito grande */
+  position: relative;
 }
 
-table.table {
+/* Container da tabela com scroll */
+.table-wrapper {
+  flex: 1;
+  overflow-y: auto; /* Permite scroll vertical na tabela */
+  overflow-x: auto; /* Permite scroll horizontal se necessário */
+  border: 1px solid #e0e0e0;
+  border-radius: 4px 4px 0 0; /* Bordas arredondadas apenas no topo */
+  border-bottom: none; /* Remove borda inferior para conectar com o paginador */
+  min-height: 150px; /* Altura mínima para a tabela */
+}
+
+.table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
-  table-layout: fixed; // Força larguras consistentes das colunas
-
+  margin: 0; /* Remove todas as margens */
+  
   th, td {
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid #e0e0e0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    color: #333; /* Cor do texto mais escura */
   }
-
-  // Define larguras específicas para cada coluna
-  th:nth-child(1), td:nth-child(1) { width: 10%; } // ID
-  th:nth-child(2), td:nth-child(2) { width: 35%; } // Produto
-  th:nth-child(3), td:nth-child(3) { width: 20%; } // Tipo
-  th:nth-child(4), td:nth-child(4) { width: 15%; } // Quantidade
-  th:nth-child(5), td:nth-child(5) { width: 20%; } // Data
-
+  
   th {
     background-color: #f5f5f5;
     font-weight: 600;
     color: #333;
     position: sticky;
     top: 0;
-    z-index: 1;
-
+    z-index: 10; /* Garante que fique acima do conteúdo */
+    
     i {
       margin-right: 8px;
       color: #666;
     }
   }
-
-  tbody {
-    tr {
-      height: 48px; // Altura fixa para cada linha
-      transition: background-color 0.2s ease;
-
-      &:hover {
-        background-color: #e8eaf6;
-      }
-
-      &.entrada {
-        border-left: 4px solid #4caf50;
-        &:hover {
-          background-color: #e8f5e9;
-        }
-      }
-
-      &.saida {
-        border-left: 4px solid #f44336;
-        &:hover {
-          background-color: #ffebee;
-        }
-      }
-
-      // Garante que todas as células tenham a mesma altura
+  
+  tbody tr {
+    transition: background-color 0.2s ease;
+    
+    td {
+      color: #333; /* Garante que o texto das células seja visível */
+      font-weight: 400;
+    }
+    
+    &:hover {
+      background-color: #f8f9fa;
+      
       td {
-        height: 48px;
-        line-height: 48px;
-        vertical-align: middle;
+        color: #000; /* Texto mais escuro no hover */
+      }
+    }
+    
+    &.entrada {
+      border-left: 4px solid #4caf50;
+      
+      &:hover {
+        background-color: #e8f5e9;
+      }
+    }
+    
+    &.saida {
+      border-left: 4px solid #f44336;
+      
+      &:hover {
+        background-color: #ffebee;
       }
     }
   }
+}
 
-  .badge {
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.85rem;
+/* Badges para tipo de movimentação */
+.badge {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: inline-block;
+  min-width: 80px;
+  text-align: center;
+  
+  &.badge-entrada {
+    background-color: #4caf50;
+    color: white;
+  }
+  
+  &.badge-saida {
+    background-color: #f44336;
+    color: white;
+  }
+}
+
+/* Garantir visibilidade do texto em toda a tabela */
+.table-container {
+  color: #333; /* Cor base para todo o container da tabela */
+}
+
+.table {
+  color: #333; /* Cor base para toda a tabela */
+  
+  /* Garantir que números e IDs sejam bem visíveis */
+  td:first-child { /* ID */
+    font-weight: 600;
+    color: #1976d2;
+  }
+  
+  /* Garantir que nomes de produtos sejam bem visíveis */
+  td:nth-child(2) { /* Nome do produto */
     font-weight: 500;
-    display: inline-block;
-    min-width: 80px;
-    text-align: center;
+    color: #333;
+  }
+  
+  /* Garantir que quantidades sejam bem visíveis */
+  td:nth-child(4) { /* Quantidade */
+    font-weight: 600;
+    color: #333;
+  }
+  
+  /* Garantir que datas sejam bem visíveis */
+  td:nth-child(5) { /* Data */
+    color: #666;
+    font-size: 0.9rem;
+  }
+  
+  /* Garantir que Org ID seja bem visível */
+  td:nth-child(6) { /* Org ID */
+    color: #666;
+    font-size: 0.9rem;
+  }
+}
 
-    &.badge-entrada {
-      background-color: #4caf50;
-      color: white;
+/* Paginador */
+mat-paginator {
+  margin: 0 !important; /* Remove todas as margens */
+  border: 1px solid #e0e0e0;
+  border-top: none; /* Remove borda superior para conectar com a tabela */
+  background-color: #f8f9fa;
+  flex-shrink: 0 !important; /* Impede que o paginador encolha */
+  border-radius: 0 0 4px 4px; /* Bordas arredondadas apenas na parte inferior */
+  position: relative; /* Garante posicionamento correto */
+  z-index: 5; /* Fica acima do conteúdo da tabela */
+  height: 56px !important; /* Altura fixa do paginador */
+  min-height: 56px !important; /* Altura mínima fixa */
+  max-height: 56px !important; /* Altura máxima fixa */
+}
+
+/* Garantir que o paginador seja sempre visível */
+.table-container mat-paginator {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: static !important; /* Força posicionamento estático */
+}
+
+/* Forçar layout correto do container da tabela */
+.table-container {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 200px !important;
+  max-height: 600px !important;
+}
+
+.table-wrapper {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px 4px 0 0;
+  border-bottom: none;
+  min-height: 150px !important;
+}
+
+/* Forçar posicionamento do paginador */
+.table-container mat-paginator {
+  margin: 0 !important;
+  border: 1px solid #e0e0e0;
+  border-top: none;
+  background-color: #f8f9fa;
+  border-radius: 0 0 4px 4px;
+  height: 56px !important;
+  min-height: 56px !important;
+  max-height: 56px !important;
+  flex-shrink: 0 !important; /* Impede que o paginador encolha */
+}
+
+/* ===== RESPONSIVIDADE ===== */
+@media (max-width: 1024px) {
+  .content-wrapper {
+    flex-direction: column;
+  }
+  
+  .filters-panel {
+    flex: none;
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+  
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .filters-panel, .results-panel {
+    padding: 16px;
+  }
+  
+  .table {
+    font-size: 0.9rem;
+    
+    th, td {
+      padding: 8px;
     }
+  }
+}
 
-    &.badge-saida {
-      background-color: #f44336;
-      color: white;
+@media (max-width: 480px) {
+  .container {
+    padding: 12px;
+  }
+  
+  .page-header h1 {
+    font-size: 1.3rem;
+  }
+  
+  .filters-panel, .results-panel {
+    padding: 12px;
+  }
+  
+  .table {
+    font-size: 0.8rem;
+    
+    th, td {
+      padding: 6px;
+    }
+  }
+  
+  .filter-actions {
+    button {
+      height: 44px;
+      font-size: 0.9rem;
     }
   }
 }

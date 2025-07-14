@@ -1,4 +1,4 @@
-export interface MovimentacaoProdutoDto {
+export interface MovimentacaoProduto {
   id: number;
   produtoId: number;
   tipo: TipoMovimentacao; // Usando o enum TipoMovimentacao

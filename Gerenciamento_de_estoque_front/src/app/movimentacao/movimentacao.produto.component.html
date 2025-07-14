@@ -8,6 +8,10 @@
     <aside class="filters-panel">
       <div class="panel-header">
         <h3><i class="fas fa-filter"></i> Filtros</h3>
+        <small class="filter-info">
+          <i class="fas fa-info-circle"></i>
+          Os filtros podem ser combinados. Ex: "Saídas" + "Junho" = Saídas em junho
+        </small>
       </div>
 
       <div class="filter-sections">
@@ -17,11 +21,16 @@
           <div class="filter-content">
             <mat-form-field appearance="fill" class="full-width">
               <mat-label>Tipo de Movimentação</mat-label>
-              <mat-select [(ngModel)]="tipoMovimentacao" (selectionChange)="buscarMovimentacoes()">
-                <mat-option value="ENTRADA">Entrada</mat-option>
-                <mat-option value="SAIDA">Saída</mat-option>
+              <mat-select [(ngModel)]="tipoMovimentacao">
+                <mat-option *ngFor="let tipo of tiposMovimentacao" [value]="tipo">
+                  {{ tipo === 'ENTRADA' ? 'Entrada' : 'Saída' }}
+                </mat-option>
               </mat-select>
             </mat-form-field>
+            <button mat-raised-button color="primary" class="filter-btn" (click)="aplicarFiltroTipo()">
+              <i class="fas fa-search"></i>
+              Filtrar por Tipo
+            </button>
           </div>
         </div>
 
@@ -34,7 +43,6 @@
               <input matInput 
                      [matDatepicker]="dataPicker" 
                      [(ngModel)]="data" 
-                     (dateChange)="buscarMovimentacoes()"
                      placeholder="Selecione a data"
                      aria-label="Data específica">
               <mat-datepicker-toggle matSuffix [for]="dataPicker"></mat-datepicker-toggle>
@@ -46,7 +54,6 @@
               <input matInput 
                      [matDatepicker]="inicioPicker" 
                      [(ngModel)]="inicio" 
-                     (dateChange)="buscarMovimentacoes()"
                      placeholder="Selecione a data inicial"
                      aria-label="Data inicial do período">
               <mat-datepicker-toggle matSuffix [for]="inicioPicker"></mat-datepicker-toggle>
@@ -58,7 +65,6 @@
               <input matInput 
                      [matDatepicker]="fimPicker" 
                      [(ngModel)]="fim" 
-                     (dateChange)="buscarMovimentacoes()"
                      placeholder="Selecione a data final"
                      aria-label="Data final do período">
               <mat-datepicker-toggle matSuffix [for]="fimPicker"></mat-datepicker-toggle>
@@ -71,7 +77,6 @@
                 <input matInput 
                        type="number" 
                        [(ngModel)]="ano" 
-                       (change)="buscarMovimentacoes()" 
                        min="2000" 
                        max="2099"
                        placeholder="Digite o ano"
@@ -79,7 +84,7 @@
               </mat-form-field>
               <mat-form-field appearance="fill">
                 <mat-label>Mês</mat-label>
-                <mat-select [(ngModel)]="mes" (selectionChange)="buscarMovimentacoes()">
+                <mat-select [(ngModel)]="mes">
                   <mat-option [value]="1">Janeiro</mat-option>
                   <mat-option [value]="2">Fevereiro</mat-option>
                   <mat-option [value]="3">Março</mat-option>
@@ -95,6 +100,10 @@
                 </mat-select>
               </mat-form-field>
             </div>
+            <button mat-raised-button color="primary" class="filter-btn" (click)="aplicarFiltroData()">
+              <i class="fas fa-calendar-check"></i>
+              Filtrar por Data
+            </button>
           </div>
         </div>
 
@@ -104,18 +113,22 @@
           <div class="filter-content">
             <mat-form-field appearance="fill" class="full-width">
               <mat-label>Nome do Produto</mat-label>
-              <input matInput [(ngModel)]="nomeProduto" (input)="buscarMovimentacoes()" placeholder="Digite o nome do produto">
+              <input matInput [(ngModel)]="nomeProduto" placeholder="Digite o nome do produto">
             </mat-form-field>
 
             <mat-form-field appearance="fill" class="full-width">
               <mat-label>Categoria</mat-label>
-              <input matInput [(ngModel)]="categoriaProduto" (input)="buscarMovimentacoes()" placeholder="Digite a categoria">
+              <input matInput [(ngModel)]="categoriaProduto" placeholder="Digite a categoria">
             </mat-form-field>
 
             <mat-form-field appearance="fill" class="full-width">
               <mat-label>ID do Produto</mat-label>
-              <input matInput type="number" [(ngModel)]="produtoId" (input)="buscarMovimentacoes()" placeholder="Digite o ID">
+              <input matInput type="number" [(ngModel)]="produtoId" placeholder="Digite o ID">
             </mat-form-field>
+            <button mat-raised-button color="primary" class="filter-btn" (click)="aplicarFiltroProduto()">
+              <i class="fas fa-search"></i>
+              Filtrar por Produto
+            </button>
           </div>
         </div>
         
@@ -124,6 +137,12 @@
           <button mat-raised-button color="accent" (click)="limparFiltros()">
             <i class="fas fa-eraser"></i>
             Limpar Filtros
+          </button>
+          <button mat-raised-button 
+                  [color]="temFiltrosAtivos() ? 'warn' : 'primary'" 
+                  (click)="aplicarTodosFiltros()">
+            <i class="fas fa-search"></i>
+            {{ temFiltrosAtivos() ? 'Aplicar Filtros Ativos' : 'Aplicar Todos os Filtros' }}
           </button>
           <button mat-raised-button color="primary" (click)="registrarMovimentacao()">
             <i class="fas fa-plus-circle"></i>
@@ -152,30 +171,34 @@
 
       <!-- Results table -->
       <div *ngIf="!loading && movimentacoes.length > 0" class="table-container">
-        <table class="table">
-          <thead>
-            <tr>
-              <th><i class="fas fa-id-badge"></i> ID</th>
-              <th><i class="fas fa-cube"></i> Produto</th>
-              <th><i class="fas fa-exchange-alt"></i> Tipo</th>
-              <th><i class="fas fa-sort-numeric-up"></i> Quantidade</th>
-              <th><i class="fas fa-calendar-alt"></i> Data</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let movimentacao of movimentacoes" [ngClass]="{'entrada': movimentacao.tipo === 'ENTRADA', 'saida': movimentacao.tipo === 'SAIDA'}">
-              <td>{{ movimentacao.id }}</td>
-              <td>{{ movimentacao.nomeProduto }}</td>
-              <td>
-                <span class="badge" [ngClass]="{'badge-entrada': movimentacao.tipo === 'ENTRADA', 'badge-saida': movimentacao.tipo === 'SAIDA'}">
-                  {{ movimentacao.tipo }}
-                </span>
-              </td>
-              <td>{{ movimentacao.quantidade }}</td>
-              <td>{{ movimentacao.dataHora | date:'dd/MM/yyyy HH:mm' }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th><i class="fas fa-id-badge"></i> ID</th>
+                <th><i class="fas fa-cube"></i> Produto</th>
+                <th><i class="fas fa-exchange-alt"></i> Tipo</th>
+                <th><i class="fas fa-sort-numeric-up"></i> Quantidade</th>
+                <th><i class="fas fa-calendar-alt"></i> Data</th>
+                <th><i class="fas fa-building"></i> Org ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let movimentacao of movimentacoes" [ngClass]="{'entrada': movimentacao.tipo === TIPO_MOVIMENTACAO_ENTRADA, 'saida': movimentacao.tipo === TIPO_MOVIMENTACAO_SAIDA}">
+                <td>{{ movimentacao.id }}</td>
+                <td>{{ movimentacao.nomeProduto }}</td>
+                <td>
+                  <span class="badge" [ngClass]="{'badge-entrada': movimentacao.tipo === TIPO_MOVIMENTACAO_ENTRADA, 'badge-saida': movimentacao.tipo === TIPO_MOVIMENTACAO_SAIDA}">
+                    {{ movimentacao.tipo === TIPO_MOVIMENTACAO_ENTRADA ? 'Entrada' : 'Saída' }}
+                  </span>
+                </td>
+                <td>{{ movimentacao.quantidade }}</td>
+                <td>{{ movimentacao.dataHora | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ movimentacao.orgId }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <!-- Paginador -->
         <mat-paginator
