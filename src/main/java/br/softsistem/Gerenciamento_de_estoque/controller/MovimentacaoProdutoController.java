@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/movimentacoes")
@@ -36,12 +38,13 @@ public class MovimentacaoProdutoController {
      * Exemplo de chamada: GET /movimentacoes/por-data?tipo=ENTRADA&data=2025-05-31
      */
     @GetMapping("/por-data")
-    public ResponseEntity<List<MovimentacaoProdutoDto>> porData(
+    public ResponseEntity<Page<MovimentacaoProdutoDto>> porData(
             @RequestParam TipoMovimentacao tipo,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data,
+            Pageable pageable
     ) {
-        List<MovimentacaoProdutoDto> dtoList = service.buscarPorData(tipo, data);
-        return ResponseEntity.ok(dtoList);
+        Page<MovimentacaoProdutoDto> dtoPage = service.buscarPorData(tipo, data, pageable);
+        return ResponseEntity.ok(dtoPage);
     }
 
     /**
@@ -49,13 +52,14 @@ public class MovimentacaoProdutoController {
      * Exemplo: GET /movimentacoes/por-periodo?tipo=SAIDA&inicio=2025-05-01T00:00:00&fim=2025-05-31T23:59:59
      */
     @GetMapping("/por-periodo")
-    public ResponseEntity<List<MovimentacaoProdutoDto>> porPeriodo(
+    public ResponseEntity<Page<MovimentacaoProdutoDto>> porPeriodo(
             @RequestParam TipoMovimentacao tipo,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fim
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fim,
+            Pageable pageable
     ) {
-        List<MovimentacaoProdutoDto> dtoList = service.buscarPorPeriodo(tipo, inicio, fim);
-        return ResponseEntity.ok(dtoList);
+        Page<MovimentacaoProdutoDto> dtoPage = service.buscarPorPeriodo(tipo, inicio, fim, pageable);
+        return ResponseEntity.ok(dtoPage);
     }
 
     /**
@@ -63,11 +67,12 @@ public class MovimentacaoProdutoController {
      * Exemplo: GET /movimentacoes/por-ano?ano=2025
      */
     @GetMapping("/por-ano")
-    public ResponseEntity<List<MovimentacaoProdutoDto>> porAno(
-            @RequestParam int ano
+    public ResponseEntity<Page<MovimentacaoProdutoDto>> porAno(
+            @RequestParam int ano,
+            Pageable pageable
     ) {
-        List<MovimentacaoProdutoDto> dtoList = service.listarDetalhadoPorAno(ano);
-        return ResponseEntity.ok(dtoList);
+        Page<MovimentacaoProdutoDto> dtoPage = service.listarDetalhadoPorAno(ano, pageable);
+        return ResponseEntity.ok(dtoPage);
     }
 
     /**
@@ -75,12 +80,81 @@ public class MovimentacaoProdutoController {
      * Exemplo: GET /movimentacoes/por-mes?ano=2025&mes=5
      */
     @GetMapping("/por-mes")
-    public ResponseEntity<List<MovimentacaoProdutoDto>> porMes(
+    public ResponseEntity<Page<MovimentacaoProdutoDto>> porMes(
             @RequestParam int ano,
-            @RequestParam int mes
+            @RequestParam int mes,
+            Pageable pageable
     ) {
-        List<MovimentacaoProdutoDto> dtoList = service.listarDetalhadoPorMes(ano, mes);
-        return ResponseEntity.ok(dtoList);
+        Page<MovimentacaoProdutoDto> dtoPage = service.listarDetalhadoPorMes(ano, mes, pageable);
+        return ResponseEntity.ok(dtoPage);
     }
 
+    /**
+     * Retorna todas as movimentações de um produto pelo nome.
+     * Exemplo de chamada: GET /movimentacoes/por-nome?nomeProduto=produtoX
+     */
+    @GetMapping("/por-nome")
+    public ResponseEntity<Page<MovimentacaoProdutoDto>> porNomeProduto(
+            @RequestParam String nomeProduto,
+            Pageable pageable
+    ) {
+        Page<MovimentacaoProdutoDto> dtoPage = service.buscarPorNomeProduto(nomeProduto, pageable);
+        return ResponseEntity.ok(dtoPage);
+    }
+
+    /**
+     * Retorna todas as movimentações de um produto por categoria.
+     * Exemplo de chamada: GET /movimentacoes/por-categoria?categoriaProduto=categoriaX
+     */
+    @GetMapping("/por-categoria")
+    public ResponseEntity<Page<MovimentacaoProdutoDto>> porCategoriaProduto(
+            @RequestParam String categoriaProduto,
+            Pageable pageable
+    ) {
+        Page<MovimentacaoProdutoDto> dtoPage = service.buscarPorCategoriaProduto(categoriaProduto, pageable);
+        return ResponseEntity.ok(dtoPage);
+    }
+
+    /**
+     * Retorna todas as movimentações de um produto pelo ID.
+     * Exemplo de chamada: GET /movimentacoes/por-id?produtoId=1
+     */
+    @GetMapping("/por-id")
+    public ResponseEntity<Page<MovimentacaoProdutoDto>> porIdProduto(
+            @RequestParam Long produtoId,
+            Pageable pageable
+    ) {
+        Page<MovimentacaoProdutoDto> dtoPage = service.buscarPorIdProduto(produtoId, pageable);
+        return ResponseEntity.ok(dtoPage);
+    }
+
+    /**
+     * Retorna todas as movimentações de uma organização, por produto, nome ou categoria, e por intervalo de datas.
+     * Exemplo de chamada: GET /movimentacoes/por-intervalo?nome=produtoX&categoria=categoriaX&produtoId=1&inicio=2025-05-01T00:00:00&fim=2025-05-31T23:59:59
+     */
+    @GetMapping("/por-intervalo")
+    public ResponseEntity<Page<MovimentacaoProdutoDto>> porIntervalo(
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) Long produtoId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fim,
+            Pageable pageable
+    ) {
+        Page<MovimentacaoProdutoDto> dtoPage = service.buscarPorProdutoNomeCategoriaIdAndIntervalo(nome, categoria, produtoId, inicio, fim, pageable);
+        return ResponseEntity.ok(dtoPage);
+    }
+
+    /**
+     * Retorna todas as movimentações do tipo ENTRADA e/ou SAIDA para a organização do usuário logado.
+     * Exemplo de chamada: GET /movimentacoes/por-tipos?tipos=ENTRADA,SAIDA
+     */
+    @GetMapping("/por-tipos")
+    public ResponseEntity<Page<MovimentacaoProdutoDto>> buscarPorTipos(
+            @RequestParam(name = "tipos") List<TipoMovimentacao> tipos,
+            Pageable pageable
+    ) {
+        Page<MovimentacaoProdutoDto> dtoPage = service.buscarPorTipos(tipos, pageable);
+        return ResponseEntity.ok(dtoPage);
+    }
 }

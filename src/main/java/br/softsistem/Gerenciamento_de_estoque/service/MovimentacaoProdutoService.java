@@ -8,6 +8,8 @@ import br.softsistem.Gerenciamento_de_estoque.model.Produto;
 import br.softsistem.Gerenciamento_de_estoque.repository.MovimentacaoProdutoRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.ProdutoRepository;
 import br.softsistem.Gerenciamento_de_estoque.dto.movimentacaoDto.MovimentacaoProdutoDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -61,63 +63,104 @@ public class MovimentacaoProdutoService {
     /**
      * Busca todas as movimentações detalhadas de um mês e ano.
      */
-    public List<MovimentacaoProdutoDto> listarDetalhadoPorMes(int ano, int mes) {
+    public Page<MovimentacaoProdutoDto> listarDetalhadoPorMes(int ano, int mes, Pageable pageable) {
         Long orgId = SecurityUtils.getCurrentOrgId();
         LocalDateTime inicio = LocalDateTime.of(ano, mes, 1, 0, 0);
-        LocalDateTime fim    = inicio.plusMonths(1);
-
+        LocalDateTime fim = inicio.plusMonths(1);
         return movimentacaoRepository
-                .findMovimentacoesPorIntervalo(inicio, fim, orgId)
-                .stream()
-                .map(MovimentacaoProdutoDto::new)
-                .collect(Collectors.toList());
+                .findMovimentacoesPorIntervalo(inicio, fim, orgId, pageable)
+                .map(MovimentacaoProdutoDto::new);
     }
 
-    /**
-     * Busca todas as movimentações detalhadas de um ano inteiro.
-     */
-    public List<MovimentacaoProdutoDto> listarDetalhadoPorAno(int ano) {
+    public Page<MovimentacaoProdutoDto> listarDetalhadoPorAno(int ano, Pageable pageable) {
         Long orgId = SecurityUtils.getCurrentOrgId();
         LocalDateTime inicio = LocalDateTime.of(ano, 1, 1, 0, 0);
-        LocalDateTime fim    = inicio.plusYears(1);
-
+        LocalDateTime fim = inicio.plusYears(1);
         return movimentacaoRepository
-                .findMovimentacoesPorIntervalo(inicio, fim, orgId)
-                .stream()
-                .map(MovimentacaoProdutoDto::new)
-                .collect(Collectors.toList());
+                .findMovimentacoesPorIntervalo(inicio, fim, orgId, pageable)
+                .map(MovimentacaoProdutoDto::new);
     }
 
-    /**
-     * Busca todas as movimentações de um tipo (ENTRADA/SAIDA) em um dia específico.
-     */
-    public List<MovimentacaoProdutoDto> buscarPorData(TipoMovimentacao tipo, LocalDate data) {
+    public Page<MovimentacaoProdutoDto> buscarPorData(TipoMovimentacao tipo, LocalDate data, Pageable pageable) {
         Long orgId = SecurityUtils.getCurrentOrgId();
         LocalDateTime inicio = data.atStartOfDay();
-        LocalDateTime fim    = data.atTime(23, 59, 59);
-
+        LocalDateTime fim = data.atTime(23, 59, 59);
         return movimentacaoRepository
-                .findByTipoAndDataHoraBetweenAndOrgId(tipo, inicio, fim, orgId)
+                .findByTipoAndDataHoraBetweenAndOrgId(tipo, inicio, fim, orgId, pageable)
+                .map(MovimentacaoProdutoDto::new);
+    }
+
+    public Page<MovimentacaoProdutoDto> buscarPorPeriodo(TipoMovimentacao tipo, LocalDateTime inicio, LocalDateTime fim, Pageable pageable) {
+        Long orgId = SecurityUtils.getCurrentOrgId();
+        return movimentacaoRepository
+                .findByTipoAndDataHoraBetweenAndOrgId(tipo, inicio, fim, orgId, pageable)
+                .map(MovimentacaoProdutoDto::new);
+    }
+
+    public Page<MovimentacaoProdutoDto> buscarPorNomeProduto(String nomeProduto, Pageable pageable) {
+        Long orgId = SecurityUtils.getCurrentOrgId();
+        return movimentacaoRepository
+                .findByProdutoNomeAndOrgId(nomeProduto, orgId, pageable)
+                .map(MovimentacaoProdutoDto::new);
+    }
+
+    public Page<MovimentacaoProdutoDto> buscarPorCategoriaProduto(String categoriaProduto, Pageable pageable) {
+        Long orgId = SecurityUtils.getCurrentOrgId();
+        return movimentacaoRepository
+                .findByProdutoCategoriaAndOrgId(categoriaProduto, orgId, pageable)
+                .map(MovimentacaoProdutoDto::new);
+    }
+
+    public Page<MovimentacaoProdutoDto> buscarPorIdProduto(Long produtoId, Pageable pageable) {
+        Long orgId = SecurityUtils.getCurrentOrgId();
+        return movimentacaoRepository
+                .findByProdutoIdAndOrgId(produtoId, orgId, pageable)
+                .map(MovimentacaoProdutoDto::new);
+    }
+
+    public Page<MovimentacaoProdutoDto> buscarPorProdutoNomeCategoriaIdAndIntervalo(String nome, String categoria, Long produtoId, LocalDateTime inicio, LocalDateTime fim, Pageable pageable) {
+        Long orgId = SecurityUtils.getCurrentOrgId();
+        return movimentacaoRepository
+                .findByProdutoNomeCategoriaIdAndIntervalo(nome, categoria, produtoId, inicio, fim, orgId, pageable)
+                .map(MovimentacaoProdutoDto::new);
+    }
+
+    /**
+     * Busca todas as movimentações de um produto pelo ID e pela organização.
+     */
+    public List<MovimentacaoProdutoDto> buscarPorIdProduto(Long produtoId) {
+        Long orgId = SecurityUtils.getCurrentOrgId();
+    
+        // Usar Pageable.unpaged() para obter todos os resultados sem paginação
+        return movimentacaoRepository
+                .findByProdutoIdAndOrgId(produtoId, orgId, Pageable.unpaged())
                 .stream()
                 .map(MovimentacaoProdutoDto::new)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Busca todas as movimentações de um tipo (ENTRADA/SAIDA) em um intervalo de data/hora.
+     * Busca todas as movimentações de uma organização, por produto, nome ou categoria, e por intervalo de datas.
      */
-    public List<MovimentacaoProdutoDto> buscarPorPeriodo(TipoMovimentacao tipo, LocalDateTime inicio, LocalDateTime fim) {
+    public List<MovimentacaoProdutoDto> buscarPorProdutoNomeCategoriaIdAndIntervalo(String nome, String categoria, Long produtoId, LocalDateTime inicio, LocalDateTime fim) {
         Long orgId = SecurityUtils.getCurrentOrgId();
-
+    
+        // Usar Pageable.unpaged() para obter todos os resultados sem paginação
         return movimentacaoRepository
-                .findByTipoAndDataHoraBetweenAndOrgId(tipo, inicio, fim, orgId)
+                .findByProdutoNomeCategoriaIdAndIntervalo(nome, categoria, produtoId, inicio, fim, orgId, Pageable.unpaged())
                 .stream()
                 .map(MovimentacaoProdutoDto::new)
                 .collect(Collectors.toList());
     }
 
-    // Se ainda quiser manter os métodos de total, mas transformá-los em detalhamento (lista),
-    // você pode simplesmente chamar os métodos detalhados acima e, no cliente, calcular soma ou filtrar.
-    // Por enquanto, como foi pedido “resposta detalhada”, removemos/ignora-se endpoints que retornavam Integer.
+    /**
+     * Busca todas as movimentações de tipos (ENTRADA e SAIDA) para uma organização, com suporte à paginação.
+     */
+    public Page<MovimentacaoProdutoDto> buscarPorTipos(List<TipoMovimentacao> tipos, Pageable pageable) {
+        Long orgId = SecurityUtils.getCurrentOrgId();
+        return movimentacaoRepository
+                .findByTipoInAndOrgId(tipos, orgId, pageable)
+                .map(MovimentacaoProdutoDto::new);
+    }
 
 }
