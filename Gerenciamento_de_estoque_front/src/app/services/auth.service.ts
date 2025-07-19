@@ -26,30 +26,30 @@ export class AuthService {
           const decodedToken: any = jwtDecode(response.token);
           
           // Adicionando log para verificar o conteúdo do decodedToken
-          console.log('Token Decodificado:', decodedToken);  // Verifique se as roles estão presentes no decodedToken
+          console.log('Token Decodificado:', decodedToken);
           
           const userInfo = {
-            username: decodedToken.sub,  // 'sub' é o nome do usuário no JWT
-            userId: decodedToken.user_id,  // user_id extraído do JWT
-            orgId: decodedToken.org_id,  // org_id extraído do JWT
-            roles: decodedToken.roles || []  // Certifique-se de que as roles sejam extraídas e armazenadas
+            username: decodedToken.sub,
+            userId: decodedToken.user_id,
+            orgId: decodedToken.org_id,
+            roles: decodedToken.roles || []
           };
 
           // Logando as informações do usuário
-          console.log('Informações do Usuário:', userInfo); // Verifique as informações armazenadas
+          console.log('Informações do Usuário:', userInfo);
 
           // Armazenando o usuário no localStorage
           localStorage.setItem('loggedUser', JSON.stringify(userInfo));
 
-          // Redireciona para o dashboard
-          this.router.navigate(['/dashboard']);
+          // Redireciona para a home
+          this.router.navigate(['/home']);
         }
       }),
       catchError((err) => {
         console.error('Erro ao fazer login:', err);
         window.alert('Erro ao tentar fazer login. Verifique suas credenciais.');
         this.router.navigate(['/login']);
-        return of({ token: '', roles: [] });  // resposta vazia válida
+        return of({ token: '', roles: [] });
       })
     );
   }

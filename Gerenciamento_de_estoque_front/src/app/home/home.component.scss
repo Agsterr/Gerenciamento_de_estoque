@@ -6,9 +6,22 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 80vh;
-  padding: 32px 12px;
-  background: linear-gradient(120deg, #f7faff 60%, #e0e7ef 100%);
+  min-height: 100vh;
+  padding: 32px 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Wrapper interno para controlar largura máxima */
+.home-wrapper {
+  max-width: 1200px;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  padding: 48px 32px;
+  text-align: center;
 }
 
 /* Estilo para o título */
@@ -20,6 +33,7 @@
   letter-spacing: 1px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 18px;
 }
 .home-title i {
@@ -33,7 +47,7 @@
   color: #444;
   text-align: center;
   max-width: 700px;
-  margin-bottom: 38px;
+  margin: 0 auto 38px auto;
   line-height: 1.6;
 }
 
@@ -68,7 +82,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #fff;
+  background: #f8fafc;
   border-radius: 16px;
   box-shadow: 0 4px 18px 0 rgba(30,41,59,0.10);
   padding: 32px 36px;
@@ -100,6 +114,10 @@
 }
 
 @media (max-width: 900px) {
+  .home-wrapper {
+    padding: 32px 24px;
+  }
+  
   .home-actions {
     gap: 18px;
   }
@@ -109,9 +127,22 @@
     font-size: 1em;
   }
 }
+
 @media (max-width: 600px) {
-  .home-title { font-size: 1.5em; }
-  .home-description { font-size: 1em; }
+  .home-container {
+    padding: 16px 10px;
+  }
+  
+  .home-wrapper {
+    padding: 24px 16px;
+  }
+  
+  .home-title { 
+    font-size: 1.5em; 
+  }
+  .home-description { 
+    font-size: 1em; 
+  }
   .home-actions {
     flex-direction: column;
     gap: 14px;
