@@ -26,6 +26,7 @@ export class ConsumersComponent implements OnInit {
   mensagem = '';
   mensagemErro = '';
   mensagemTipo = '';
+  loading = false; // <--- NOVO
 
   // Paginação
   currentPage = 0;
@@ -40,7 +41,7 @@ export class ConsumersComponent implements OnInit {
     this.consumerForm = this.fb.group({
       id: [null],
       nome: ['', Validators.required],
-      cpf: ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
+      cpf: ['', [Validators.required, Validators.pattern(/^[0-9]{11}$/)]],
       endereco: ['', Validators.required],
     });
   }
@@ -50,32 +51,26 @@ export class ConsumersComponent implements OnInit {
   }
 
   /** Busca paginada de consumidores */
- fetchConsumers(page: number = 0): void {
-  this.consumidorService
-    .listarConsumidoresPaged(page, this.pageSize)  // Chama o método que retorna a resposta paginada
-    .subscribe({
-      next: (resp: ConsumerPagedResponse) => {
-        // Atualizando os metadados de paginação
-        this.currentPage   = resp.number;           // Página atual
-        this.pageSize      = resp.size;             // Tamanho da página
-        this.totalPages    = resp.totalPages;       // Total de páginas
-        this.totalElements = resp.totalElements;    // Total de consumidores
-
-        // Ordenando os consumidores pelo nome
-        this.consumers = resp.content.sort((a, b) => a.nome.localeCompare(b.nome));
-
-        // Aplicando filtro (se houver algum)
-        this.applyFilter();  // Função para aplicar filtros nos consumidores
-
-        // Mensagem de sucesso pode ser removida, se não for necessária.
-        // this.onSuccess('Lista carregada com sucesso');
-      },
-      error: () => {
-        // Em caso de erro, exibe uma mensagem de erro
-        this.onError('Erro ao buscar consumidores!');
-      }
-    });
-}
+  fetchConsumers(page: number = 0): void {
+    this.loading = true;
+    this.consumidorService
+      .listarConsumidoresPaged(page, this.pageSize)
+      .subscribe({
+        next: (resp: ConsumerPagedResponse) => {
+          this.currentPage   = resp.number;
+          this.pageSize      = resp.size;
+          this.totalPages    = resp.totalPages;
+          this.totalElements = resp.totalElements;
+          this.consumers = resp.content.sort((a, b) => a.nome.localeCompare(b.nome));
+          this.applyFilter();
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+          this.onError('Erro ao buscar consumidores!');
+        }
+      });
+  }
 
 
   /** Mostrar lista */
@@ -84,6 +79,9 @@ export class ConsumersComponent implements OnInit {
     this.showAddForm = false;
     this.editingConsumer = false;
     this.resetForm();
+    this.mensagem = '';
+    this.mensagemErro = '';
+    this.mensagemTipo = '';
     this.fetchConsumers(this.currentPage);
   }
 
@@ -93,6 +91,9 @@ export class ConsumersComponent implements OnInit {
     this.showList = false;
     this.editingConsumer = false;
     this.resetForm();
+    this.mensagem = '';
+    this.mensagemErro = '';
+    this.mensagemTipo = '';
   }
 
   submitAddForm(): void {
@@ -105,9 +106,16 @@ export class ConsumersComponent implements OnInit {
 
   createConsumer(): void {
     const novo = this.consumerForm.value as Partial<Consumer>;
+    this.loading = true;
     this.consumidorService.criarConsumidor(novo).subscribe({
-      next: () => this.onSuccess('Consumidor adicionado!'),
-      error: err => this.onError(err.error?.error || 'Erro ao adicionar consumidor!')
+      next: () => {
+        this.loading = false;
+        this.onSuccess('Consumidor adicionado!');
+      },
+      error: err => {
+        this.loading = false;
+        this.onError(err.error?.error || 'Erro ao adicionar consumidor!');
+      }
     });
   }
 
@@ -117,17 +125,31 @@ export class ConsumersComponent implements OnInit {
       this.onError('ID obrigatório para edição');
       return;
     }
+    this.loading = true;
     this.consumidorService.editarConsumidor(upd).subscribe({
-      next: () => this.onSuccess('Consumidor atualizado!'),
-      error: () => this.onError('Erro ao editar consumidor!')
+      next: () => {
+        this.loading = false;
+        this.onSuccess('Consumidor atualizado!');
+      },
+      error: () => {
+        this.loading = false;
+        this.onError('Erro ao editar consumidor!');
+      }
     });
   }
 
   deleteConsumer(id: number): void {
     if (!confirm('Confirma exclusão do consumidor?')) return;
+    this.loading = true;
     this.consumidorService.deletarConsumidor(id).subscribe({
-      next: () => this.onSuccess('Consumidor deletado!'),
-      error: () => this.onError('Erro ao deletar consumidor!')
+      next: () => {
+        this.loading = false;
+        this.onSuccess('Consumidor deletado!');
+      },
+      error: () => {
+        this.loading = false;
+        this.onError('Erro ao deletar consumidor!');
+      }
     });
   }
 
@@ -143,6 +165,9 @@ export class ConsumersComponent implements OnInit {
     this.showAddForm = true;
     this.showList = false;
     this.consumerForm.patchValue(c);
+    this.mensagem = '';
+    this.mensagemErro = '';
+    this.mensagemTipo = '';
   }
 
   paginaAnterior(): void {
@@ -157,6 +182,17 @@ export class ConsumersComponent implements OnInit {
     }
   }
 
+  irParaPagina(pagina: number): void {
+    if (pagina >= 0 && pagina < this.totalPages) {
+      this.fetchConsumers(pagina);
+    }
+  }
+
+  onPageSizeChange(event: any): void {
+    this.currentPage = 0;
+    this.fetchConsumers(0);
+  }
+
   resetForm(): void {
     this.consumerForm.reset();
     this.searchTerm = '';
@@ -168,11 +204,19 @@ export class ConsumersComponent implements OnInit {
   private onSuccess(msg: string): void {
     this.mensagem = msg;
     this.mensagemTipo = 'sucesso';
-    this.toggleList();  // volta para lista após operação de sucesso
+    setTimeout(() => {
+      this.mensagem = '';
+      this.mensagemTipo = '';
+    }, 3000);
+    this.toggleList();
   }
 
   private onError(msg: string): void {
     this.mensagemErro = msg;
     this.mensagemTipo = 'erro';
+    setTimeout(() => {
+      this.mensagemErro = '';
+      this.mensagemTipo = '';
+    }, 3000);
   }
 }

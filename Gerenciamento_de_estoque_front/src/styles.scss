@@ -33,3 +33,6 @@ a:hover {
 * {
   box-sizing: border-box; /* inclui padding e border na largura e altura */
 }
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

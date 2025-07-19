@@ -15,7 +15,7 @@ import { ConsumerPagedResponse } from '../models/consumer-paged-response.model';
   providedIn: 'root',
 })
 export class ConsumidorService {
-  private apiUrl = 'http://localhost:8080/consumidores';
+  private apiUrl = 'http://localhost:8081/consumidores';
 
   constructor(private http: HttpClient) {}
 

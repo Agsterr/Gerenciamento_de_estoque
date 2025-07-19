@@ -8,7 +8,7 @@ import { TipoMovimentacao } from '../models/movimentacao-produto.model';
   providedIn: 'root'
 })
 export class MovimentacaoProdutoService {
-  private apiUrl = 'http://localhost:8080/movimentacoes';
+  private apiUrl = 'http://localhost:8081/movimentacoes';
 
   constructor(private http: HttpClient) {}
 

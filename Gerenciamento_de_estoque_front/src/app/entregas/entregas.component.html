@@ -190,13 +190,13 @@
     </thead>
     <tbody>
       <tr *ngFor="let entrega of filteredEntregas">
-        <td>{{ entrega.id }}</td>
-        <td>{{ entrega.nomeConsumidor }}</td>
-        <td>{{ entrega.nomeProduto }}</td>
-        <td>{{ entrega.nomeEntregador }}</td>
-        <td>{{ entrega.quantidade }}</td>
-        <td>{{ formatarDataHoraBrasil(entrega.horarioEntrega) }}</td>
-        <td>
+        <td data-label="ID">{{ entrega.id }}</td>
+        <td data-label="Consumidor">{{ entrega.nomeConsumidor }}</td>
+        <td data-label="Produto">{{ entrega.nomeProduto }}</td>
+        <td data-label="Entregador">{{ entrega.nomeEntregador }}</td>
+        <td data-label="Quantidade">{{ entrega.quantidade }}</td>
+        <td data-label="Horário">{{ formatarDataHoraBrasil(entrega.horarioEntrega) }}</td>
+        <td data-label="Ações">
           <button (click)="editEntrega(entrega.id)" class="btn btn-primary btn-sm" title="Editar">
             <i class="fas fa-edit"></i>
           </button>
@@ -209,13 +209,35 @@
   </table>
 
   <!-- Paginação -->
-  <div class="pagination">
-    <button (click)="paginaAnterior()" [disabled]="currentPage === 0">
-      <i class="fas fa-chevron-left"></i> Anterior
-    </button>
-    <button (click)="proximaPagina()" [disabled]="currentPage >= totalPages - 1 || totalPages === 0">
-      Próxima <i class="fas fa-chevron-right"></i>
-    </button>
-    <p>Página {{ currentPage + 1 }} de {{ totalPages > 0 ? totalPages : 1 }}</p>
+  <div class="pagination-bar" *ngIf="totalPages > 0">
+    <div class="pagination-info-left">
+      Página {{ currentPage + 1 }} de {{ totalPages }} ({{ totalElements || 0 }} entregas)
+    </div>
+    <div class="pagination-row">
+      <button (click)="paginaAnterior()" [disabled]="currentPage === 0" class="btn-pag">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <ng-container *ngFor="let page of [].constructor(totalPages); let i = index">
+        <button
+          class="pagina-numero"
+          [class.ativa]="i === currentPage"
+          (click)="irParaPagina(i)"
+          [disabled]="i === currentPage">
+          {{ i + 1 }}
+        </button>
+      </ng-container>
+      <button (click)="proximaPagina()" [disabled]="currentPage >= totalPages - 1 || totalPages === 0" class="btn-pag">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+    <div class="pagination-info-right page-size-box">
+      <label>
+        <span>Exibir</span>
+        <select [(ngModel)]="pageSize" (change)="onPageSizeChange($event)">
+          <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+        </select>
+        <span>por página</span>
+      </label>
+    </div>
   </div>
 </div>

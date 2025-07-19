@@ -32,7 +32,9 @@ export class EntregasComponent implements OnInit {
   novaEntrega: Partial<EntregaRequest> = {};
   currentPage = 0;
   totalPages = 0;
+  totalElements = 0;
   pageSize = 20;
+  pageSizeOptions = [5, 10, 20, 50];
 
   mensagem = '';
   mensagemErro = '';
@@ -81,6 +83,7 @@ export class EntregasComponent implements OnInit {
         this.entregas = data.content;  // A lista de entregas
         this.currentPage = data.number;  // Número da página atual
         this.totalPages = data.totalPages;  // Total de páginas
+        this.totalElements = data.totalElements; // Total de elementos
         this.applyFilter();  // Aplica o filtro
       },
       error: () => {
@@ -208,7 +211,7 @@ export class EntregasComponent implements OnInit {
 
   // Navegar para a próxima página
   proximaPagina(): void {
-    if (this.currentPage < this.totalPages - 1) {
+    if (this.currentPage + 1 < this.totalPages) {
       this.fetchEntregas(this.currentPage + 1);
     }
   }
@@ -217,6 +220,12 @@ export class EntregasComponent implements OnInit {
   paginaAnterior(): void {
     if (this.currentPage > 0) {
       this.fetchEntregas(this.currentPage - 1);
+    }
+  }
+
+  irParaPagina(pagina: number): void {
+    if (pagina >= 0 && pagina < this.totalPages) {
+      this.fetchEntregas(pagina);
     }
   }
 
@@ -238,5 +247,10 @@ export class EntregasComponent implements OnInit {
     if (this.showBuscaEntrega) {
       this.showAddForm = false;  // Fecha o formulário de nova entrega se o de busca for aberto
     }
+  }
+
+  onPageSizeChange(event: any): void {
+    this.currentPage = 0;
+    this.fetchEntregas(this.currentPage);
   }
 }

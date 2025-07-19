@@ -9,7 +9,7 @@ import { Categoria } from '../models/categoria.model';
   providedIn: 'root',
 })
 export class ProdutoService {
-  private apiUrl = 'http://localhost:8080/produtos';
+  private apiUrl = 'http://localhost:8081/produtos';
 
   constructor(private http: HttpClient) {}
 
@@ -35,7 +35,7 @@ export class ProdutoService {
   }
 
   // ✅ Listar todos os produtos (paginado)
-  listarProdutos(page: number = 0, size: number = 100): Observable<{ content: Produto[], totalPages: number, currentPage: number }> {
+  listarProdutos(page: number = 0, size: number = 10): Observable<{ content: Produto[], totalPages: number, currentPage: number, totalElements: number }> {
     const orgId = this.getOrgId();
     const headers = this.getAuthHeaders();
 
@@ -43,7 +43,8 @@ export class ProdutoService {
       map(response => ({
         content: response.content,
         totalPages: response.totalPages,
-        currentPage: response.number
+        currentPage: response.number,
+        totalElements: response.totalElements
       })),
       catchError(err => {
         console.error('Erro ao buscar produtos:', err);

@@ -1,176 +1,175 @@
-<div class="produto-container">
-
-  <!-- ALERTA DE ESTOQUE BAIXO -->
-  <div *ngIf="alertaEstoqueBaixo" class="alerta-estoque-baixo">
-    <i class="fas fa-exclamation-triangle"></i>
-    Atenção! Há produtos com estoque abaixo do mínimo.
-    <button (click)="fecharAlertaEstoque()" aria-label="Fechar alerta">
-      <i class="fas fa-times"></i>
+<!-- Cabeçalho fixo -->
+<header class="header-produto">
+  <h2><i class="fas fa-box"></i> Gestão de Produtos</h2>
+  <div class="acoes-header">
+    <button class="botao-listar" (click)="toggleList()" title="Ver lista de produtos">
+      <i class="fas fa-list"></i> Listar
+    </button>
+    <button class="botao-adicionar" (click)="toggleAddForm()" title="Adicionar novo produto">
+      <i class="fas fa-plus"></i> Novo
     </button>
   </div>
+</header>
 
-  <!-- Mensagens de feedback -->
-  <div *ngIf="mensagem" class="mensagem sucesso">{{ mensagem }}</div>
-  <div *ngIf="mensagemErro" class="mensagem erro">{{ mensagemErro }}</div>
+<!-- Mensagens de feedback -->
+<div *ngIf="mensagem" class="mensagem-feedback sucesso animate">
+  <i class="fas fa-check-circle"></i> {{ mensagem }}
+</div>
+<div *ngIf="mensagemErro" class="mensagem-feedback erro animate">
+  <i class="fas fa-exclamation-circle"></i> {{ mensagemErro }}
+</div>
 
-  <!-- Lista de Produtos -->
-  <div *ngIf="exibirLista" class="produto-lista">
-    <h2><i class="fas fa-box"></i> Produtos Cadastrados</h2>
+<!-- Spinner de carregamento -->
+<div *ngIf="loading" class="spinner-overlay">
+  <div class="spinner"></div>
+</div>
 
-    <!-- Menu de Ações -->
-    <div class="menu">
-      <button (click)="exibirListaProdutos()">
-        <i class="fas fa-list"></i> Lista de Produtos
-      </button>
-      <button (click)="exibirCriarProduto()">
-        <i class="fas fa-plus-circle"></i> Criar Novo Produto
-      </button>
+<div class="main-content">
+  <!-- Card Lista -->
+  <div class="card-lista" *ngIf="showList">
+    <div class="busca-container">
+      <div class="busca-input-wrapper">
+        <i class="fas fa-search"></i>
+        <input
+          class="campo-busca"
+          type="text"
+          placeholder="Buscar por nome, código ou categoria..."
+          [(ngModel)]="searchTerm"
+          (input)="applyFilter()"
+        />
+      </div>
     </div>
-
-    <!-- Campo de busca -->
-    <div class="search-box">
-      <input 
-        type="text" 
-        [(ngModel)]="searchTerm" 
-        placeholder="Buscar por nome ou descrição" 
-        (input)="filtrarProdutos()" 
-      />
-    </div>
-
-    <!-- Tabela de Produtos -->
     <table class="tabela-produtos">
       <thead>
         <tr>
-          <th><i class="fas fa-hashtag"></i> ID</th> <!-- Adicionada a coluna ID -->
-          <th><i class="fas fa-tag"></i> Nome</th>
-          <th><i class="fas fa-align-left"></i> Descrição</th>
-          <th><i class="fas fa-dollar-sign"></i> Preço</th>
-          <th><i class="fas fa-sort-numeric-up"></i> Quantidade</th>
-          <th><i class="fas fa-list-alt"></i> Categoria</th>
-          <th><i class="fas fa-tools"></i> Ações</th>
+          <th>ID</th>
+          <th>Nome</th>
+          <th>Descrição</th>
+          <th>Categoria</th>
+          <th>Quantidade</th>
+          <th>Qtd. Mínima</th>
+          <th>Preço</th>
+          <th>Ações</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let produto of produtosFiltrados">
-          <td>{{ produto.id }}</td> <!-- Exibe o ID do produto -->
+        <tr *ngFor="let produto of filteredProdutos">
+          <td>{{ produto.id }}</td>
           <td>{{ produto.nome }}</td>
           <td>{{ produto.descricao }}</td>
-          <td>{{ produto.preco | currency }}</td>
-          <td>{{ produto.quantidade }}</td>
           <td>{{ produto.categoriaNome }}</td>
-          <td>
-            <button (click)="verDetalhes(produto.id)" class="btn-detalhes" title="Ver Detalhes">
-              <i class="fas fa-eye"></i>
+          <td>{{ produto.quantidade }}</td>
+          <td>{{ produto.quantidadeMinima }}</td>
+          <td>{{ produto.preco | currency:'BRL' }}</td>
+          <td class="acoes-tabela">
+            <button class="botao-editar" (click)="editProduto(produto)" title="Editar">
+              <i class="fas fa-pen"></i>
             </button>
-            <button (click)="exibirEditarProduto(produto.id)" class="btn-editar" title="Editar">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button (click)="deletarProduto(produto.id)" class="btn-deletar" title="Excluir">
-              <i class="fas fa-trash-alt"></i>
+            <button class="botao-deletar" (click)="deleteProduto(produto.id)" title="Excluir">
+              <i class="fas fa-trash"></i>
             </button>
           </td>
         </tr>
       </tbody>
     </table>
-
     <!-- Paginação -->
-    <div class="pagination">
-      <button (click)="paginaAnterior()" [disabled]="currentPage === 0">
-        <i class="fas fa-chevron-left"></i> Anterior
+  <div class="pagination-bar" *ngIf="totalPages > 0">
+    <div class="pagination-info-left">
+      Página {{ currentPage + 1 }} de {{ totalPages }} ({{ totalElements || 0 }} entregas)
+    </div>
+    <div class="pagination-row">
+      <button (click)="paginaAnterior()" [disabled]="currentPage === 0" class="btn-pag">
+        <i class="fas fa-chevron-left"></i>
       </button>
-      <button (click)="proximaPagina()" [disabled]="currentPage === totalPages - 1 || totalPages === 0">
-        Próxima <i class="fas fa-chevron-right"></i>
+      <ng-container *ngFor="let page of [].constructor(totalPages); let i = index">
+        <button
+          class="pagina-numero"
+          [class.ativa]="i === currentPage"
+          (click)="irParaPagina(i)"
+          [disabled]="i === currentPage">
+          {{ i + 1 }}
+        </button>
+      </ng-container>
+      <button (click)="proximaPagina()" [disabled]="currentPage >= totalPages - 1 || totalPages === 0" class="btn-pag">
+        <i class="fas fa-chevron-right"></i>
       </button>
-      <p>Página {{ currentPage + 1 }} de {{ totalPages > 0 ? totalPages : 1 }}</p>
+    </div>
+    <div class="pagination-info-right page-size-box">
+      <label>
+        <span>Exibir</span>
+        <select [(ngModel)]="pageSize" (change)="onPageSizeChange($event)">
+          <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+        </select>
+        <span>por página</span>
+      </label>
     </div>
   </div>
-
-  <!-- Formulário de Edição -->
-  <div *ngIf="exibirEditar" class="produto-editar">
-    <h2><i class="fas fa-edit"></i> Editar Produto</h2>
-
-    <form [formGroup]="produtoForm" (ngSubmit)="atualizarProduto()">
-      <label for="nome"><i class="fas fa-tag"></i> Nome:</label>
-      <input id="nome" formControlName="nome" type="text" />
-
-      <label for="descricao"><i class="fas fa-align-left"></i> Descrição:</label>
-      <input id="descricao" formControlName="descricao" type="text" />
-
-      <label for="preco"><i class="fas fa-dollar-sign"></i> Preço:</label>
-      <input id="preco" formControlName="preco" type="number" step="0.01" />
-
-      <label for="quantidade"><i class="fas fa-sort-numeric-up"></i> Quantidade:</label>
-      <input id="quantidade" formControlName="quantidade" type="number" />
-
-      <label for="quantidadeMinima"><i class="fas fa-exclamation-circle"></i> Quantidade Mínima:</label>
-      <input id="quantidadeMinima" formControlName="quantidadeMinima" type="number" />
-
-      <label for="categoriaId"><i class="fas fa-list-alt"></i> Categoria:</label>
-      <select id="categoriaId" formControlName="categoriaId">
-        <option *ngFor="let categoria of categorias" [value]="categoria.id">
-          {{ categoria.nome }}
-        </option>
-      </select>
-
-      <button type="submit" [disabled]="produtoForm.invalid">
-        <i class="fas fa-save"></i> Atualizar Produto
-      </button>
+</div>
+  <!-- Card Formulário -->
+  <div class="card-form" *ngIf="showAddForm">
+    <h3 class="titulo-form">
+      <i class="fas fa-box"></i>
+      {{ editingProduto ? 'Editar Produto' : 'Adicionar Produto' }}
+    </h3>
+    <form [formGroup]="produtoForm" (ngSubmit)="submitAddForm()" class="form-adicionar">
+      <div class="form-group">
+        <label for="nome"><i class="fas fa-tag"></i> Nome</label>
+        <input id="nome" type="text" formControlName="nome" required [class.invalido]="produtoForm.get('nome')?.invalid && produtoForm.get('nome')?.touched" />
+        <div class="erro-campo" *ngIf="produtoForm.get('nome')?.invalid && produtoForm.get('nome')?.touched">
+          Nome é obrigatório.
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="descricao"><i class="fas fa-align-left"></i> Descrição</label>
+        <input id="descricao" type="text" formControlName="descricao" required [class.invalido]="produtoForm.get('descricao')?.invalid && produtoForm.get('descricao')?.touched" />
+        <div class="erro-campo" *ngIf="produtoForm.get('descricao')?.invalid && produtoForm.get('descricao')?.touched">
+          Descrição é obrigatória.
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="preco"><i class="fas fa-dollar-sign"></i> Preço</label>
+          <input id="preco" type="number" formControlName="preco" required step="0.01" [class.invalido]="produtoForm.get('preco')?.invalid && produtoForm.get('preco')?.touched" />
+          <div class="erro-campo" *ngIf="produtoForm.get('preco')?.invalid && produtoForm.get('preco')?.touched">
+            Preço é obrigatório.
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="quantidade"><i class="fas fa-sort-numeric-up"></i> Quantidade</label>
+          <input id="quantidade" type="number" formControlName="quantidade" required [class.invalido]="produtoForm.get('quantidade')?.invalid && produtoForm.get('quantidade')?.touched" />
+          <div class="erro-campo" *ngIf="produtoForm.get('quantidade')?.invalid && produtoForm.get('quantidade')?.touched">
+            Quantidade é obrigatória.
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="quantidadeMinima"><i class="fas fa-exclamation-circle"></i> Qtd. Mínima</label>
+          <input id="quantidadeMinima" type="number" formControlName="quantidadeMinima" required [class.invalido]="produtoForm.get('quantidadeMinima')?.invalid && produtoForm.get('quantidadeMinima')?.touched" />
+          <div class="erro-campo" *ngIf="produtoForm.get('quantidadeMinima')?.invalid && produtoForm.get('quantidadeMinima')?.touched">
+            Quantidade mínima é obrigatória.
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="categoriaId"><i class="fas fa-list-alt"></i> Categoria</label>
+          <select id="categoriaId" formControlName="categoriaId" required [class.invalido]="produtoForm.get('categoriaId')?.invalid && produtoForm.get('categoriaId')?.touched">
+            <option value="">Selecione...</option>
+            <option *ngFor="let cat of categorias" [value]="cat.id">{{ cat.nome }}</option>
+          </select>
+          <div class="erro-campo" *ngIf="produtoForm.get('categoriaId')?.invalid && produtoForm.get('categoriaId')?.touched">
+            Categoria é obrigatória.
+          </div>
+        </div>
+      </div>
+      <div class="botoes-form">
+        <button type="submit" class="botao-salvar" [disabled]="produtoForm.invalid || loading">
+          <span *ngIf="!loading"><i class="fas fa-save"></i> {{ editingProduto ? 'Salvar' : 'Adicionar' }}</span>
+          <span *ngIf="loading" class="spinner-mini"></span>
+        </button>
+        <button type="button" class="botao-cancelar" (click)="toggleList()" [disabled]="loading">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+      </div>
     </form>
   </div>
-
- <!-- Formulário de Criação -->
-<div *ngIf="exibirCriar" class="produto-criar">
-  <h2><i class="fas fa-plus-circle"></i> Criar Novo Produto</h2>
-
-  <form [formGroup]="produtoForm" (ngSubmit)="criarProduto()">
-    <label for="nome"><i class="fas fa-tag"></i> Nome:</label>
-    <input id="nome" formControlName="nome" type="text" />
-
-    <label for="descricao"><i class="fas fa-align-left"></i> Descrição:</label>
-    <input id="descricao" formControlName="descricao" type="text" />
-
-    <label for="preco"><i class="fas fa-dollar-sign"></i> Preço:</label>
-    <input id="preco" formControlName="preco" type="number" step="0.01" />
-
-    <label for="quantidade"><i class="fas fa-sort-numeric-up"></i> Quantidade:</label>
-    <input id="quantidade" formControlName="quantidade" type="number" />
-
-    <label for="quantidadeMinima"><i class="fas fa-exclamation-circle"></i> Quantidade Mínima:</label>
-    <input id="quantidadeMinima" formControlName="quantidadeMinima" type="number" />
-
-    <label for="categoriaId"><i class="fas fa-list-alt"></i> Categoria:</label>
-    <select id="categoriaId" formControlName="categoriaId">
-      <option *ngFor="let categoria of categorias" [value]="categoria.id">
-        {{ categoria.nome }}
-      </option>
-    </select>
-
-    <button type="submit" [disabled]="produtoForm.invalid">
-      <i class="fas fa-check"></i> Criar Produto
-    </button>
-  </form>
-
-  <!-- Botão de Voltar para a Lista -->
-  <button (click)="exibirListaProdutos()" class="btn-voltar">
-    <i class="fas fa-arrow-left"></i> Voltar para a Lista
-  </button>
-</div>
-
-
-  <!-- Detalhes do Produto -->
-  <div *ngIf="produtoDetalhado" class="produto-detalhado">
-    <h2><i class="fas fa-info-circle"></i> Detalhes do Produto</h2>
-    <p><strong>ID:</strong> {{ produtoDetalhado.id }}</p>
-    <p><strong><i class="fas fa-tag"></i> Nome:</strong> {{ produtoDetalhado.nome }}</p>
-    <p><strong><i class="fas fa-align-left"></i> Descrição:</strong> {{ produtoDetalhado.descricao }}</p>
-    <p><strong><i class="fas fa-dollar-sign"></i> Preço:</strong> {{ produtoDetalhado.preco | currency }}</p>
-    <p><strong><i class="fas fa-sort-numeric-up"></i> Quantidade:</strong> {{ produtoDetalhado.quantidade }}</p>
-    <p><strong><i class="fas fa-exclamation-circle"></i> Quantidade Mínima:</strong> {{ produtoDetalhado.quantidadeMinima }}</p>
-    <p><strong><i class="fas fa-list-alt"></i> Categoria:</strong> {{ produtoDetalhado.categoriaNome }}</p>
-    <p><strong>Data de Criação:</strong> {{ produtoDetalhado.criadoEm | date: 'dd/MM/yy HH:mm' }}</p>
-    <button (click)="fecharDetalhes()">
-      <i class="fas fa-arrow-left"></i> Voltar
-    </button>
-  </div>
-
 </div>

@@ -28,8 +28,10 @@ export class BuscaEntregaComponent {
   // Lista de entregas filtradas
   entregas: EntregaResponse[] = [];
   
-  // Flag para verificar se a busca foi realizada
+  // Flags de estado
   isSearched: boolean = false;
+  isLoading: boolean = false;
+  errorMessage: string = '';
 
   constructor(private entregasService: EntregasService) {}
 
@@ -39,98 +41,190 @@ export class BuscaEntregaComponent {
     return date.toISOString();  // Retorna a data no formato ISO
   }
 
+  // Método para validar datas
+  validarDatas(dataInicio: string, dataFim: string): boolean {
+    const inicio = new Date(dataInicio);
+    const fim = new Date(dataFim);
+    
+    if (inicio > fim) {
+      this.errorMessage = 'A data de início não pode ser maior que a data de fim.';
+      return false;
+    }
+    
+    return true;
+  }
+
+  // Método para validar mês e ano
+  validarMesAno(mes: number, ano: number): boolean {
+    const anoAtual = new Date().getFullYear();
+    
+    if (mes < 1 || mes > 12) {
+      this.errorMessage = 'O mês deve estar entre 1 e 12.';
+      return false;
+    }
+    
+    if (ano < 2020 || ano > anoAtual + 1) {
+      this.errorMessage = `O ano deve estar entre 2020 e ${anoAtual + 1}.`;
+      return false;
+    }
+    
+    return true;
+  }
+
+  // Método para limpar mensagens de erro
+  limparErro(): void {
+    this.errorMessage = '';
+  }
+
   // Método para buscar entregas por período (data)
   onBuscarPorPeriodo() {
-    if (this.dataInicio && this.dataFim) {
-      const inicioISO = this.formatarDataISO(this.dataInicio);
-      const fimISO = this.formatarDataISO(this.dataFim);
+    this.limparErro();
+    
+    if (!this.dataInicio || !this.dataFim) {
+      this.errorMessage = 'Por favor, preencha ambas as datas.';
+      return;
+    }
 
-      this.entregasService.porPeriodo(inicioISO, fimISO).subscribe({
-        next: (response: any) => {
-          if (Array.isArray(response.content)) {
-            this.entregas = response.content;  // Atualiza as entregas com o conteúdo da resposta
-            this.isSearched = true;  // Marca como busca realizada
-            this.emitirResultados('porPeriodo');
-          } else {
-            this.entregas = [];  // Se não for um array válido, limpa as entregas
-            this.isSearched = true;  // Marca como busca realizada
-            this.emitirResultados('porPeriodo');
-          }
-        },
-        error: (error) => {
-          console.error('Erro ao buscar entregas por período', error);
-          this.entregas = [];  // Limpa as entregas em caso de erro
+    if (!this.validarDatas(this.dataInicio, this.dataFim)) {
+      return;
+    }
+
+    this.isLoading = true;
+    const inicioISO = this.formatarDataISO(this.dataInicio);
+    const fimISO = this.formatarDataISO(this.dataFim);
+
+    this.entregasService.porPeriodo(inicioISO, fimISO).subscribe({
+      next: (response: any) => {
+        this.isLoading = false;
+        if (Array.isArray(response.content)) {
+          this.entregas = response.content;  // Atualiza as entregas com o conteúdo da resposta
+          this.isSearched = true;  // Marca como busca realizada
+          this.emitirResultados('porPeriodo');
+        } else {
+          this.entregas = [];  // Se não for um array válido, limpa as entregas
           this.isSearched = true;  // Marca como busca realizada
           this.emitirResultados('porPeriodo');
         }
-      });
-    }
+      },
+      error: (error) => {
+        this.isLoading = false;
+        console.error('Erro ao buscar entregas por período', error);
+        this.errorMessage = 'Erro ao buscar entregas. Tente novamente.';
+        this.entregas = [];  // Limpa as entregas em caso de erro
+        this.isSearched = true;  // Marca como busca realizada
+        this.emitirResultados('porPeriodo');
+      }
+    });
   }
 
   // Método para buscar entregas por mês e ano
   onBuscarPorMesAno() {
-    if (this.mes && this.ano) {
-      this.entregasService.porMes(this.mes, this.ano).subscribe({
-        next: (response: any) => {
-          if (Array.isArray(response.content)) {
-            this.entregas = response.content;  // Atualiza as entregas com o conteúdo da resposta
-            this.isSearched = true;  // Marca como busca realizada
-            this.emitirResultados('porMesAno');
-          } else {
-            this.entregas = [];  // Se não for um array válido, limpa as entregas
-            this.isSearched = true;  // Marca como busca realizada
-            this.emitirResultados('porMesAno');
-          }
-        },
-        error: (error) => {
-          console.error('Erro ao buscar entregas por mês e ano', error);
-          this.entregas = [];  // Limpa as entregas em caso de erro
+    this.limparErro();
+    
+    if (!this.mes || !this.ano) {
+      this.errorMessage = 'Por favor, preencha o mês e o ano.';
+      return;
+    }
+
+    if (!this.validarMesAno(this.mes, this.ano)) {
+      return;
+    }
+
+    this.isLoading = true;
+    this.entregasService.porMes(this.mes, this.ano).subscribe({
+      next: (response: any) => {
+        this.isLoading = false;
+        if (Array.isArray(response.content)) {
+          this.entregas = response.content;  // Atualiza as entregas com o conteúdo da resposta
+          this.isSearched = true;  // Marca como busca realizada
+          this.emitirResultados('porMesAno');
+        } else {
+          this.entregas = [];  // Se não for um array válido, limpa as entregas
           this.isSearched = true;  // Marca como busca realizada
           this.emitirResultados('porMesAno');
         }
-      });
-    }
+      },
+      error: (error) => {
+        this.isLoading = false;
+        console.error('Erro ao buscar entregas por mês e ano', error);
+        this.errorMessage = 'Erro ao buscar entregas. Tente novamente.';
+        this.entregas = [];  // Limpa as entregas em caso de erro
+        this.isSearched = true;  // Marca como busca realizada
+        this.emitirResultados('porMesAno');
+      }
+    });
   }
 
   // Método para buscar entregas por produto
   onBuscarPorProduto() {
-    if (this.produtoId) {
-      this.entregasService.porProduto(this.produtoId, 1, 0, 20).subscribe({
-        next: (data: any) => {
-          this.entregas = data.content; // Atualiza as entregas com a resposta paginada
-          this.isSearched = true;  // Marca como busca realizada
-          this.emitirResultados('porProduto');
-        },
-        error: (error) => {
-          console.error('Erro ao buscar entregas por produto', error);
-        }
-      });
+    this.limparErro();
+    
+    if (!this.produtoId) {
+      this.errorMessage = 'Por favor, informe o ID do produto.';
+      return;
     }
+
+    if (this.produtoId <= 0) {
+      this.errorMessage = 'O ID do produto deve ser maior que zero.';
+      return;
+    }
+
+    this.isLoading = true;
+    this.entregasService.porProduto(this.produtoId, 1, 0, 20).subscribe({
+      next: (data: any) => {
+        this.isLoading = false;
+        this.entregas = data.content; // Atualiza as entregas com a resposta paginada
+        this.isSearched = true;  // Marca como busca realizada
+        this.emitirResultados('porProduto');
+      },
+      error: (error) => {
+        this.isLoading = false;
+        console.error('Erro ao buscar entregas por produto', error);
+        this.errorMessage = 'Erro ao buscar entregas. Tente novamente.';
+        this.entregas = [];
+        this.isSearched = true;
+        this.emitirResultados('porProduto');
+      }
+    });
   }
 
   // Método para buscar entregas por consumidor
   onBuscarPorConsumidor() {
-    if (this.consumidorId) {
-      this.entregasService.porConsumidor(this.consumidorId).subscribe({
-        next: (response: any) => {
-          if (Array.isArray(response.content)) {
-            this.entregas = response.content;  // Atualiza as entregas com a resposta
-            this.isSearched = true;  // Marca como busca realizada
-            this.emitirResultados('porConsumidor');
-          } else {
-            this.entregas = [];  // Limpa as entregas se a resposta não for válida
-            this.isSearched = true;  // Marca como busca realizada
-            this.emitirResultados('porConsumidor');
-          }
-        },
-        error: (error) => {
-          console.error('Erro ao buscar entregas por consumidor', error);
-          this.entregas = [];  // Limpa as entregas em caso de erro
+    this.limparErro();
+    
+    if (!this.consumidorId) {
+      this.errorMessage = 'Por favor, informe o ID do consumidor.';
+      return;
+    }
+
+    if (this.consumidorId <= 0) {
+      this.errorMessage = 'O ID do consumidor deve ser maior que zero.';
+      return;
+    }
+
+    this.isLoading = true;
+    this.entregasService.porConsumidor(this.consumidorId).subscribe({
+      next: (response: any) => {
+        this.isLoading = false;
+        if (Array.isArray(response.content)) {
+          this.entregas = response.content;  // Atualiza as entregas com a resposta
+          this.isSearched = true;  // Marca como busca realizada
+          this.emitirResultados('porConsumidor');
+        } else {
+          this.entregas = [];  // Limpa as entregas se a resposta não for válida
           this.isSearched = true;  // Marca como busca realizada
           this.emitirResultados('porConsumidor');
         }
-      });
-    }
+      },
+      error: (error) => {
+        this.isLoading = false;
+        console.error('Erro ao buscar entregas por consumidor', error);
+        this.errorMessage = 'Erro ao buscar entregas. Tente novamente.';
+        this.entregas = [];  // Limpa as entregas em caso de erro
+        this.isSearched = true;  // Marca como busca realizada
+        this.emitirResultados('porConsumidor');
+      }
+    });
   }
 
   // Emitir os resultados para o componente pai
@@ -151,6 +245,7 @@ export class BuscaEntregaComponent {
     this.produtoId = null;
     this.consumidorId = null;
     this.isSearched = false;  // Marca como não buscado
+    this.errorMessage = '';   // Limpa mensagens de erro
     
     // Emite o evento para o componente pai recarregar as entregas
     this.emitirResultados('limpar');
@@ -158,15 +253,11 @@ export class BuscaEntregaComponent {
 
   // Método para submeter o formulário
   onSubmit() {
-    if (this.dataInicio && this.dataFim) {
-      this.onBuscarPorPeriodo();
-    }
+    this.onBuscarPorPeriodo();
   }
 
   // Método para submeter o formulário de mês/ano
   onSubmitMesAno() {
-    if (this.mes && this.ano) {
-      this.onBuscarPorMesAno();  // Método que busca as entregas por mês e ano
-    }
+    this.onBuscarPorMesAno();
   }
 }
