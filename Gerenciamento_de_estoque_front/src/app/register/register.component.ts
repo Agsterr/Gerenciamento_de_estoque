@@ -4,36 +4,38 @@ import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { RoleService } from '../services/role.service';
 import { HttpErrorResponse } from '@angular/common/http';
-import { MatSnackBar } from '@angular/material/snack-bar'; // Importando MatSnackBar para mostrar mensagens
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule], // Importando módulos necessários
+  imports: [ReactiveFormsModule, CommonModule, MatIconModule],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss'],
 })
 export class RegisterComponent implements OnInit {
   registerForm: FormGroup;
-  roles: any[] = []; // Lista de roles
-  successMessage: string = ''; // Variável para mensagens de sucesso
-  errorMessage: string = ''; // Variável para mensagens de erro
+  roles: any[] = [];
+  successMessage: string = '';
+  errorMessage: string = '';
+  showPassword: boolean = false;
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private authService: AuthService,
     private roleService: RoleService,
-    private snackBar: MatSnackBar // Injetando MatSnackBar
+    private snackBar: MatSnackBar
   ) {
     this.registerForm = this.fb.group({
       username: ['', Validators.required],
       senha: ['', [Validators.required, Validators.minLength(6)]],
       email: ['', [Validators.required, Validators.email]],
-      orgId: ['', Validators.required], // Campo para o ID da organização
-      roles: [[], Validators.required], // Campo para selecionar múltiplas roles
+      orgId: ['', Validators.required],
+      roles: [[], Validators.required],
     });
   }
 
@@ -42,13 +44,13 @@ export class RegisterComponent implements OnInit {
     const errorMessage = localStorage.getItem('authErrorMessage');
     if (errorMessage) {
       this.errorMessage = errorMessage;
-      localStorage.removeItem('authErrorMessage'); // Limpa a mensagem após exibir
+      localStorage.removeItem('authErrorMessage');
     }
 
     // Carregar as roles do backend
     this.roleService.listarRoles().subscribe({
       next: (roles: any[]) => {
-        this.roles = roles; // Armazenar as roles para exibir no formulário
+        this.roles = roles;
       },
       error: (err: HttpErrorResponse) => {
         console.error('Erro ao carregar roles:', err);
@@ -59,6 +61,10 @@ export class RegisterComponent implements OnInit {
         });
       }
     });
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
 
   onSubmit(): void {
@@ -87,7 +93,7 @@ export class RegisterComponent implements OnInit {
               panelClass: ['success-snackbar'],
             });
             this.errorMessage = '';
-            this.router.navigate(['/login']); // Redireciona para a tela de login
+            this.router.navigate(['/login']);
           },
           error: (err: HttpErrorResponse) => {
             console.error('Erro ao registrar:', err);
@@ -109,8 +115,9 @@ export class RegisterComponent implements OnInit {
   }
 
   cancel(): void {
-    this.registerForm.reset(); // Limpa os campos do formulário
-    this.successMessage = ''; // Limpa a mensagem de sucesso
-    this.errorMessage = ''; // Limpa a mensagem de erro
+    this.registerForm.reset();
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.showPassword = false;
   }
 }

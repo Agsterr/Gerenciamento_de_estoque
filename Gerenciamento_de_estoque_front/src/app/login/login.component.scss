@@ -1,117 +1,284 @@
-/* login.component.scss */
-
-/* Estiliza o cartão de login */
+/* Estilo do contêiner principal */
 .login-container {
-  max-width: 500px;
-  margin: 40px auto;
-  padding: 40px 30px;
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-  text-align: center;
-  position: relative;
-  overflow: hidden;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 20px;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #2196f3, #1976d2);
-  }
+/* Wrapper interno para controlar largura máxima */
+.login-wrapper {
+  max-width: 500px;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  padding: 48px 40px;
+  box-sizing: border-box;
+}
+
+/* Header do formulário */
+.login-header {
+  text-align: center;
+  margin-bottom: 32px;
 
   .login-icon {
-    font-size: 48px;
-    height: 48px;
-    width: 48px;
+    font-size: 3rem;
+    height: 3rem;
+    width: 3rem;
     margin-bottom: 16px;
-    color: #1976d2;
+    color: #2563eb;
     animation: fadeIn 0.5s ease-in-out;
   }
 
-  h2.login-title {
-    margin-bottom: 24px;
-    font-size: 2rem;
-    color: #333;
-    font-weight: 500;
+  .login-title {
+    font-size: 2.2rem;
+    color: #2563eb;
+    margin-bottom: 8px;
+    font-weight: 700;
   }
 
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+  .login-subtitle {
+    color: #64748b;
+    font-size: 1.1rem;
+    margin: 0;
+    line-height: 1.5;
   }
+}
 
-  .mat-form-field {
-    width: 100%;
+/* Formulário */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
 
-    .field-icon {
-      font-size: 18px;
-      margin-right: 8px;
-      vertical-align: bottom;
-      opacity: 0.8;
-    }
-  }
+/* Grupos de formulário */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 
-  button[mat-raised-button] {
-    font-weight: 500;
+  label {
+    font-weight: 600;
+    color: #374151;
     font-size: 1rem;
-    padding: 8px 16px;
-    height: 48px;
-    transition: all 0.3s ease;
-
-    mat-icon {
-      margin-right: 8px;
-      vertical-align: middle;
-    }
-
-    &:hover:not([disabled]) {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-  }
-
-  .error-message {
-    color: #e74c3c;
-    font-size: 14px;
-    margin-top: 12px;
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 8px;
 
     mat-icon {
-      font-size: 20px;
-      height: 20px;
-      width: 20px;
+      font-size: 1.2rem;
+      color: #6b7280;
     }
   }
+}
 
-  .lembrar-credenciais {
-    margin: 8px 0;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
+/* Campos de input */
+.form-control {
+  padding: 14px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: #f9fafb;
 
-    mat-checkbox {
-      color: rgba(0, 0, 0, 0.87);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      .checkbox-icon {
-        font-size: 18px;
-        vertical-align: middle;
-        opacity: 0.8;
-      }
-    }
+  &:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    background: #ffffff;
   }
 
-  .full-width {
-    width: 100%;
+  &::placeholder {
+    color: #9ca3af;
   }
+}
+
+/* Container do campo de senha */
+.password-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input {
+  padding-right: 50px;
+}
+
+/* Botão de mostrar/ocultar senha */
+.password-toggle-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  color: #6b7280;
+  transition: color 0.2s, background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    color: #374151;
+    background-color: #f3f4f6;
+  }
+
+  &:focus {
+    outline: none;
+    color: #2563eb;
+    background-color: #eff6ff;
+  }
+
+  mat-icon {
+    font-size: 1.2rem;
+  }
+}
+
+/* Mensagens de erro */
+.error {
+  color: #dc2626;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+
+  mat-icon {
+    font-size: 1rem;
+  }
+}
+
+/* Checkbox personalizado */
+.lembrar-credenciais {
+  margin: 8px 0;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkbox-custom {
+  height: 20px;
+  width: 20px;
+  background-color: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 4px;
+  position: relative;
+  transition: all 0.2s;
+
+  &:after {
+    content: '';
+    position: absolute;
+    display: none;
+    left: 6px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+}
+
+.checkbox-input:checked ~ .checkbox-custom {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+.checkbox-input:checked ~ .checkbox-custom:after {
+  display: block;
+}
+
+.checkbox-icon {
+  font-size: 1.2rem;
+  color: #6b7280;
+}
+
+.checkbox-label {
+  color: #374151;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* Botões */
+.btn {
+  padding: 14px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  width: 100%;
+
+  mat-icon {
+    font-size: 1.2rem;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+  }
+}
+
+/* Alertas */
+.alert {
+  padding: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+
+  mat-icon {
+    font-size: 1.2rem;
+  }
+}
+
+.alert-danger {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
 }
 
 /* Animações */
@@ -127,61 +294,43 @@
 }
 
 /* Responsividade */
-@media (max-width: 1024px) {
-  .login-container {
-    padding: 30px 25px;
-    margin: 30px auto;
-
-    h2.login-title {
-      font-size: 1.8rem;
-    }
-
-    .login-icon {
-      font-size: 40px;
-      height: 40px;
-      width: 40px;
-    }
-  }
-}
-
 @media (max-width: 768px) {
   .login-container {
-    padding: 25px 20px;
-    margin: 20px auto;
+    padding: 16px;
+  }
 
-    h2.login-title {
-      font-size: 1.6rem;
-    }
+  .login-wrapper {
+    padding: 32px 24px;
+  }
 
-    button {
-      font-size: 0.95rem;
-    }
+  .login-header .login-title {
+    font-size: 1.8rem;
+  }
 
-    .login-icon {
-      font-size: 36px;
-      height: 36px;
-      width: 36px;
-    }
+  .login-header .login-icon {
+    font-size: 2.5rem;
+    height: 2.5rem;
+    width: 2.5rem;
   }
 }
 
 @media (max-width: 480px) {
-  .login-container {
-    padding: 20px 15px;
-    margin: 15px auto;
+  .login-wrapper {
+    padding: 24px 20px;
+  }
 
-    h2.login-title {
-      font-size: 1.4rem;
-    }
+  .login-header .login-title {
+    font-size: 1.5rem;
+  }
 
-    button {
-      font-size: 0.9rem;
-    }
+  .login-header .login-icon {
+    font-size: 2rem;
+    height: 2rem;
+    width: 2rem;
+  }
 
-    .login-icon {
-      font-size: 32px;
-      height: 32px;
-      width: 32px;
-    }
+  .form-control {
+    padding: 12px 14px;
+    font-size: 0.95rem;
   }
 }
