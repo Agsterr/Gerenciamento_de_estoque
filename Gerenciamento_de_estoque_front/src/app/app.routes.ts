@@ -13,9 +13,16 @@ import { AuthGuard } from './guards/Auth.Guard';
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' }, // Redireciona para home por padrão
   { path: 'home', component: HomeComponent }, // Rota para o componente Home
-  
+
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent, canActivate: [AdminGuard] },
+
+  // Rotas principais para os módulos, protegidas por AuthGuard
+  { path: 'produtos', component: ProdutoComponent, canActivate: [AuthGuard] },
+  { path: 'categorias', component: CategoriaComponent, canActivate: [AuthGuard] },
+  { path: 'consumidores', component: ConsumersComponent, canActivate: [AuthGuard] },
+  { path: 'entregas', component: EntregasComponent, canActivate: [AuthGuard] },
+  { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
 
   {
     path: 'dashboard',

@@ -9,7 +9,7 @@ import { PageCategoriaResponse } from '../models/page-categoria-response.model';
   providedIn: 'root',
 })
 export class CategoriaService {
-  private apiUrl = 'http://localhost:8080/categorias';
+  private apiUrl = 'http://localhost:8081/categorias';
 
   constructor(private http: HttpClient) {}
 

@@ -84,6 +84,7 @@ export class LoginComponent implements OnInit {
 
       this.authService.login(loginData).subscribe({
         next: (response) => {
+          console.log('Resposta do login:', response);
           if (!response.token) {
             this.errorMessage = 'Credenciais inválidas.';
           }

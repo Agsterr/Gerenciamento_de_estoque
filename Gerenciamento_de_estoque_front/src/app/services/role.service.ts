@@ -9,7 +9,7 @@ import { throwError } from 'rxjs'; // Para criar o erro
   providedIn: 'root',
 })
 export class RoleService {
-  private apiUrl = 'http://localhost:8080/roles'; // URL da API
+  private apiUrl = 'http://localhost:8081/roles'; // URL da API
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 

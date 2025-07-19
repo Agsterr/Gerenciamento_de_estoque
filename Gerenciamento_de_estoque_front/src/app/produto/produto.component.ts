@@ -21,22 +21,22 @@ import { CommonModule } from '@angular/common';
 })
 export class ProdutoComponent implements OnInit {
   produtos: Produto[] = [];
-  produtosFiltrados: Produto[] = [];
-  searchTerm: string = ''; // Variável de busca
+  filteredProdutos: Produto[] = [];
+  searchTerm: string = '';
   categorias: Categoria[] = [];
   produtoForm: FormGroup;
   mensagem = '';
   mensagemErro = '';
-  alertaEstoqueBaixo = false;
+  loading = false;
   currentPage = 0;
+  pageSize = 10;
+  pageSizeOptions = [10, 20, 30, 40];
   totalPages = 0;
-
-  exibirLista = true;
-  exibirCriar = false;
-  exibirEditar = false;
-  produtoDetalhado: Produto | null = null;
-
-  quantidadesAdicionar: { [key: number]: number } = {};
+  totalElements = 0;
+  showList = true;
+  showAddForm = false;
+  editingProduto = false;
+  produtoEditando: Produto | null = null;
 
   constructor(
     private produtoService: ProdutoService,
@@ -44,6 +44,7 @@ export class ProdutoComponent implements OnInit {
     private fb: FormBuilder
   ) {
     this.produtoForm = this.fb.group({
+      id: [null],
       nome: ['', Validators.required],
       descricao: ['', Validators.required],
       preco: [0, [Validators.required, Validators.min(0.01)]],
@@ -54,313 +55,171 @@ export class ProdutoComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.carregarProdutos();
+    this.fetchProdutos();
     this.carregarCategorias();
-    this.verificarEstoqueBaixo();
-  }
-  
-
-  
-
-  exibirListaProdutos(): void {
-    this.exibirLista = true;
-    this.exibirCriar = false;
-    this.exibirEditar = false;
-    this.mensagem = '';
-    this.mensagemErro = '';
-    this.produtoDetalhado = null;
   }
 
-  exibirCriarProduto(): void {
-    this.exibirLista = false;
-    this.exibirCriar = true;
-    this.exibirEditar = false;
-    this.mensagem = '';
-    this.mensagemErro = '';
-    this.produtoDetalhado = null;
-  }
-
-
-
-  
-
-  atualizarProduto(): void {
-    if (this.produtoForm.valid && this.produtoDetalhado) {
-      const produtoAtualizado: Produto = {
-        ...this.produtoForm.value,
-        id: this.produtoDetalhado.id,
-        orgId: Number(this.getOrgId()),
-        ativo: true,
-        criadoEm: this.produtoDetalhado.criadoEm,
-        status: '',
-        categoriaNome: '',
-      };
-
-      this.produtoService.atualizarProduto(produtoAtualizado, produtoAtualizado.id).subscribe({
-        next: () => {
-          this.mensagem = 'Produto atualizado com sucesso!';
-          this.carregarProdutos();
-          this.produtoForm.reset();
-          this.exibirListaProdutos();
-        },
-        error: (error: any) => {
-          this.mensagemErro = 'Erro ao atualizar produto.';
-          console.error('Erro ao atualizar produto:', error);
-        }
-      });
-    }
-  }
-
-  private getOrgId(): string {
-    const token = localStorage.getItem('jwtToken');
-    if (!token) throw new Error('Token não encontrado.');
-    const payload = this.decodeJwt(token);
-    if (payload && payload.org_id) return payload.org_id;
-    throw new Error('OrgId não encontrado no token.');
-  }
-
-  private decodeJwt(token: string): any {
-    const parts = token.split('.');
-    if (parts.length !== 3) throw new Error('Token JWT inválido.');
-    const payload = atob(parts[1]);
-    return JSON.parse(payload);
-  }
-
-carregarProdutos(page: number = 0): void {
-  this.produtoService.listarProdutos(page).subscribe({
-    next: (data) => {
-      this.produtos = data.content;
-      this.produtosFiltrados = [...this.produtos]; // Inicia a lista filtrada com todos os produtos
-      this.currentPage = data.currentPage || 0;
-      this.totalPages = data.totalPages || 1;
-      this.filtrarProdutos();  // Aplica o filtro após carregar produtos
-    },
-    error: (error: any) => {
-      this.mensagemErro = 'Erro ao carregar produtos.';
-      console.error('Erro ao carregar produtos:', error);
-    }
-  });
-}
-
-
-
- 
-  // Método que será chamado para atualizar o produto já carregado no formulário
-  editarProduto(): void {
-    if (this.produtoForm.valid && this.produtoDetalhado) {
-      // Monta o objeto Produto para envio (garantindo o id e orgId)
-      const produtoAtualizado: Produto = {
-        ...this.produtoForm.value,
-        id: this.produtoDetalhado.id,
-        orgId: Number(this.getOrgId()),
-        ativo: true,
-        criadoEm: this.produtoDetalhado.criadoEm,
-        status: this.produtoDetalhado.status || '',
-        categoriaNome: this.produtoDetalhado.categoriaNome || '',
-      };
-
-      this.produtoService.atualizarProduto(produtoAtualizado, produtoAtualizado.id).subscribe({
-        next: () => {
-          this.mensagem = 'Produto atualizado com sucesso!';
-          this.carregarProdutos(this.currentPage);
-          this.produtoForm.reset();
-          this.exibirListaProdutos(); // Volta para a lista após editar
-          this.produtoDetalhado = null;
-        },
-        error: (error: any) => {
-          this.mensagemErro = 'Erro ao atualizar produto.';
-          console.error('Erro ao atualizar produto:', error);
-        }
-      });
-    } else {
-      this.mensagemErro = 'Por favor, preencha corretamente os campos do formulário.';
-    }
-  }
-
-  // Atualizar exibirEditarProduto para abrir o formulário com dados do produto
-  exibirEditarProduto(produtoId: number): void {
-    this.exibirLista = false;
-    this.exibirCriar = false;
-    this.exibirEditar = true;
-    this.mensagem = '';
-    this.mensagemErro = '';
-
-    this.produtoService.getProdutoById(produtoId).subscribe({
-      next: (produto) => {
-        this.produtoForm.setValue({
-          nome: produto.nome,
-          descricao: produto.descricao,
-          preco: produto.preco,
-          quantidade: produto.quantidade,
-          quantidadeMinima: produto.quantidadeMinima,
-          categoriaId: produto.categoriaId,
-        });
-        this.produtoDetalhado = produto;
+  fetchProdutos(page: number = 0): void {
+    this.loading = true;
+    this.produtoService.listarProdutos(page, this.pageSize).subscribe({
+      next: (data) => {
+        this.produtos = data.content;
+        this.filteredProdutos = [...this.produtos];
+        this.currentPage = data.currentPage || 0;
+        this.totalPages = data.totalPages || 1;
+        this.totalElements = data.totalElements || this.produtos.length;
+        this.applyFilter();
+        this.loading = false;
       },
       error: (error: any) => {
-        this.mensagemErro = 'Erro ao carregar produto para edição.';
-        console.error('Erro ao carregar produto:', error);
+        this.mensagemErro = 'Erro ao carregar produtos.';
+        this.loading = false;
+        console.error('Erro ao carregar produtos:', error);
       }
     });
-  }
-
-
-
-  toggleAdicionar(produtoId: number): void {
-    this.quantidadesAdicionar[produtoId] !== undefined
-      ? delete this.quantidadesAdicionar[produtoId]
-      : (this.quantidadesAdicionar[produtoId] = 0);
-  }
-
-  confirmarAdicionar(produtoId: number): void {
-    const quantidade = this.quantidadesAdicionar[produtoId];
-    if (quantidade > 0) {
-      this.produtoService.atualizarProdutoQuantidade(produtoId, quantidade).subscribe({
-        next: (updatedProduto) => {
-          const index = this.produtos.findIndex(p => p.id === produtoId);
-          if (index !== -1) this.produtos[index].quantidade = updatedProduto.quantidade;
-          this.mensagem = 'Quantidade adicionada com sucesso!';
-          delete this.quantidadesAdicionar[produtoId];
-        },
-        error: (error: any) => {
-          this.mensagemErro = 'Erro ao adicionar quantidade.';
-          console.error('Erro ao atualizar produto', error);
-        }
-      });
-    } else {
-      this.mensagemErro = 'Quantidade inválida. Deve ser maior que zero.';
-    }
-  }
-
-  verDetalhes(produtoId: number): void {
-    this.produtoService.getProdutoById(produtoId).subscribe({
-      next: (produto) => {
-        this.produtoDetalhado = produto;
-        this.exibirLista = false;
-        this.exibirCriar = false;
-      },
-      error: (error: any) => {
-        this.mensagemErro = 'Erro ao carregar detalhes do produto.';
-        console.error('Erro ao carregar detalhes do produto:', error);
-      }
-    });
-  }
-
-  fecharDetalhes(): void {
-    this.produtoDetalhado = null;
-    this.exibirListaProdutos();
-  }
-
- criarProduto(): void {
-  if (this.produtoForm.valid) {
-    // Copia os valores do formulário para o objeto produto
-    const produtoData = { ...this.produtoForm.value };
-
-    // Garantir que a quantidade não seja null ou undefined, e atribuir valor padrão 0 se necessário
-    if (produtoData.quantidade === null || produtoData.quantidade === undefined) {
-      produtoData.quantidade = 0;  // Valor padrão
-    }
-
-    // Caso algum outro campo obrigatório tenha valor inválido, atribuir valor padrão ou notificar
-    if (produtoData.nome.trim() === '') {
-      this.mensagemErro = 'O nome do produto é obrigatório.';
-      return;
-    }
-
-    // Envia a requisição para o serviço
-    this.produtoService.criarProduto(produtoData).subscribe({
-      next: () => {
-        this.mensagem = 'Produto criado com sucesso!';
-        this.carregarProdutos();  // Recarrega os produtos após a criação
-        this.produtoForm.reset();  // Limpa o formulário
-        this.exibirListaProdutos();  // Retorna para a lista de produtos
-      },
-      error: (error: any) => {
-        // Exibe uma mensagem de erro caso a requisição falhe
-        this.mensagemErro = 'Erro ao criar produto. Verifique os dados e tente novamente.';
-        console.error('Erro ao criar produto:', error);
-
-        // Detalha mais informações do erro no console
-        if (error.error) {
-          console.error('Detalhes do erro:', error.error);
-        }
-      }
-    });
-  } else {
-    // Caso o formulário não seja válido, exibe um erro genérico
-    this.mensagemErro = 'Por favor, preencha todos os campos obrigatórios.';
-  }
-}
-
-
- deletarProduto(produtoId: number): void {
-  const confirmacao = window.confirm('Tem certeza que deseja excluir este produto?');
-
-  if (confirmacao) {
-    this.produtoService.deletarProduto(produtoId).subscribe({
-      next: () => {
-        this.mensagem = `Produto deletado com sucesso.`;
-        this.carregarProdutos(this.currentPage);
-      },
-      error: (error: any) => {
-        this.mensagemErro = 'Erro ao deletar produto.';
-        console.error('Erro ao deletar produto:', error);
-      }
-    });
-  } else {
-    // Se o usuário cancelar, você pode fazer algo, por exemplo, exibir uma mensagem
-    console.log('A exclusão do produto foi cancelada.');
-  }
-}
-
-
-  paginaAnterior(): void {
-    if (this.currentPage > 0) this.carregarProdutos(this.currentPage - 1);
-  }
-
-  proximaPagina(): void {
-    if (this.currentPage < this.totalPages - 1) this.carregarProdutos(this.currentPage + 1);
   }
 
   carregarCategorias(): void {
-   this.categoriaService.listarCategorias().subscribe({
-  next: (data) => this.categorias = data.content,  // data.content é o array Categoria[]
-  error: (error: any) => {
-    this.mensagemErro = 'Erro ao carregar categorias.';
-    console.error('Erro ao carregar categorias:', error);
-  }
-});
+    this.categoriaService.listarCategorias().subscribe({
+      next: (data) => this.categorias = data.content,
+      error: (error: any) => {
+        this.mensagemErro = 'Erro ao carregar categorias.';
+        console.error('Erro ao carregar categorias:', error);
+      }
+    });
   }
 
- verificarEstoqueBaixo(): void {
-  this.produtoService.listarProdutosComEstoqueBaixo().subscribe({
-    next: (produtosBaixoEstoque) => {
-      this.alertaEstoqueBaixo = produtosBaixoEstoque.length > 0;
-    },
-    error: (error) => {
-      console.error('Erro ao verificar estoque baixo:', error);
+  toggleList(): void {
+    this.showList = true;
+    this.showAddForm = false;
+    this.editingProduto = false;
+    this.produtoEditando = null;
+    this.produtoForm.reset();
+    this.mensagem = '';
+    this.mensagemErro = '';
+    this.fetchProdutos(this.currentPage);
+  }
+
+  toggleAddForm(): void {
+    this.showAddForm = true;
+    this.showList = false;
+    this.editingProduto = false;
+    this.produtoEditando = null;
+    this.produtoForm.reset();
+    this.mensagem = '';
+    this.mensagemErro = '';
+  }
+
+  submitAddForm(): void {
+    if (this.produtoForm.invalid) {
+      this.mensagemErro = 'Preencha todos os campos corretamente!';
+      return;
     }
-  });
-}
-
-// Método para filtrar os produtos com base no texto de busca
-filtrarProdutos(): void {
-  if (this.searchTerm.trim() === '') {
-    // Se o campo de busca estiver vazio, exibe todos os produtos
-    this.produtosFiltrados = [...this.produtos]; 
-  } else {
-    // Se houver texto no campo de busca, filtra os produtos
-    this.produtosFiltrados = this.produtos.filter(produto =>
-      produto.nome.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-      produto.descricao.toLowerCase().includes(this.searchTerm.toLowerCase())
-    );
+    this.editingProduto ? this.updateProduto() : this.createProduto();
   }
-}
 
+  createProduto(): void {
+    const novo = this.produtoForm.value as Produto;
+    this.loading = true;
+    this.produtoService.criarProduto(novo).subscribe({
+      next: () => {
+        this.loading = false;
+        this.mensagem = 'Produto adicionado!';
+        this.toggleList();
+      },
+      error: err => {
+        this.loading = false;
+        this.mensagemErro = err.error?.error || 'Erro ao adicionar produto!';
+      }
+    });
+  }
 
+  updateProduto(): void {
+    const upd = this.produtoForm.value as Produto;
+    if (!upd.id) {
+      this.mensagemErro = 'ID obrigatório para edição';
+      return;
+    }
+    this.loading = true;
+    this.produtoService.atualizarProduto(upd, upd.id).subscribe({
+      next: () => {
+        this.loading = false;
+        this.mensagem = 'Produto atualizado!';
+        this.toggleList();
+      },
+      error: () => {
+        this.loading = false;
+        this.mensagemErro = 'Erro ao editar produto!';
+      }
+    });
+  }
 
+  deleteProduto(id: number): void {
+    if (!confirm('Confirma exclusão do produto?')) return;
+    this.loading = true;
+    this.produtoService.deletarProduto(id).subscribe({
+      next: () => {
+        this.loading = false;
+        this.mensagem = 'Produto deletado!';
+        this.fetchProdutos(this.currentPage);
+      },
+      error: () => {
+        this.loading = false;
+        this.mensagemErro = 'Erro ao deletar produto!';
+      }
+    });
+  }
 
-  fecharAlertaEstoque(): void {
-    this.alertaEstoqueBaixo = false;
+  applyFilter(): void {
+    const t = this.searchTerm.trim().toLowerCase();
+    this.filteredProdutos = t
+      ? this.produtos.filter(p =>
+          p.nome.toLowerCase().includes(t) ||
+          (p.descricao && p.descricao.toLowerCase().includes(t)) ||
+          (p.categoriaNome && p.categoriaNome.toLowerCase().includes(t))
+        )
+      : [...this.produtos];
+  }
+
+  editProduto(p: Produto): void {
+    this.editingProduto = true;
+    this.showAddForm = true;
+    this.showList = false;
+    this.produtoEditando = p;
+    this.produtoForm.patchValue({
+      id: p.id,
+      nome: p.nome,
+      descricao: p.descricao,
+      preco: p.preco,
+      quantidade: p.quantidade,
+      quantidadeMinima: p.quantidadeMinima,
+      categoriaId: p.categoriaId
+    });
+    this.mensagem = '';
+    this.mensagemErro = '';
+  }
+
+  irParaPagina(pagina: number): void {
+    if (pagina >= 0 && pagina < this.totalPages) {
+      this.fetchProdutos(pagina);
+    }
+  }
+
+  onPageSizeChange(event: any): void {
+    this.currentPage = 0;
+    this.pageSize = event.target.value;
+    this.fetchProdutos(0);
+  }
+
+  paginaAnterior(): void {
+    if (this.currentPage > 0) {
+      this.fetchProdutos(this.currentPage - 1);
+    }
+  }
+
+  proximaPagina(): void {
+    if (this.currentPage + 1 < this.totalPages) {
+      this.fetchProdutos(this.currentPage + 1);
+    }
   }
 }

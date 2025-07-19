@@ -107,69 +107,146 @@
   color: #333;
 }
 
+// ---------- Tabela ----------
 .categoria-tabela {
   width: 100%;
   border-collapse: collapse;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+  font-size: 1.35rem;
 }
-.categoria-tabela th,
-.categoria-tabela td {
-  padding: 12px 15px;
-  text-align: left;
+.categoria-tabela th, .categoria-tabela td {
+  padding: 22px 18px;
+  font-size: 1.35rem;
+  color: #222;
   border: 1px solid #ddd;
 }
 .categoria-tabela th {
   background-color: #007bff;
-  color: white;
+  color: #fff !important;
+  font-size: 1.38rem;
+  font-weight: 700;
+}
+.categoria-tabela tbody tr:nth-child(even) {
+  background: #f7faff;
 }
 .categoria-tabela tbody tr:hover {
-  background-color: #f1f1f1;
+  background: #eaf4ff;
+  box-shadow: 0 2px 8px rgba(0,123,255,0.07);
 }
 
-/* Formulário de Criação */
-.categoria-container__formulario {
-  background-color: #ffffff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  margin-top: 20px;
-  width: 100%;
-  max-width: 600px;  /* Limitar a largura máxima */
-  margin-left: auto; /* Centralizar */
-  margin-right: auto; /* Centralizar */
+// ---------- Cards ----------
+.categoria-lista, .categoria-formulario {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  padding: 40px 40px;
+  min-width: 480px;
+  max-width: 900px;
+  flex: 1 1 600px;
+  margin: 0 auto 32px auto;
+}
+.categoria-formulario { max-width: 480px; }
+
+// ---------- Botões ----------
+.btn, .pagination button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 10px 18px;
+  font-size: 15px;
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  background-color: #007bff;
+  color: #fff;
+  transition: background-color 0.2s, transform 0.15s;
+  box-shadow: 0 2px 8px rgba(0,123,255,0.07);
+}
+.btn:hover, .pagination button:hover:not(:disabled) {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+.btn--deletar { background: #dc3545; }
+.btn--deletar:hover { background: #a71d2a; }
+.btn--primario { background: #007bff; }
+.btn--primario:hover { background: #0056b3; }
+
+// ---------- Mensagens ----------
+.mensagem--sucesso {
+  background: linear-gradient(90deg, #e6f9ec 80%, #d4f5e3 100%);
+  color: #218838;
+  border: 1.5px solid #b7e4c7;
+}
+.mensagem--erro {
+  background: linear-gradient(90deg, #ffeaea 80%, #ffe3e3 100%);
+  color: #c82333;
+  border: 1.5px solid #f5c6cb;
 }
 
-.categoria-container__formulario h3 {
-  margin-bottom: 15px;
-  font-size: 1.5rem;
-  color: #333;
-  text-align: center; /* Centralizar título */
-}
-
-form {
+// ---------- Inputs e Formulário ----------
+.categoria-formulario form {
   display: flex;
   flex-direction: column;
+  gap: 18px;
 }
-label {
-  margin-bottom: 5px;
-  font-size: 1rem;
-  color: #333;
+.categoria-formulario .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
-input {
-  margin-bottom: 15px;
+.categoria-formulario label {
+  font-weight: 600;
+  color: #007bff;
+  margin-bottom: 2px;
+}
+.categoria-formulario input {
   padding: 10px;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  width: 100%; /* Garantir que o input ocupe 100% da largura */
+  border: 1.5px solid #ddd;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+.categoria-formulario input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px #cce3ff;
+}
+input.invalido {
+  border-color: #dc3545 !important;
+  background: #fff6f6;
+}
+.erro-campo {
+  color: #dc3545;
+  font-size: 0.95rem;
+  margin-top: 2px;
+  margin-bottom: -8px;
 }
 
-button:focus-visible,
-input:focus-visible {
-  outline: 2px solid #007bff;
-  outline-offset: 3px;
+// ---------- Paginação ----------
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+.pagination button {
+  background: #f1f5fa;
+  color: #007bff;
+  border: 1.5px solid #007bff;
+  margin: 0 2px;
+  border-radius: 5px;
+  min-width: 48px;
+  min-height: 48px;
+  font-size: 1.22rem;
+  font-weight: 600;
+  transition: background 0.2s, color 0.2s;
+}
+.pagination button:disabled {
+  background: #007bff;
+  color: #fff;
+  cursor: default;
+  border: 1.5px solid #007bff;
 }
 
 /* Responsividade */
@@ -216,7 +293,7 @@ input:focus-visible {
     padding: 6px;
   }
 
-  /* ---------- Paginação ---------- */
+  // ---------- Paginação ----------
  
 .pagination {
   margin-top: 20px;
@@ -258,40 +335,122 @@ input:focus-visible {
 
 }
 
-/* ---------- Paginação ---------- */
-.pagination {
-  margin-top: 20px;
+// ---------- Responsividade ----------
+@media (max-width: 1200px) {
+  .categoria-lista, .categoria-formulario {
+    min-width: 0;
+    max-width: 100%;
+    padding: 18px 8px;
+  }
+}
+@media (max-width: 900px) {
+  .categoria-lista, .categoria-formulario {
+    max-width: 100%;
+    min-width: 0;
+    padding: 18px 8px;
+  }
+}
+@media (max-width: 600px) {
+  .categoria-lista, .categoria-formulario {
+    padding: 10px 2px;
+  }
+  .categoria-tabela th, .categoria-tabela td {
+    font-size: 12px;
+    padding: 6px 2px;
+  }
+}
+
+.pagination-bar {
   display: flex;
-  gap: 10px;
-  justify-content: center; /* Centralizar a paginação */
   align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  margin-top: 28px;
+  flex-wrap: wrap;
 }
-
-.pagination button {
-  padding: 8px 16px;
-  background-color: #007bff; /* Azul igual ao botão primário */
-  color: white;
-  border: none;
+.pagination-info-left {
+  min-width: 180px;
+  font-size: 1.18rem;
+  color: #333;
+  font-weight: 500;
+}
+.pagination-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1 1 auto;
+  justify-content: center;
+}
+.pagination-info-right {
+  min-width: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.pagina-numero {
+  background: #f1f5fa;
+  color: #007bff;
+  border: 1.5px solid #007bff;
+  margin: 0 2px;
   border-radius: 5px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: background-color 0.3s ease, transform 0.3s ease;
+  min-width: 48px;
+  min-height: 48px;
+  font-size: 1.22rem;
+  font-weight: 600;
+  transition: background 0.2s, color 0.2s;
+}
+.pagina-numero.ativa, .pagina-numero:disabled {
+  background: #007bff !important;
+  color: #fff !important;
+  cursor: default;
+  border: 1.5px solid #007bff;
+}
+@media (max-width: 800px) {
+  .pagination-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .pagination-row {
+    justify-content: flex-start;
+  }
+  .pagination-info-right {
+    justify-content: flex-start;
+  }
 }
 
-.pagination button:disabled {
-  background-color: #6c757d; /* Cinza para botões desabilitados */
+.pagination button, .pagina-numero {
+  background: #0ea5e9;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1.1em;
+  padding: 0.5em 1em;
+  transition: 0.18s cubic-bezier(.4,0,.2,1);
+  box-shadow: 0 1px 4px 0 rgba(30,41,59,0.04);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  min-width: 40px;
+  margin: 0 2px;
+}
+.pagination button:disabled, .pagina-numero:disabled {
+  background: #cbd5e1;
+  color: #fff;
+  opacity: 0.7;
   cursor: not-allowed;
 }
-
-.pagination button:hover:not(:disabled) {
-  background-color: #0056b3; /* Azul escuro no hover */
-  transform: scale(1.05); /* Animação suave de aumento ao passar o mouse */
+.pagination button:focus, .pagina-numero:focus, .pagination button:focus-visible, .pagina-numero:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
 }
-
-.pagination p {
-  margin: 0;
-  font-size: 14px;
-  color: #333; /* Cor do texto da paginação */
+.pagination button:hover:not(:disabled), .pagina-numero:hover:not(:disabled) {
+  background: #2563eb;
+  color: #fff;
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 2px 10px 0 rgba(30,41,59,0.13);
 }

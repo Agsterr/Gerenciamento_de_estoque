@@ -71,7 +71,9 @@ carregarCategorias(pagina: number = 0): void {
   });
 }
 
-
+  onPageSizeChange() {
+    this.carregarCategorias(0);
+  }
 
 
   toggleNovaCategoriaForm(): void {

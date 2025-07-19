@@ -12,7 +12,7 @@ import { EntregaComAvisoResponse } from '../models/src/app/models/entrega/entreg
   providedIn: 'root'
 })
 export class EntregasService {
-  private apiUrl = 'http://localhost:8080/entregas';
+  private apiUrl = 'http://localhost:8081/entregas';
 
   constructor(private http: HttpClient) {}
 
