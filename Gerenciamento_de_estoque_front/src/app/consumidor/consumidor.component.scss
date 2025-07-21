@@ -94,6 +94,11 @@
   background-color: #007bff;
   color: #fff;
   font-weight: 600;
+  font-size: 1.38rem;
+}
+.tabela-consumidores td {
+  font-size: 1.35rem;
+  color: #222;
 }
 .tabela-consumidores tbody tr:hover {
   background-color: #f1f1f1;
@@ -653,7 +658,7 @@ input.invalido {
   }
 }
 
-.btn-pag {
+.btn-pag, .pagina-numero {
   background: #0ea5e9;
   color: #fff;
   border: none;
@@ -669,34 +674,23 @@ input.invalido {
   justify-content: center;
   height: 40px;
   min-width: 40px;
+  margin: 0 2px;
 }
-.btn-pag:disabled {
+.btn-pag:disabled, .pagina-numero:disabled {
   background: #cbd5e1;
   color: #fff;
   opacity: 0.7;
   cursor: not-allowed;
 }
-.btn-pag:focus, .btn-pag:focus-visible {
+.btn-pag:focus, .pagina-numero:focus, .btn-pag:focus-visible, .pagina-numero:focus-visible {
   outline: 2px solid #2563eb;
   outline-offset: 2px;
 }
-.btn-pag:hover:not(:disabled) {
+.btn-pag:hover:not(:disabled), .pagina-numero:hover:not(:disabled) {
   background: #2563eb;
   color: #fff;
   transform: translateY(-2px) scale(1.04);
   box-shadow: 0 2px 10px 0 rgba(30,41,59,0.13);
-}
-.pagina-numero {
-  background: #f1f5fa;
-  color: #007bff;
-  border: 1.5px solid #007bff;
-  margin: 0 2px;
-  border-radius: 5px;
-  min-width: 48px;
-  min-height: 48px;
-  font-size: 1.22rem;
-  font-weight: 600;
-  transition: background 0.2s, color 0.2s;
 }
 .pagina-numero.ativa, .pagina-numero:disabled {
   background: #007bff !important;
@@ -785,39 +779,4 @@ input.invalido {
   justify-content: center;
   align-items: flex-start;
   box-sizing: border-box;
-}
-
-.pagination button, .pagina-numero {
-  background: #0ea5e9;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 1.1em;
-  padding: 0.5em 1em;
-  transition: 0.18s cubic-bezier(.4,0,.2,1);
-  box-shadow: 0 1px 4px 0 rgba(30,41,59,0.04);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 40px;
-  min-width: 40px;
-  margin: 0 2px;
-}
-.pagination button:disabled, .pagina-numero:disabled {
-  background: #cbd5e1;
-  color: #fff;
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-.pagination button:focus, .pagina-numero:focus, .pagination button:focus-visible, .pagina-numero:focus-visible {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
-}
-.pagination button:hover:not(:disabled), .pagina-numero:hover:not(:disabled) {
-  background: #2563eb;
-  color: #fff;
-  transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 2px 10px 0 rgba(30,41,59,0.13);
 }
