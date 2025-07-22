@@ -239,14 +239,14 @@
         <i class="fas fa-chevron-right"></i>
       </button>
     </div>
-    <div class="pagination-info-right page-size-box">
-      <label>
-        <span>Exibir</span>
-        <select [(ngModel)]="pageSize" (change)="onPageSizeChange($event)">
+    <div class="pagination-info-right">
+      <div class="select-page-size">
+        <label for="pageSizeSelect">Exibir</label>
+        <select id="pageSizeSelect" [(ngModel)]="pageSize" (change)="onPageSizeChange($event)">
           <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
         </select>
         <span>por página</span>
-      </label>
+      </div>
     </div>
   </div>
 </div>

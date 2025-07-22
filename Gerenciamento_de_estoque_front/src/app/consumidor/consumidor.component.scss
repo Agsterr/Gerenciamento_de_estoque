@@ -472,22 +472,17 @@ button[title]:hover::after {
   font-weight: 500;
 }
 .select-page-size select {
-  color: #222;
-  border: 1.5px solid #bbb;
-  background: #fff;
+  color: #007bff;
+  border: 1.5px solid #007bff;
+  background: #f7faff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  margin-left: 4px;
+  margin-right: 4px;
 }
 .select-page-size label, .select-page-size span {
   color: #222;
-}
-.select-page-size select {
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: 1.5px solid #007bff;
-  font-size: 1.1rem;
-  background: #f7faff;
-  color: #007bff;
-  margin-left: 4px;
-  margin-right: 4px;
 }
 
 // Tabela
