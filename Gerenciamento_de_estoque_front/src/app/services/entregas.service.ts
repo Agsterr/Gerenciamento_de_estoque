@@ -28,7 +28,6 @@ export class EntregasService {
   }
 
   private handleError(error: any) {
-    // Aqui você pode personalizar o tratamento de erros
     console.error('Erro na requisição:', error);
     return throwError(() => error);
   }
@@ -133,8 +132,7 @@ export class EntregasService {
       catchError(this.handleError)
     );
   }
-  
-    // Método para listar entregas por produto
+
   porProduto(produtoId: number, orgId: number, page: number, size: number): Observable<PageEntregaResponse> {
     const params = new HttpParams()
       .set('page', page.toString())
@@ -149,5 +147,95 @@ export class EntregasService {
     );
   }
 
+  porConsumidorAno(
+    consumidorId: number,
+    inicioAno: string,
+    fimAno: string,
+    orgId: number,
+    page: number,
+    size: number
+  ): Observable<PageEntregaResponse> {
+    const params = new HttpParams()
+      .set('inicioAno', inicioAno)
+      .set('fimAno', fimAno)
+      .set('orgId', orgId.toString())
+      .set('page', page.toString())
+      .set('size', size.toString());
 
+    return this.http.get<PageEntregaResponse>(`${this.apiUrl}/consumidor/${consumidorId}/anual`, {
+      headers: this.getAuthHeaders(),
+      params
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  porConsumidorMes(
+    consumidorId: number,
+    inicioMes: string,
+    fimMes: string,
+    orgId: number,
+    page: number,
+    size: number
+  ): Observable<PageEntregaResponse> {
+    const params = new HttpParams()
+      .set('inicioMes', inicioMes)
+      .set('fimMes', fimMes)
+      .set('orgId', orgId.toString())
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http.get<PageEntregaResponse>(`${this.apiUrl}/consumidor/${consumidorId}/mensal`, {
+      headers: this.getAuthHeaders(),
+      params
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  porOrganizacaoAno(
+    inicioAno: string,
+    fimAno: string,
+    orgId: number,
+    page: number,
+    size: number
+  ): Observable<PageEntregaResponse> {
+    const params = new HttpParams()
+      .set('inicioAno', inicioAno)
+      .set('fimAno', fimAno)
+      .set('orgId', orgId.toString())
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http.get<PageEntregaResponse>(`${this.apiUrl}/organizacao/anual`, {
+      headers: this.getAuthHeaders(),
+      params
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  porOrganizacaoMes(
+    inicioMes: string,
+    fimMes: string,
+    orgId: number,
+    page: number,
+    size: number
+  ): Observable<PageEntregaResponse> {
+    const params = new HttpParams()
+      .set('inicioMes', inicioMes)
+      .set('fimMes', fimMes)
+      .set('orgId', orgId.toString())
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http.get<PageEntregaResponse>(`${this.apiUrl}/organizacao/mensal`, {
+      headers: this.getAuthHeaders(),
+      params
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+ 
 }
