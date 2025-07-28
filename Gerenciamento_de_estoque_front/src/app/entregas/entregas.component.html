@@ -175,47 +175,59 @@
     </div>
   </div>
 
-  <!-- Tabela de Entregas -->
-  <table class="entrega-table">
-    <colgroup>
-      <col style="width: 70px">
-      <col style="width: 18%">
-      <col style="width: 18%">
-      <col style="width: 18%">
-      <col style="width: 10%">
-      <col style="width: 18%">
-      <col style="width: 120px">
-    </colgroup>
-    <thead>
-      <tr>
-        <th><i class="fas fa-hashtag"></i> ID</th>
-        <th><i class="fas fa-user"></i> Consumidor</th>
-        <th><i class="fas fa-box"></i> Produto</th>
-        <th><i class="fas fa-truck"></i> Entregador</th>
-        <th><i class="fas fa-layer-group"></i> Quantidade</th>
-        <th><i class="fas fa-clock"></i> Horário</th>
-        <th><i class="fas fa-cogs"></i> Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let entrega of filteredEntregas">
-        <td data-label="ID">{{ entrega.id }}</td>
-        <td data-label="Consumidor">{{ entrega.nomeConsumidor }}</td>
-        <td data-label="Produto">{{ entrega.nomeProduto }}</td>
-        <td data-label="Entregador">{{ entrega.nomeEntregador }}</td>
-        <td data-label="Quantidade">{{ entrega.quantidade }}</td>
-        <td data-label="Horário">{{ formatarDataHoraBrasil(entrega.horarioEntrega) }}</td>
-        <td data-label="Ações">
-          <button (click)="editEntrega(entrega.id)" class="btn btn-primary btn-sm" title="Editar">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button (click)="deleteEntrega(entrega.id)" class="btn btn-danger btn-sm" title="Deletar">
-            <i class="fas fa-trash-alt"></i>
-          </button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+<!-- Tabela de Entregas -->
+<table class="entrega-table">
+  <colgroup>
+    <col style="width: 70px">
+    <col style="width: 18%">
+    <col style="width: 18%">
+    <col style="width: 18%">
+    <col style="width: 10%">
+    <col style="width: 12%">  <!-- Total -->
+    <col style="width: 18%">
+    <col style="width: 120px">
+  </colgroup>
+  <thead>
+    <tr>
+      <th><i class="fas fa-hashtag"></i> ID</th>
+      <th><i class="fas fa-user"></i> Consumidor</th>
+      <th><i class="fas fa-box"></i> Produto</th>
+      <th><i class="fas fa-truck"></i> Entregador</th>
+      <th><i class="fas fa-layer-group"></i> Quantidade</th>
+      <th><i class="fas fa-clock"></i> Horário</th>
+      <th><i class="fas fa-dollar-sign"></i> Total</th>
+      <th><i class="fas fa-cogs"></i> Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let entrega of filteredEntregas">
+      <td data-label="ID">{{ entrega.id }}</td>
+      <td data-label="Consumidor">{{ entrega.nomeConsumidor }}</td>
+      <td data-label="Produto">{{ entrega.nomeProduto }}</td>
+      <td data-label="Entregador">{{ entrega.nomeEntregador }}</td>
+      <td data-label="Quantidade">{{ entrega.quantidade }}</td>
+      <td data-label="Horário">{{ formatarDataHoraBrasil(entrega.horarioEntrega) }}</td>
+      
+<!-- Coluna Total -->
+<td data-label="Total">
+  {{ entrega.total | currency:'BRL' }}
+</td>
+
+  
+
+      
+      <td data-label="Ações">
+        <button (click)="editEntrega(entrega.id)" class="btn btn-primary btn-sm" title="Editar">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button (click)="deleteEntrega(entrega.id)" class="btn btn-danger btn-sm" title="Deletar">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
 
   <!-- Paginação -->
   <div class="pagination-bar" *ngIf="totalPages > 0">

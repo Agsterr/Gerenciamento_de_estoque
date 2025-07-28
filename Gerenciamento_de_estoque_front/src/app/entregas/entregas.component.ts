@@ -8,6 +8,7 @@ import { EntregaResponse } from '../models/src/app/models/entrega/entrega-respon
 import { PageEntregaResponse } from '../models/src/app/models/entrega/PageEntregaResponse.model';
 import { EntregaRequest } from '../models/src/app/models/entrega/entrega-request.model';
 import { BuscaEntregaComponent } from './busca-entrega/busca-entrega.component';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-entregas',
@@ -29,6 +30,11 @@ export class EntregasComponent implements OnInit {
   consumidores: any[] = [];
   porDia: EntregaResponse[] = [];
 
+
+  totais: { [entregaId: number]: number } = {};
+  errosTotais: { [entregaId: number]: string } = {};
+
+
   novaEntrega: Partial<EntregaRequest> = {};
   currentPage = 0;
   totalPages = 0;
@@ -40,14 +46,18 @@ export class EntregasComponent implements OnInit {
   mensagemErro = '';
 
   idEntregaParaEditar: number | null = null;
+  orgId: number | null = null;
 
   constructor(
     private entregasService: EntregasService,
     private produtoService: ProdutoService,
-    private consumidorService: ConsumidorService
+    private consumidorService: ConsumidorService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
+    const user = this.authService.getLoggedUser();
+    this.orgId = user?.orgId || null;
     this.carregarProdutos();
     this.carregarConsumidores();
     this.showList = true;
@@ -58,6 +68,8 @@ export class EntregasComponent implements OnInit {
   onBuscarEntregas(event: { filtro: string; entregas: EntregaResponse[] }): void {
     this.entregas = event.entregas;  // Atualiza a lista de entregas com os resultados da busca
     this.applyFilter();  // Aplica o filtro localmente
+   
+ 
   }
 
   // Método para carregar os produtos
@@ -85,6 +97,8 @@ export class EntregasComponent implements OnInit {
         this.totalPages = data.totalPages;  // Total de páginas
         this.totalElements = data.totalElements; // Total de elementos
         this.applyFilter();  // Aplica o filtro
+
+       
       },
       error: () => {
         this.mensagemErro = 'Erro ao carregar entregas.';
@@ -253,4 +267,158 @@ export class EntregasComponent implements OnInit {
     this.currentPage = 0;
     this.fetchEntregas(this.currentPage);
   }
-}
+
+
+
+    /**
+   * Retorna as entregas realizadas por um consumidor específico dentro de um intervalo anual para uma organização, com paginação.
+   *
+   * @param consumidorId ID do consumidor
+   * @param inicioAno Data de início do intervalo anual
+   * @param fimAno Data de fim do intervalo anual
+   * @param orgId ID da organização
+   * @param page Número da página
+   * @param size Tamanho da página
+   */
+    fetchEntregasPorConsumidorAno(
+      consumidorId: number,
+      inicioAno: string,
+      fimAno: string,
+      orgId?: number,
+      page: number = this.currentPage,
+      size: number = this.pageSize
+    ): void {
+      const org = orgId ?? this.orgId;
+      if (!org) {
+        this.mensagemErro = 'Organização não encontrada!';
+        return;
+      }
+      this.entregasService.porConsumidorAno(consumidorId, inicioAno, fimAno, org, page, size).subscribe({
+        next: (data: PageEntregaResponse) => {
+          this.entregas = data.content;
+          this.currentPage = data.number;
+          this.totalPages = data.totalPages;
+          this.totalElements = data.totalElements;
+          this.applyFilter();
+        },
+        error: () => {
+          this.mensagemErro = 'Erro ao carregar entregas por consumidor e ano.';
+          console.error(this.mensagemErro);
+        }
+      });
+    }
+  
+    /**
+     * Retorna as entregas realizadas por um consumidor específico dentro de um intervalo mensal para uma organização, com paginação.
+     *
+     * @param consumidorId ID do consumidor
+     * @param inicioMes Data de início do intervalo mensal
+     * @param fimMes Data de fim do intervalo mensal
+     * @param orgId ID da organização
+     * @param page Número da página
+     * @param size Tamanho da página
+     */
+    fetchEntregasPorConsumidorMes(
+      consumidorId: number,
+      inicioMes: string,
+      fimMes: string,
+      orgId?: number,
+      page: number = this.currentPage,
+      size: number = this.pageSize
+    ): void {
+      const org = orgId ?? this.orgId;
+      if (!org) {
+        this.mensagemErro = 'Organização não encontrada!';
+        return;
+      }
+      this.entregasService.porConsumidorMes(consumidorId, inicioMes, fimMes, org, page, size).subscribe({
+        next: (data: PageEntregaResponse) => {
+          this.entregas = data.content;
+          this.currentPage = data.number;
+          this.totalPages = data.totalPages;
+          this.totalElements = data.totalElements;
+          this.applyFilter();
+        },
+        error: () => {
+          this.mensagemErro = 'Erro ao carregar entregas por consumidor e mês.';
+          console.error(this.mensagemErro);
+        }
+      });
+    }
+  
+    /**
+     * Retorna as entregas realizadas por uma organização dentro de um intervalo anual, com paginação.
+     *
+     * @param inicioAno Data de início do intervalo anual
+     * @param fimAno Data de fim do intervalo anual
+     * @param orgId ID da organização
+     * @param page Número da página
+     * @param size Tamanho da página
+     */
+    fetchEntregasPorOrganizacaoAno(
+      inicioAno: string,
+      fimAno: string,
+      orgId?: number,
+      page: number = this.currentPage,
+      size: number = this.pageSize
+    ): void {
+      const org = orgId ?? this.orgId;
+      if (!org) {
+        this.mensagemErro = 'Organização não encontrada!';
+        return;
+      }
+      this.entregasService.porOrganizacaoAno(inicioAno, fimAno, org, page, size).subscribe({
+        next: (data: PageEntregaResponse) => {
+          this.entregas = data.content;
+          this.currentPage = data.number;
+          this.totalPages = data.totalPages;
+          this.totalElements = data.totalElements;
+          this.applyFilter();
+        },
+        error: () => {
+          this.mensagemErro = 'Erro ao carregar entregas por organização e ano.';
+          console.error(this.mensagemErro);
+        }
+      });
+    }
+  
+    /**
+     * Retorna as entregas realizadas por uma organização dentro de um intervalo mensal, com paginação.
+     *
+     * @param inicioMes Data de início do intervalo mensal
+     * @param fimMes Data de fim do intervalo mensal
+     * @param orgId ID da organização
+     * @param page Número da página
+     * @param size Tamanho da página
+     */
+    fetchEntregasPorOrganizacaoMes(
+      inicioMes: string,
+      fimMes: string,
+      orgId?: number,
+      page: number = this.currentPage,
+      size: number = this.pageSize
+    ): void {
+      const org = orgId ?? this.orgId;
+      if (!org) {
+        this.mensagemErro = 'Organização não encontrada!';
+        return;
+      }
+      this.entregasService.porOrganizacaoMes(inicioMes, fimMes, org, page, size).subscribe({
+        next: (data: PageEntregaResponse) => {
+          this.entregas = data.content;
+          this.currentPage = data.number;
+          this.totalPages = data.totalPages;
+          this.totalElements = data.totalElements;
+          this.applyFilter();
+        },
+        error: () => {
+          this.mensagemErro = 'Erro ao carregar entregas por organização e mês.';
+          console.error(this.mensagemErro);
+        }
+      });
+    }
+
+
+
+
+  }
