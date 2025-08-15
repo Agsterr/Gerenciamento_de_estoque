@@ -13,6 +13,8 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MovimentacaoProdutoService } from '../services/movimentacao-produto.service';
 import { MovimentacaoProduto, TipoMovimentacao, PageResponse } from '../models/movimentacao-produto.model';
 import { MovimentacaoModalComponent, MovimentacaoModalData } from './movimentacao-modal/movimentacao-modal.component';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { Observable } from 'rxjs';
 
 
 @Component({
@@ -32,7 +34,8 @@ import { MovimentacaoModalComponent, MovimentacaoModalData } from './movimentaca
     MatIconModule,
     MatNativeDateModule,
     MatPaginatorModule,
-    MatDialogModule
+    MatDialogModule,
+    MatTooltipModule
   ]
 })
 export class MovimentacaoProdutoComponent implements OnInit {
@@ -64,6 +67,7 @@ export class MovimentacaoProdutoComponent implements OnInit {
   nomeProduto: string = '';
   categoriaProduto: string = '';
   produtoId: number = 0;
+  nomeConsumidor: string = '';
 
   constructor(
     private movimentacaoService: MovimentacaoProdutoService,
@@ -71,8 +75,34 @@ export class MovimentacaoProdutoComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    console.log('🚀 Componente inicializado. Buscando movimentações padrão...');
-    this.buscarMovimentacoes(); 
+    // Carrega ambos os tipos por padrão para evitar lista vazia quando só há saídas
+    this.buscarPorTiposAmbos();
+  }
+
+  private buscarPorTiposAmbos(): void {
+    this.loading = true;
+    this.movimentacaoService.buscarPorTipos([TipoMovimentacao.ENTRADA, TipoMovimentacao.SAIDA], this.pageIndex, this.pageSize)
+      .subscribe({
+        next: (response) => {
+          let movimentacoesFiltradas = response.content || [];
+
+          // Filtra por consumidor se especificado
+          if (this.nomeConsumidor?.trim()) {
+            const consumidorBusca = this.nomeConsumidor.trim().toLowerCase();
+            movimentacoesFiltradas = movimentacoesFiltradas.filter(m => 
+              m.nomeConsumidor?.toLowerCase().includes(consumidorBusca)
+            );
+          }
+
+          const responseFiltrada = {
+            ...response,
+            content: movimentacoesFiltradas,
+            totalElements: movimentacoesFiltradas.length
+          };
+          this.atualizarDadosPaginados(responseFiltrada);
+        },
+        error: this.handleError.bind(this)
+      });
   }
 
   // Função auxiliar para formatar data como ISO.DATE_TIME
@@ -125,7 +155,8 @@ export class MovimentacaoProdutoComponent implements OnInit {
       mes: this.mes,
       nomeProduto: this.nomeProduto,
       categoriaProduto: this.categoriaProduto,
-      produtoId: this.produtoId
+      produtoId: this.produtoId,
+      nomeConsumidor: this.nomeConsumidor
     });
 
     // Limpa o estado completamente antes de cada busca
@@ -139,130 +170,38 @@ export class MovimentacaoProdutoComponent implements OnInit {
     }
 
     try {
-      // Verifica se há combinações de filtros ativos
-      const temFiltroData = this.data || (this.inicio && this.fim) || (this.ano && this.mes) || this.ano;
-      const temFiltroProduto = (this.produtoId && this.produtoId > 0) || 
-                              (this.nomeProduto && this.nomeProduto.trim()) || 
-                              (this.categoriaProduto && this.categoriaProduto.trim());
-
-      // Combinação: Tipo + Data específica
-      if (this.data && this.tipoMovimentacao) {
-        console.log('✅ Aplicando filtro: Tipo + Data específica');
-        this.buscarPorTipoEDataEspecifica();
-        return;
-      }
-
-      // Combinação: Tipo + Período
-      if (this.inicio && this.fim && this.tipoMovimentacao) {
-        console.log('✅ Aplicando filtro: Tipo + Período');
-        this.buscarPorTipoEPeriodo();
-        return;
-      }
-
-      // Combinação: Tipo + Ano/Mês
-      if (this.ano && this.mes && this.tipoMovimentacao) {
-        console.log('✅ Aplicando filtro: Tipo + Ano/Mês');
-        this.buscarPorTipoEAnoMes();
-        return;
-      }
-
-      // Combinação: Tipo + Ano
-      if (this.ano && this.tipoMovimentacao) {
-        console.log('✅ Aplicando filtro: Tipo + Ano');
-        this.buscarPorTipoEAno();
-        return;
-      }
-
-      // Combinação: Tipo + Produto (ID)
-      if (this.produtoId && this.produtoId > 0 && this.tipoMovimentacao) {
-        console.log('✅ Aplicando filtro: Tipo + ID do produto');
-        this.buscarPorTipoEIdProduto();
-        return;
-      }
-
-      // Combinação: Tipo + Nome do produto
-      if (this.nomeProduto && this.nomeProduto.trim() && this.tipoMovimentacao) {
-        console.log('✅ Aplicando filtro: Tipo + Nome do produto');
-        this.buscarPorTipoENomeProduto();
-        return;
-      }
-
-
-
-      // Combinação: Data + Produto (quando não há tipo específico)
-      if (this.data && this.produtoId && this.produtoId > 0) {
-        console.log('✅ Aplicando filtro: Data específica + ID do produto');
-        this.buscarPorDataEIdProduto();
-        return;
-      }
-
-      if (this.data && this.nomeProduto && this.nomeProduto.trim()) {
-        console.log('✅ Aplicando filtro: Data específica + Nome do produto');
-        this.buscarPorDataENomeProduto();
-        return;
-      }
-
-
-
-      // Combinação: Período + Produto
-      if (this.inicio && this.fim && this.produtoId && this.produtoId > 0) {
-        console.log('✅ Aplicando filtro: Período + ID do produto');
-        this.buscarPorPeriodoEIdProduto();
-        return;
-      }
-
-      if (this.inicio && this.fim && this.nomeProduto && this.nomeProduto.trim()) {
-        console.log('✅ Aplicando filtro: Período + Nome do produto');
-        this.buscarPorPeriodoENomeProduto();
-        return;
-      }
-
-      // Filtros individuais (sem combinação)
-      if (this.data) {
-        console.log('✅ Aplicando filtro: Data específica');
-        this.buscarPorDataEspecifica();
-        return;
-      }
-
+      // Prioridade 1: Filtros de intervalo com múltiplos critérios
       if (this.inicio && this.fim) {
-        console.log('✅ Aplicando filtro: Período');
-        this.buscarPorPeriodo();
+        this.buscarPorIntervaloCombinado();
         return;
       }
 
-      if (this.ano && this.mes) {
-        console.log('✅ Aplicando filtro: Ano/Mês');
-        this.buscarPorAnoMes();
+      // Prioridade 2: Filtros de data específica com múltiplos critérios
+      if (this.data) {
+        this.buscarPorDataCombinada();
         return;
       }
 
+      // Prioridade 3: Filtros de período (ano/mês) com múltiplos critérios
       if (this.ano) {
-        console.log('✅ Aplicando filtro: Ano');
-        this.buscarPorAno();
+        this.buscarPorPeriodoCombinado();
         return;
       }
 
-      if (this.produtoId && this.produtoId > 0) {
-        console.log('✅ Aplicando filtro: ID do produto');
-        this.buscarPorIdProduto();
+      // Prioridade 4: Filtros de produto sem data
+      if (this.temFiltrosProduto()) {
+        this.buscarPorProdutoCombinado();
         return;
       }
 
-      if (this.nomeProduto && this.nomeProduto.trim()) {
-        console.log('✅ Aplicando filtro: Nome do produto');
-        this.buscarPorNomeProduto();
+      // Prioridade 5: Filtro apenas por tipo
+      if (this.tipoMovimentacao) {
+        this.buscarPorTipo();
         return;
       }
 
-      if (this.categoriaProduto && this.categoriaProduto.trim()) {
-        console.log('✅ Aplicando filtro: Categoria');
-        this.buscarPorCategoria();
-        return;
-      }
-
-      // Busca por tipo de movimentação (padrão)
-      console.log('✅ Aplicando filtro: Tipo de movimentação (padrão)');
-      this.buscarPorTipo();
+      // Sem filtros: buscar ENTRADA e SAIDA
+      this.buscarPorTiposAmbos();
 
     } catch (error) {
       console.error('❌ Erro ao processar a busca:', error);
@@ -270,131 +209,237 @@ export class MovimentacaoProdutoComponent implements OnInit {
     }
   }
 
-  // Métodos específicos para cada tipo de busca
-  private buscarPorDataEspecifica(): void {
-    console.log('🔍 Buscando por data específica:', this.data);
+  // Método para buscar por intervalo com filtros combinados
+  private buscarPorIntervaloCombinado(): void {
+    console.log('🔍 Buscando por intervalo com filtros combinados');
+    
+    const inicioFormatado = this.formatarDataISO(this.inicio);
+    const fimFormatado = this.formatarDataISO(this.fim, true);
+    
+    if (!inicioFormatado || !fimFormatado) {
+      this.loading = false;
+      return;
+    }
+
+    // Usa o endpoint de intervalo que suporta múltiplos filtros
+    this.movimentacaoService.buscarPorProdutoNomeCategoriaIdAndIntervalo(
+      this.nomeProduto?.trim() || null,
+      this.categoriaProduto?.trim() || null,
+      this.produtoId > 0 ? this.produtoId : null,
+      inicioFormatado,
+      fimFormatado,
+      this.pageIndex,
+      this.pageSize
+    ).subscribe({
+      next: (response) => {
+        let movimentacoesFiltradas = response.content || [];
+
+        // Filtra por tipo se especificado
+        if (this.tipoMovimentacao) {
+          movimentacoesFiltradas = movimentacoesFiltradas.filter(m => m.tipo === this.tipoMovimentacao);
+        }
+
+        // Filtra por consumidor se especificado
+        if (this.nomeConsumidor?.trim()) {
+          const consumidorBusca = this.nomeConsumidor.trim().toLowerCase();
+          movimentacoesFiltradas = movimentacoesFiltradas.filter(m => 
+            m.nomeConsumidor?.toLowerCase().includes(consumidorBusca)
+          );
+        }
+
+        const responseFiltrada = {
+          ...response,
+          content: movimentacoesFiltradas,
+          totalElements: movimentacoesFiltradas.length
+        };
+        this.atualizarDadosPaginados(responseFiltrada);
+      },
+      error: this.handleError.bind(this)
+    });
+  }
+
+  // Método para buscar por data específica com filtros combinados
+  private buscarPorDataCombinada(): void {
+    console.log('🔍 Buscando por data específica com filtros combinados');
+    
     const dataFormatada = this.formatarDataISO_DATE(this.data);
     if (!dataFormatada) {
       this.loading = false;
       return;
     }
-    console.log('📅 Data formatada:', dataFormatada);
-    this.movimentacaoService.buscarPorData(this.tipoMovimentacao, dataFormatada, this.pageIndex, this.pageSize)
-      .subscribe({
-        next: this.atualizarDadosPaginados.bind(this),
-        error: this.handleError.bind(this)
-      });
+
+    // Busca por data e filtra por outros critérios no frontend
+    this.movimentacaoService.buscarPorData(
+      this.tipoMovimentacao || TipoMovimentacao.ENTRADA, 
+      dataFormatada, 
+      this.pageIndex, 
+      this.pageSize
+    ).subscribe({
+      next: (response) => {
+        let movimentacoesFiltradas = response.content || [];
+
+        // Filtra por produto se especificado
+        if (this.produtoId > 0) {
+          movimentacoesFiltradas = movimentacoesFiltradas.filter(m => m.produtoId === this.produtoId);
+        }
+
+        // Filtra por nome se especificado
+        if (this.nomeProduto?.trim()) {
+          const nomeBusca = this.nomeProduto.trim().toLowerCase();
+          movimentacoesFiltradas = movimentacoesFiltradas.filter(m => 
+            m.nomeProduto.toLowerCase().includes(nomeBusca)
+          );
+        }
+
+        // Filtra por categoria se especificado
+        if (this.categoriaProduto?.trim()) {
+          const categoriaBusca = this.categoriaProduto.trim().toLowerCase();
+          movimentacoesFiltradas = movimentacoesFiltradas.filter(m => 
+            m.nomeProduto.toLowerCase().includes(categoriaBusca)
+          );
+        }
+
+        // Filtra por consumidor se especificado
+        if (this.nomeConsumidor?.trim()) {
+          const consumidorBusca = this.nomeConsumidor.trim().toLowerCase();
+          movimentacoesFiltradas = movimentacoesFiltradas.filter(m => 
+            m.nomeConsumidor?.toLowerCase().includes(consumidorBusca)
+          );
+        }
+
+        const responseFiltrada = {
+          ...response,
+          content: movimentacoesFiltradas,
+          totalElements: movimentacoesFiltradas.length
+        };
+        this.atualizarDadosPaginados(responseFiltrada);
+      },
+      error: this.handleError.bind(this)
+    });
   }
 
-  private buscarPorPeriodo(): void {
-    console.log('🔍 Buscando por período:', this.inicio, 'até', this.fim);
-    const inicioFormatado = this.formatarDataISO(this.inicio);
-    const fimFormatado = this.formatarDataISO(this.fim, true);
-    if (!inicioFormatado || !fimFormatado) {
+  // Método para buscar por período (ano/mês) com filtros combinados
+  private buscarPorPeriodoCombinado(): void {
+    console.log('🔍 Buscando por período com filtros combinados');
+    
+    let observable: Observable<PageResponse<MovimentacaoProduto>>;
+    
+    if (this.ano && this.mes) {
+      observable = this.movimentacaoService.buscarPorMes(this.ano, this.mes, this.pageIndex, this.pageSize);
+    } else {
+      observable = this.movimentacaoService.buscarPorAno(this.ano!, this.pageIndex, this.pageSize);
+    }
+
+    observable.subscribe({
+      next: (response) => {
+        let movimentacoesFiltradas = response.content || [];
+
+        // Filtra por tipo se especificado
+        if (this.tipoMovimentacao) {
+          movimentacoesFiltradas = movimentacoesFiltradas.filter(m => m.tipo === this.tipoMovimentacao);
+        }
+
+        // Filtra por produto se especificado
+        if (this.produtoId > 0) {
+          movimentacoesFiltradas = movimentacoesFiltradas.filter(m => m.produtoId === this.produtoId);
+        }
+
+        // Filtra por nome se especificado
+        if (this.nomeProduto?.trim()) {
+          const nomeBusca = this.nomeProduto.trim().toLowerCase();
+          movimentacoesFiltradas = movimentacoesFiltradas.filter(m => 
+            m.nomeProduto.toLowerCase().includes(nomeBusca)
+          );
+        }
+
+        // Filtra por categoria se especificado
+        if (this.categoriaProduto?.trim()) {
+          const categoriaBusca = this.categoriaProduto.trim().toLowerCase();
+          movimentacoesFiltradas = movimentacoesFiltradas.filter(m => 
+            m.nomeProduto.toLowerCase().includes(categoriaBusca)
+          );
+        }
+
+        // Filtra por consumidor se especificado
+        if (this.nomeConsumidor?.trim()) {
+          const consumidorBusca = this.nomeConsumidor.trim().toLowerCase();
+          movimentacoesFiltradas = movimentacoesFiltradas.filter(m => 
+            m.nomeConsumidor?.toLowerCase().includes(consumidorBusca)
+          );
+        }
+
+        const responseFiltrada = {
+          ...response,
+          content: movimentacoesFiltradas,
+          totalElements: movimentacoesFiltradas.length
+        };
+        this.atualizarDadosPaginados(responseFiltrada);
+      },
+      error: this.handleError.bind(this)
+    });
+  }
+
+  // Método para buscar por produto com filtros combinados
+  private buscarPorProdutoCombinado(): void {
+    console.log('🔍 Buscando por produto com filtros combinados');
+    
+    let observable: Observable<PageResponse<MovimentacaoProduto>>;
+    
+    if (this.produtoId > 0) {
+      observable = this.movimentacaoService.buscarPorIdProduto(this.produtoId, this.pageIndex, this.pageSize);
+    } else if (this.nomeProduto?.trim()) {
+      observable = this.movimentacaoService.buscarPorNomeProduto(this.nomeProduto.trim(), this.pageIndex, this.pageSize);
+    } else if (this.categoriaProduto?.trim()) {
+      observable = this.movimentacaoService.buscarPorCategoriaProduto(this.categoriaProduto.trim(), this.pageIndex, this.pageSize);
+    } else {
       this.loading = false;
       return;
     }
-    console.log('📅 Período formatado:', inicioFormatado, 'até', fimFormatado);
-    this.movimentacaoService.buscarPorPeriodo(this.tipoMovimentacao, inicioFormatado, fimFormatado, this.pageIndex, this.pageSize)
-      .subscribe({
-        next: this.atualizarDadosPaginados.bind(this),
-        error: this.handleError.bind(this)
-      });
+
+    observable.subscribe({
+      next: (response) => {
+        let movimentacoesFiltradas = response.content || [];
+
+        // Filtra por tipo se especificado
+        if (this.tipoMovimentacao) {
+          movimentacoesFiltradas = movimentacoesFiltradas.filter(m => m.tipo === this.tipoMovimentacao);
+        }
+
+        // Filtra por consumidor se especificado
+        if (this.nomeConsumidor?.trim()) {
+          const consumidorBusca = this.nomeConsumidor.trim().toLowerCase();
+          movimentacoesFiltradas = movimentacoesFiltradas.filter(m => 
+            m.nomeConsumidor?.toLowerCase().includes(consumidorBusca)
+          );
+        }
+
+        const responseFiltrada = {
+          ...response,
+          content: movimentacoesFiltradas,
+          totalElements: movimentacoesFiltradas.length
+        };
+        this.atualizarDadosPaginados(responseFiltrada);
+      },
+      error: this.handleError.bind(this)
+    });
   }
 
-  private buscarPorAnoMes(): void {
-    console.log('🔍 Buscando por ano/mês:', this.ano, '/', this.mes);
-    this.movimentacaoService.buscarPorMes(this.ano!, this.mes!, this.pageIndex, this.pageSize)
-      .subscribe({
-        next: this.atualizarDadosPaginados.bind(this),
-        error: this.handleError.bind(this)
-      });
-  }
-
-  private buscarPorAno(): void {
-    console.log('🔍 Buscando por ano:', this.ano);
-    this.movimentacaoService.buscarPorAno(this.ano!, this.pageIndex, this.pageSize)
-      .subscribe({
-        next: this.atualizarDadosPaginados.bind(this),
-        error: this.handleError.bind(this)
-      });
-  }
-
-  private buscarPorIdProduto(): void {
-    console.log('🔍 Buscando por ID do produto:', this.produtoId);
-    this.movimentacaoService.buscarPorIdProduto(this.produtoId, this.pageIndex, this.pageSize)
-      .subscribe({
-        next: this.atualizarDadosPaginados.bind(this),
-        error: this.handleError.bind(this)
-      });
-  }
-
-  private buscarPorNomeProduto(): void {
-    console.log('🔍 Buscando por nome do produto:', this.nomeProduto);
-    const nomeProdutoTrimmed = this.nomeProduto.trim();
-    this.movimentacaoService.buscarPorNomeProduto(nomeProdutoTrimmed, this.pageIndex, this.pageSize)
-      .subscribe({
-        next: this.atualizarDadosPaginados.bind(this),
-        error: this.handleError.bind(this)
-      });
-  }
-
-  private buscarPorCategoria(): void {
-    console.log('🔍 Buscando por categoria:', this.categoriaProduto);
-    this.movimentacaoService.buscarPorCategoriaProduto(this.categoriaProduto.trim(), this.pageIndex, this.pageSize)
-      .subscribe({
-        next: this.atualizarDadosPaginados.bind(this),
-        error: this.handleError.bind(this)
-      });
-  }
-
+  // Método para buscar apenas por tipo
   private buscarPorTipo(): void {
-    console.log('🔍 Buscando por tipo:', this.tipoMovimentacao);
+    console.log('🔍 Buscando apenas por tipo:', this.tipoMovimentacao);
     this.movimentacaoService.buscarPorTipos([this.tipoMovimentacao], this.pageIndex, this.pageSize)
       .subscribe({
-        next: this.atualizarDadosPaginados.bind(this),
-        error: this.handleError.bind(this)
-      });
-  }
-
-  // Métodos para combinações de filtros
-  private buscarPorTipoEDataEspecifica(): void {
-    console.log('🔍 Buscando por tipo + data específica:', this.tipoMovimentacao, this.data);
-    const dataFormatada = this.formatarDataISO_DATE(this.data);
-    if (!dataFormatada) {
-      this.loading = false;
-      return;
-    }
-    this.movimentacaoService.buscarPorData(this.tipoMovimentacao, dataFormatada, this.pageIndex, this.pageSize)
-      .subscribe({
-        next: this.atualizarDadosPaginados.bind(this),
-        error: this.handleError.bind(this)
-      });
-  }
-
-  private buscarPorTipoEPeriodo(): void {
-    console.log('🔍 Buscando por tipo + período:', this.tipoMovimentacao, this.inicio, 'até', this.fim);
-    const inicioFormatado = this.formatarDataISO(this.inicio);
-    const fimFormatado = this.formatarDataISO(this.fim, true);
-    if (!inicioFormatado || !fimFormatado) {
-      this.loading = false;
-      return;
-    }
-    this.movimentacaoService.buscarPorPeriodo(this.tipoMovimentacao, inicioFormatado, fimFormatado, this.pageIndex, this.pageSize)
-      .subscribe({
-        next: this.atualizarDadosPaginados.bind(this),
-        error: this.handleError.bind(this)
-      });
-  }
-
-  private buscarPorTipoEAnoMes(): void {
-    console.log('🔍 Buscando por tipo + ano/mês:', this.tipoMovimentacao, this.ano, '/', this.mes);
-    // Como o backend não tem endpoint específico para tipo + ano/mês, vamos buscar por ano/mês e filtrar por tipo no frontend
-    this.movimentacaoService.buscarPorMes(this.ano!, this.mes!, this.pageIndex, this.pageSize)
-      .subscribe({
         next: (response) => {
-          // Filtra por tipo no frontend
-          const movimentacoesFiltradas = response.content?.filter(m => m.tipo === this.tipoMovimentacao) || [];
+          let movimentacoesFiltradas = response.content || [];
+
+          // Filtra por consumidor se especificado
+          if (this.nomeConsumidor?.trim()) {
+            const consumidorBusca = this.nomeConsumidor.trim().toLowerCase();
+            movimentacoesFiltradas = movimentacoesFiltradas.filter(m => 
+              m.nomeConsumidor?.toLowerCase().includes(consumidorBusca)
+            );
+          }
+
           const responseFiltrada = {
             ...response,
             content: movimentacoesFiltradas,
@@ -406,182 +451,14 @@ export class MovimentacaoProdutoComponent implements OnInit {
       });
   }
 
-  private buscarPorTipoEAno(): void {
-    console.log('🔍 Buscando por tipo + ano:', this.tipoMovimentacao, this.ano);
-    // Como o backend não tem endpoint específico para tipo + ano, vamos buscar por ano e filtrar por tipo no frontend
-    this.movimentacaoService.buscarPorAno(this.ano!, this.pageIndex, this.pageSize)
-      .subscribe({
-        next: (response) => {
-          // Filtra por tipo no frontend
-          const movimentacoesFiltradas = response.content?.filter(m => m.tipo === this.tipoMovimentacao) || [];
-          const responseFiltrada = {
-            ...response,
-            content: movimentacoesFiltradas,
-            totalElements: movimentacoesFiltradas.length
-          };
-          this.atualizarDadosPaginados(responseFiltrada);
-        },
-        error: this.handleError.bind(this)
-      });
+  // Método auxiliar para verificar se há filtros de produto
+  private temFiltrosProduto(): boolean {
+    const temProdutoId = Boolean(this.produtoId > 0);
+    const temNomeProduto = Boolean(this.nomeProduto && this.nomeProduto.trim());
+    const temCategoria = Boolean(this.categoriaProduto && this.categoriaProduto.trim());
+    
+    return temProdutoId || temNomeProduto || temCategoria;
   }
-
-  private buscarPorTipoEIdProduto(): void {
-    console.log('🔍 Buscando por tipo + ID do produto:', this.tipoMovimentacao, this.produtoId);
-    // Como o backend não tem endpoint específico para tipo + ID, vamos buscar por ID e filtrar por tipo no frontend
-    this.movimentacaoService.buscarPorIdProduto(this.produtoId, this.pageIndex, this.pageSize)
-      .subscribe({
-        next: (response) => {
-          // Filtra por tipo no frontend
-          const movimentacoesFiltradas = response.content?.filter(m => m.tipo === this.tipoMovimentacao) || [];
-          const responseFiltrada = {
-            ...response,
-            content: movimentacoesFiltradas,
-            totalElements: movimentacoesFiltradas.length
-          };
-          this.atualizarDadosPaginados(responseFiltrada);
-        },
-        error: this.handleError.bind(this)
-      });
-  }
-
-  private buscarPorTipoENomeProduto(): void {
-    console.log('🔍 Buscando por tipo + nome do produto:', this.tipoMovimentacao, this.nomeProduto);
-    // Como o backend não tem endpoint específico para tipo + nome, vamos buscar por nome e filtrar por tipo no frontend
-    const nomeProdutoTrimmed = this.nomeProduto.trim();
-    this.movimentacaoService.buscarPorNomeProduto(nomeProdutoTrimmed, this.pageIndex, this.pageSize)
-      .subscribe({
-        next: (response) => {
-          // Filtra por tipo no frontend
-          const movimentacoesFiltradas = response.content?.filter(m => m.tipo === this.tipoMovimentacao) || [];
-          const responseFiltrada = {
-            ...response,
-            content: movimentacoesFiltradas,
-            totalElements: movimentacoesFiltradas.length
-          };
-          this.atualizarDadosPaginados(responseFiltrada);
-        },
-        error: this.handleError.bind(this)
-      });
-  }
-
-  private buscarPorTipoECategoria(): void {
-    console.log('🔍 Buscando por tipo + categoria:', this.tipoMovimentacao, this.categoriaProduto);
-    // Como o backend não tem endpoint específico para tipo + categoria, vamos buscar por categoria e filtrar por tipo no frontend
-    this.movimentacaoService.buscarPorCategoriaProduto(this.categoriaProduto.trim(), this.pageIndex, this.pageSize)
-      .subscribe({
-        next: (response) => {
-          // Filtra por tipo no frontend
-          const movimentacoesFiltradas = response.content?.filter(m => m.tipo === this.tipoMovimentacao) || [];
-          const responseFiltrada = {
-            ...response,
-            content: movimentacoesFiltradas,
-            totalElements: movimentacoesFiltradas.length
-          };
-          this.atualizarDadosPaginados(responseFiltrada);
-        },
-        error: this.handleError.bind(this)
-      });
-  }
-
-  private buscarPorDataEIdProduto(): void {
-    console.log('🔍 Buscando por data específica + ID do produto:', this.data, this.produtoId);
-    const dataFormatada = this.formatarDataISO_DATE(this.data);
-    if (!dataFormatada) {
-      this.loading = false;
-      return;
-    }
-    this.movimentacaoService.buscarPorData(this.tipoMovimentacao, dataFormatada, this.pageIndex, this.pageSize)
-      .subscribe({
-        next: (response) => {
-          // Filtra por ID no frontend
-          const movimentacoesFiltradas = response.content?.filter(m => m.produtoId === this.produtoId) || [];
-          const responseFiltrada = {
-            ...response,
-            content: movimentacoesFiltradas,
-            totalElements: movimentacoesFiltradas.length
-          };
-          this.atualizarDadosPaginados(responseFiltrada);
-        },
-        error: this.handleError.bind(this)
-      });
-  }
-
-  private buscarPorDataENomeProduto(): void {
-    console.log('🔍 Buscando por data específica + nome do produto:', this.data, this.nomeProduto);
-    const dataFormatada = this.formatarDataISO_DATE(this.data);
-    if (!dataFormatada) {
-      this.loading = false;
-      return;
-    }
-    const nomeProdutoTrimmed = this.nomeProduto.trim();
-    this.movimentacaoService.buscarPorData(this.tipoMovimentacao, dataFormatada, this.pageIndex, this.pageSize)
-      .subscribe({
-        next: (response) => {
-          // Filtra por nome no frontend
-          const movimentacoesFiltradas = response.content?.filter(m => m.nomeProduto === nomeProdutoTrimmed) || [];
-          const responseFiltrada = {
-            ...response,
-            content: movimentacoesFiltradas,
-            totalElements: movimentacoesFiltradas.length
-          };
-          this.atualizarDadosPaginados(responseFiltrada);
-        },
-        error: this.handleError.bind(this)
-      });
-  }
-
-
-
-  private buscarPorPeriodoEIdProduto(): void {
-    console.log('🔍 Buscando por período + ID do produto:', this.inicio, this.fim, this.produtoId);
-    const inicioFormatado = this.formatarDataISO(this.inicio);
-    const fimFormatado = this.formatarDataISO(this.fim, true);
-    if (!inicioFormatado || !fimFormatado) {
-      this.loading = false;
-      return;
-    }
-    this.movimentacaoService.buscarPorPeriodo(this.tipoMovimentacao, inicioFormatado, fimFormatado, this.pageIndex, this.pageSize)
-      .subscribe({
-        next: (response) => {
-          // Filtra por ID no frontend
-          const movimentacoesFiltradas = response.content?.filter(m => m.produtoId === this.produtoId) || [];
-          const responseFiltrada = {
-            ...response,
-            content: movimentacoesFiltradas,
-            totalElements: movimentacoesFiltradas.length
-          };
-          this.atualizarDadosPaginados(responseFiltrada);
-        },
-        error: this.handleError.bind(this)
-      });
-  }
-
-  private buscarPorPeriodoENomeProduto(): void {
-    console.log('🔍 Buscando por período + nome do produto:', this.inicio, this.fim, this.nomeProduto);
-    const inicioFormatado = this.formatarDataISO(this.inicio);
-    const fimFormatado = this.formatarDataISO(this.fim, true);
-    if (!inicioFormatado || !fimFormatado) {
-      this.loading = false;
-      return;
-    }
-    const nomeProdutoTrimmed = this.nomeProduto.trim();
-    this.movimentacaoService.buscarPorPeriodo(this.tipoMovimentacao, inicioFormatado, fimFormatado, this.pageIndex, this.pageSize)
-      .subscribe({
-        next: (response) => {
-          // Filtra por nome no frontend
-          const movimentacoesFiltradas = response.content?.filter(m => m.nomeProduto === nomeProdutoTrimmed) || [];
-          const responseFiltrada = {
-            ...response,
-            content: movimentacoesFiltradas,
-            totalElements: movimentacoesFiltradas.length
-          };
-          this.atualizarDadosPaginados(responseFiltrada);
-        },
-        error: this.handleError.bind(this)
-      });
-  }
-
-
 
   // Método auxiliar para atualizar os dados paginados
   private atualizarDadosPaginados(response: PageResponse<MovimentacaoProduto>): void {
@@ -628,6 +505,7 @@ export class MovimentacaoProdutoComponent implements OnInit {
   registrarMovimentacao(): void {
     // Dados iniciais para o modal
     const modalData: MovimentacaoModalData = {
+      modo: 'criar',
       tipoMovimentacao: this.tipoMovimentacao,
       produtoId: this.produtoId || undefined,
       nomeProduto: this.nomeProduto || undefined
@@ -649,16 +527,51 @@ export class MovimentacaoProdutoComponent implements OnInit {
         this.movimentacaoService.registrarMovimentacao(result.data).subscribe({
           next: (response) => {
             console.log('Movimentação registrada com sucesso!', response);
-            // TODO: Mostrar mensagem de sucesso
             this.buscarMovimentacoes(); // Atualiza a lista
           },
           error: (error) => {
             console.error('Erro ao registrar movimentação:', error);
-            // TODO: Mostrar mensagem de erro para o usuário
           }
         });
       }
     });
+  }
+
+  editarMovimentacao(mov: MovimentacaoProduto): void {
+    const modalData: MovimentacaoModalData = {
+      modo: 'editar',
+      movimentacao: mov,
+      tipoMovimentacao: mov.tipo,
+      produtoId: mov.produtoId,
+      nomeProduto: mov.nomeProduto
+    };
+
+    const dialogRef = this.dialog.open(MovimentacaoModalComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      data: modalData,
+      disableClose: false,
+      autoFocus: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.success) {
+        this.movimentacaoService.editarMovimentacao(mov.id, result.data).subscribe({
+          next: () => {
+            console.log('Movimentação editada com sucesso!');
+            this.buscarMovimentacoes();
+          },
+          error: (err) => {
+            console.error('Erro ao editar movimentação:', err);
+          }
+        });
+      }
+    });
+  }
+
+  // Compatível com o template atualizado
+  onPageChange(event: PageEvent): void {
+    this.handlePageEvent(event);
   }
 
   // Método para lidar com eventos de paginação
@@ -668,6 +581,37 @@ export class MovimentacaoProdutoComponent implements OnInit {
     this.pageIndex = event.pageIndex;
     
     // Busca os dados da nova página
+    this.buscarMovimentacoes();
+  }
+
+  // Método para limpar filtros
+  limparFiltros(): void {
+    console.log('🧹 Limpando todos os filtros...');
+    
+    // Reset de todos os filtros para valores neutros
+    this.tipoMovimentacao = TipoMovimentacao.ENTRADA;
+    this.data = null;
+    this.inicio = null;
+    this.fim = null;
+    this.ano = null;
+    this.mes = null;
+    this.nomeProduto = '';
+    this.categoriaProduto = '';
+    this.produtoId = 0;
+    this.nomeConsumidor = '';
+
+    // Reset da paginação
+    if (this.paginator) {
+      this.paginator.pageIndex = 0;
+      this.pageIndex = 0;
+    }
+    this.pageSize = 10;
+
+    // Limpa a lista e busca apenas por tipo (padrão)
+    this.movimentacoes = [];
+    this.totalItems = 0;
+    
+    console.log('✅ Filtros limpos. Buscando apenas por tipo padrão...');
     this.buscarMovimentacoes();
   }
 
@@ -727,6 +671,19 @@ export class MovimentacaoProdutoComponent implements OnInit {
     this.buscarMovimentacoes();
   }
 
+  // Método para aplicar filtro por consumidor
+  aplicarFiltroConsumidor(): void {
+    // Não limpa outros filtros - permite combinações
+    // Reseta apenas a paginação
+    this.pageIndex = 0;
+    if (this.paginator) {
+      this.paginator.pageIndex = 0;
+    }
+    
+    // Busca com todos os filtros ativos
+    this.buscarMovimentacoes();
+  }
+
   // Método para aplicar todos os filtros ativos
   aplicarTodosFiltros(): void {
     console.log('🚀 Aplicando todos os filtros ativos...');
@@ -739,7 +696,8 @@ export class MovimentacaoProdutoComponent implements OnInit {
       mes: this.mes,
       nomeProduto: this.nomeProduto,
       categoriaProduto: this.categoriaProduto,
-      produtoId: this.produtoId
+      produtoId: this.produtoId,
+      nomeConsumidor: this.nomeConsumidor
     });
     
     // Verifica se há filtros ativos além do tipo padrão
@@ -760,42 +718,15 @@ export class MovimentacaoProdutoComponent implements OnInit {
 
   // Método para verificar se há filtros ativos além do tipo padrão
   temFiltrosAtivos(): boolean {
-    return !!(this.data || 
-             (this.inicio && this.fim) || 
-             this.ano || 
-             this.mes || 
-             (this.nomeProduto && this.nomeProduto.trim()) || 
-             (this.categoriaProduto && this.categoriaProduto.trim()) || 
-             (this.produtoId && this.produtoId > 0));
-  }
-
-  // Método para limpar filtros
-  limparFiltros(): void {
-    console.log('🧹 Limpando todos os filtros...');
+    const temData = Boolean(this.data);
+    const temPeriodo = Boolean(this.inicio && this.fim);
+    const temAno = Boolean(this.ano);
+    const temMes = Boolean(this.mes);
+    const temNomeProduto = Boolean(this.nomeProduto && this.nomeProduto.trim());
+    const temCategoria = Boolean(this.categoriaProduto && this.categoriaProduto.trim());
+    const temProdutoId = Boolean(this.produtoId && this.produtoId > 0);
+    const temConsumidor = Boolean(this.nomeConsumidor && this.nomeConsumidor.trim());
     
-    // Reset de todos os filtros para valores neutros
-    this.tipoMovimentacao = TipoMovimentacao.ENTRADA;
-    this.data = null;
-    this.inicio = null;
-    this.fim = null;
-    this.ano = null; // Não define ano padrão
-    this.mes = null; // Não define mês padrão
-    this.nomeProduto = '';
-    this.categoriaProduto = '';
-    this.produtoId = 0;
-
-    // Reset da paginação
-    if (this.paginator) {
-      this.paginator.pageIndex = 0;
-      this.pageIndex = 0;
-    }
-    this.pageSize = 10;
-
-    // Limpa a lista e busca apenas por tipo (padrão)
-    this.movimentacoes = [];
-    this.totalItems = 0;
-    
-    console.log('✅ Filtros limpos. Buscando apenas por tipo padrão...');
-    this.buscarMovimentacoes();
+    return temData || temPeriodo || temAno || temMes || temNomeProduto || temCategoria || temProdutoId || temConsumidor;
   }
 }

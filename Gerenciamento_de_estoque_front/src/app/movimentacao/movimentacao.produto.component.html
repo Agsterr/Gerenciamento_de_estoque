@@ -131,6 +131,21 @@
             </button>
           </div>
         </div>
+
+        <!-- Seção de Consumidor -->
+        <div class="filter-section">
+          <h4>Filtro por Consumidor</h4>
+          <div class="filter-content">
+            <mat-form-field appearance="fill" class="full-width">
+              <mat-label>Nome do Consumidor</mat-label>
+              <input matInput [(ngModel)]="nomeConsumidor" placeholder="Digite o nome do consumidor">
+            </mat-form-field>
+            <button mat-raised-button color="primary" class="filter-btn" (click)="aplicarFiltroConsumidor()">
+              <i class="fas fa-user"></i>
+              Filtrar por Consumidor
+            </button>
+          </div>
+        </div>
         
         <!-- Botões de ação -->
         <div class="filter-actions">
@@ -175,12 +190,12 @@
           <table class="table">
             <thead>
               <colgroup>
-                <col style="width: 70px">
-                <col style="width: 22%">
-                <col style="width: 10%">
-                <col style="width: 10%">
+                <col style="width: 60px">
+                <col style="width: 25%">
+                <col style="width: 12%">
+                <col style="width: 12%">
                 <col style="width: 18%">
-                <col style="width: 10%">
+                <col style="width: 33%">
               </colgroup>
               <tr>
                 <th><i class="fas fa-id-badge"></i> ID</th>
@@ -188,36 +203,47 @@
                 <th><i class="fas fa-exchange-alt"></i> Tipo</th>
                 <th><i class="fas fa-sort-numeric-up"></i> Quantidade</th>
                 <th><i class="fas fa-calendar-alt"></i> Data</th>
-                <th><i class="fas fa-building"></i> Org ID</th>
+                <th><i class="fas fa-user-tie"></i> Consumidor</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let movimentacao of movimentacoes" [ngClass]="{'entrada': movimentacao.tipo === TIPO_MOVIMENTACAO_ENTRADA, 'saida': movimentacao.tipo === TIPO_MOVIMENTACAO_SAIDA}">
+              <tr *ngFor="let movimentacao of movimentacoes; let i = index" [ngClass]="{'entrada': movimentacao.tipo === TIPO_MOVIMENTACAO_ENTRADA, 'saida': movimentacao.tipo === TIPO_MOVIMENTACAO_SAIDA}">
                 <td>{{ movimentacao.id }}</td>
                 <td>{{ movimentacao.nomeProduto }}</td>
                 <td>
                   <span class="badge" [ngClass]="{'badge-entrada': movimentacao.tipo === TIPO_MOVIMENTACAO_ENTRADA, 'badge-saida': movimentacao.tipo === TIPO_MOVIMENTACAO_SAIDA}">
+                    <i class="fas" [ngClass]="{'fa-arrow-down': movimentacao.tipo === TIPO_MOVIMENTACAO_ENTRADA, 'fa-arrow-up': movimentacao.tipo === TIPO_MOVIMENTACAO_SAIDA}"></i>
                     {{ movimentacao.tipo === TIPO_MOVIMENTACAO_ENTRADA ? 'Entrada' : 'Saída' }}
                   </span>
                 </td>
                 <td>{{ movimentacao.quantidade }}</td>
                 <td>{{ movimentacao.dataHora | date:'dd/MM/yyyy HH:mm' }}</td>
-                <td>{{ movimentacao.orgId }}</td>
+                <td>
+                  <span *ngIf="movimentacao.nomeConsumidor; else semConsumidor" class="consumer-info">
+                    <i class="fas fa-user-tie"></i>
+                    {{ movimentacao.nomeConsumidor }}
+                  </span>
+                  <ng-template #semConsumidor>
+                    <span class="no-consumer">
+                      <i class="fas fa-user-slash"></i>
+                      N/A
+                    </span>
+                  </ng-template>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <!-- Paginador -->
-        <mat-paginator
-          #paginator
+        <!-- Paginação -->
+        <mat-paginator 
           [length]="totalItems"
           [pageSize]="pageSize"
           [pageSizeOptions]="pageSizeOptions"
           [pageIndex]="pageIndex"
-          (page)="handlePageEvent($event)"
-          aria-label="Selecione a página"
-          showFirstLastButtons>
+          (page)="onPageChange($event)"
+          showFirstLastButtons
+          class="paginator">
         </mat-paginator>
       </div>
     </main>

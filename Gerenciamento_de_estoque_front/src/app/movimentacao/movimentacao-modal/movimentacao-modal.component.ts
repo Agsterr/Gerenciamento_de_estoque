@@ -12,6 +12,8 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MovimentacaoProduto, TipoMovimentacao } from '../../models/movimentacao-produto.model';
 
 export interface MovimentacaoModalData {
+  modo: 'criar' | 'editar';
+  movimentacao?: MovimentacaoProduto; // Para edição
   tipoMovimentacao: TipoMovimentacao;
   produtoId?: number;
   nomeProduto?: string;
@@ -40,18 +42,40 @@ export class MovimentacaoModalComponent {
   movimentacaoForm: FormGroup;
   tiposMovimentacao: TipoMovimentacao[] = [TipoMovimentacao.ENTRADA, TipoMovimentacao.SAIDA];
   loading = false;
+  isEdicao: boolean;
+  tituloModal: string;
 
   constructor(
     private dialogRef: MatDialogRef<MovimentacaoModalComponent>,
     @Inject(MAT_DIALOG_DATA) public data: MovimentacaoModalData,
     private fb: FormBuilder
   ) {
+    this.isEdicao = data.modo === 'editar';
+    this.tituloModal = this.isEdicao ? 'Editar Movimentação' : 'Nova Movimentação';
+    
+    const mov = data.movimentacao;
+    
     this.movimentacaoForm = this.fb.group({
-      produtoId: [data.produtoId || '', [Validators.required, Validators.min(1)]],
-      nomeProduto: [data.nomeProduto || '', [Validators.required, Validators.minLength(2)]],
-      tipo: [data.tipoMovimentacao, Validators.required],
-      quantidade: ['', [Validators.required, Validators.min(1), Validators.max(999999)]],
-      dataHora: [new Date(), Validators.required],
+      produtoId: [
+        this.isEdicao ? mov?.produtoId : (data.produtoId || ''), 
+        [Validators.required, Validators.min(1)]
+      ],
+      nomeProduto: [
+        this.isEdicao ? mov?.nomeProduto : (data.nomeProduto || ''), 
+        [Validators.required, Validators.minLength(2)]
+      ],
+      tipo: [
+        this.isEdicao ? mov?.tipo : data.tipoMovimentacao, 
+        Validators.required
+      ],
+      quantidade: [
+        this.isEdicao ? mov?.quantidade : '', 
+        [Validators.required, Validators.min(1), Validators.max(999999)]
+      ],
+      dataHora: [
+        this.isEdicao ? new Date(mov?.dataHora!) : new Date(), 
+        Validators.required
+      ],
       observacoes: ['', Validators.maxLength(500)]
     });
   }
@@ -61,20 +85,21 @@ export class MovimentacaoModalComponent {
       this.loading = true;
       
       const formValue = this.movimentacaoForm.value;
-      const novaMovimentacao: MovimentacaoProduto = {
-        id: 0,
+      const movimentacao: MovimentacaoProduto = {
+        id: this.isEdicao ? this.data.movimentacao!.id : 0,
         produtoId: formValue.produtoId,
         tipo: formValue.tipo,
         quantidade: formValue.quantidade,
         dataHora: formValue.dataHora.toISOString(),
-        orgId: 1, // TODO: Pegar do contexto do usuário
+        orgId: this.isEdicao ? this.data.movimentacao!.orgId : 1, // TODO: Pegar do contexto do usuário
         nomeProduto: formValue.nomeProduto
       };
 
       this.dialogRef.close({
         success: true,
-        data: novaMovimentacao,
-        observacoes: formValue.observacoes
+        data: movimentacao,
+        observacoes: formValue.observacoes,
+        modo: this.data.modo
       });
     }
   }
@@ -94,4 +119,4 @@ export class MovimentacaoModalComponent {
   get quantidade() { return this.movimentacaoForm.get('quantidade'); }
   get dataHora() { return this.movimentacaoForm.get('dataHora'); }
   get observacoes() { return this.movimentacaoForm.get('observacoes'); }
-} 
+}

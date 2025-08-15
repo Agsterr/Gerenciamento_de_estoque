@@ -5,11 +5,12 @@ import { Categoria } from '../models/categoria.model';
 import { catchError, map } from 'rxjs/operators';
 import { HttpParams } from '@angular/common/http'; // não esqueça de importar no início
 import { PageCategoriaResponse } from '../models/page-categoria-response.model';
+import { environment } from '../../environments/environment';
 @Injectable({
   providedIn: 'root',
 })
 export class CategoriaService {
-  private apiUrl = 'http://localhost:8081/categorias';
+  private apiUrl = `${environment.apiUrl}/categorias`;
 
   constructor(private http: HttpClient) {}
 
@@ -38,24 +39,23 @@ export class CategoriaService {
   }
 
  /** Lista categorias da organização atual */
-listarCategorias(page: number = 0, size: number = 10): Observable<PageCategoriaResponse> {
-  const orgId = this.getOrgId();
-  const headers = this.getAuthHeaders();
+ listarCategorias(page: number = 0, size: number = 10): Observable<PageCategoriaResponse> {
+   const orgId = this.getOrgId();
+   const headers = this.getAuthHeaders();
 
-  // Monta os parâmetros da query string para paginação
-  const params = new HttpParams()
-    .set('page', page.toString())
-    .set('size', size.toString());
+   // Monta os parâmetros da query string para paginação
+   const params = new HttpParams()
+     .set('page', page.toString())
+     .set('size', size.toString());
 
-  // Ajusta a URL conforme seu padrão (org no caminho)
-  return this.http.get<PageCategoriaResponse>(`${this.apiUrl}/org/${orgId}`, { headers, params }).pipe(
-    catchError(error => {
-      console.error('Erro ao listar categorias paginadas:', error);
-      return throwError(() => new Error('Falha ao carregar categorias paginadas.'));
-    })
-  );
-}
-
+   // Ajusta a URL conforme seu padrão (org no caminho)
+   return this.http.get<PageCategoriaResponse>(`${this.apiUrl}/org/${orgId}`, { headers, params }).pipe(
+     catchError(error => {
+       console.error('Erro ao listar categorias paginadas:', error);
+       return throwError(() => new Error('Falha ao carregar categorias paginadas.'));
+     })
+   );
+ }
 
   /** Cria uma nova categoria com nome e descrição */
   criarCategoria(nome: string, descricao: string = ''): Observable<Categoria> {

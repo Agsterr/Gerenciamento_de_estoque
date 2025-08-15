@@ -9,35 +9,35 @@
       <div class="resumo-card">
         <mat-icon>inventory_2</mat-icon>
         <div>
-          <span class="resumo-valor">{{ produtos.length }}</span>
+          <span class="resumo-valor">{{ totalProdutos }}</span>
           <span class="resumo-label">Produtos</span>
         </div>
       </div>
       <div class="resumo-card">
         <mat-icon>people</mat-icon>
         <div>
-          <span class="resumo-valor">{{ consumidores.length }}</span>
+          <span class="resumo-valor">{{ totalConsumidores }}</span>
           <span class="resumo-label">Consumidores</span>
         </div>
       </div>
       <div class="resumo-card">
         <mat-icon>local_shipping</mat-icon>
         <div>
-          <span class="resumo-valor">{{ entregas.length }}</span>
+          <span class="resumo-valor">{{ totalEntregas }}</span>
           <span class="resumo-label">Entregas</span>
         </div>
       </div>
       <div class="resumo-card">
         <mat-icon>category</mat-icon>
         <div>
-          <span class="resumo-valor">{{ categorias.length }}</span>
+          <span class="resumo-valor">{{ totalCategorias }}</span>
           <span class="resumo-label">Categorias</span>
         </div>
       </div>
       <div class="resumo-card">
         <mat-icon>cached</mat-icon>
         <div>
-          <span class="resumo-valor">{{ movimentacoes.length }}</span>
+          <span class="resumo-valor">{{ totalMovimentacoes }}</span>
           <span class="resumo-label">Movimentações</span>
         </div>
       </div>
@@ -63,6 +63,10 @@
       <a routerLink="movimentacoes" routerLinkActive="active">
         <mat-icon>cached</mat-icon>
         <span>Movimentações</span>
+      </a>
+      <a routerLink="relatorios" routerLinkActive="active">
+        <mat-icon>description</mat-icon>
+        <span>Relatórios</span>
       </a>
     </nav>
 

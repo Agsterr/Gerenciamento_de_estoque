@@ -1,8 +1,8 @@
 <div class="modal-container">
   <div class="modal-header">
     <h2 mat-dialog-title>
-      <i class="fas fa-plus-circle"></i>
-      Nova Movimentação de Produto
+      <i class="fas" [ngClass]="isEdicao ? 'fa-edit' : 'fa-plus-circle'"></i>
+      {{ tituloModal }}
     </h2>
     <button mat-icon-button mat-dialog-close (click)="onCancel()" aria-label="Fechar">
       <mat-icon>close</mat-icon>
@@ -100,6 +100,18 @@
         </mat-form-field>
       </div>
 
+      <!-- Usuário (apenas em modo de edição) -->
+      <div class="form-row" *ngIf="isEdicao && data.movimentacao?.nomeUsuario">
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Usuário</mat-label>
+          <input matInput 
+                 [value]="data.movimentacao?.nomeUsuario"
+                 readonly
+                 placeholder="Usuário que realizou a movimentação">
+          <mat-icon matSuffix>person</mat-icon>
+        </mat-form-field>
+      </div>
+
       <!-- Observações -->
       <div class="form-row">
         <mat-form-field appearance="fill" class="full-width">
@@ -131,10 +143,9 @@
               color="primary" 
               type="submit" 
               [disabled]="movimentacaoForm.invalid || loading">
-        <i class="fas fa-save" *ngIf="!loading"></i>
-        <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>
-        {{ loading ? 'Salvando...' : 'Salvar Movimentação' }}
+        <i class="fas" [ngClass]="loading ? 'fa-spinner fa-spin' : (isEdicao ? 'fa-save' : 'fa-plus')" *ngIf="!loading || loading"></i>
+        {{ loading ? 'Salvando...' : (isEdicao ? 'Atualizar Movimentação' : 'Criar Movimentação') }}
       </button>
     </div>
   </form>
-</div> 
+</div>

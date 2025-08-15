@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { MovimentacaoProduto, PageResponse } from '../models/movimentacao-produto.model';
-import { TipoMovimentacao } from '../models/movimentacao-produto.model';
+import { MovimentacaoProduto, PageResponse, TipoMovimentacao } from '../models/movimentacao-produto.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MovimentacaoProdutoService {
-  private apiUrl = 'http://localhost:8081/movimentacoes';
+  private apiUrl = `${environment.apiUrl}/movimentacoes`;
 
   constructor(private http: HttpClient) {}
 
@@ -24,7 +24,19 @@ export class MovimentacaoProdutoService {
     return this.http.post<MovimentacaoProduto>(this.apiUrl, dto, { headers });
   }
 
-  // Buscar movimentações por data
+  // Editar movimentação existente
+  editarMovimentacao(id: number, dto: MovimentacaoProduto): Observable<MovimentacaoProduto> {
+    const headers = this.getAuthHeaders();
+    return this.http.put<MovimentacaoProduto>(`${this.apiUrl}/${id}`, dto, { headers });
+  }
+
+  // Listar todas as movimentações de um produto específico (sem paginação)
+  listarPorProduto(produtoId: number): Observable<MovimentacaoProduto[]> {
+    const headers = this.getAuthHeaders();
+    return this.http.get<MovimentacaoProduto[]>(`${this.apiUrl}/produto/${produtoId}`, { headers });
+  }
+
+  // Buscar movimentações por data (formato ISO.DATE)
   buscarPorData(tipo: TipoMovimentacao, data: string, page: number = 0, size: number = 20): Observable<PageResponse<MovimentacaoProduto>> {
     const headers = this.getAuthHeaders();
     if (!data) {
@@ -43,17 +55,21 @@ export class MovimentacaoProdutoService {
     return this.http.get<PageResponse<MovimentacaoProduto>>(`${this.apiUrl}/por-data`, { headers, params });
   }
 
-  // Buscar movimentações por período
+  // Buscar movimentações por período (formato ISO.DATE_TIME)
   buscarPorPeriodo(tipo: TipoMovimentacao, inicio: string, fim: string, page: number = 0, size: number = 20): Observable<PageResponse<MovimentacaoProduto>> {
     const headers = this.getAuthHeaders();
     if (!inicio || !fim) {
       throw new Error('As datas de início e fim são obrigatórias');
     }
 
+    // Formata as datas para o formato ISO.DATE_TIME se necessário
+    const inicioFormatado = inicio.includes('T') ? inicio : `${inicio}T00:00:00`;
+    const fimFormatado = fim.includes('T') ? fim : `${fim}T23:59:59`;
+
     const params = new HttpParams()
       .set('tipo', tipo)
-      .set('inicio', inicio)
-      .set('fim', fim)
+      .set('inicio', inicioFormatado)
+      .set('fim', fimFormatado)
       .set('page', page.toString())
       .set('size', size.toString());
 
@@ -84,7 +100,6 @@ export class MovimentacaoProdutoService {
   // Buscar movimentações por nome do produto
   buscarPorNomeProduto(nomeProduto: string, page: number = 0, size: number = 20): Observable<PageResponse<MovimentacaoProduto>> {
     const headers = this.getAuthHeaders();
-    // Validação adicional do nome do produto
     const nomeProdutoTrimmed = nomeProduto?.trim() || '';
     if (nomeProdutoTrimmed.length === 0) {
       throw new Error('O nome do produto não pode estar vazio');
@@ -109,7 +124,7 @@ export class MovimentacaoProdutoService {
     return this.http.get<PageResponse<MovimentacaoProduto>>(`${this.apiUrl}/por-categoria`, { headers, params });
   }
 
-  // Buscar movimentações por ID do produto
+  // Buscar movimentações por ID do produto (com paginação)
   buscarPorIdProduto(produtoId: number, page: number = 0, size: number = 20): Observable<PageResponse<MovimentacaoProduto>> {
     const headers = this.getAuthHeaders();
     const params = new HttpParams()
@@ -119,7 +134,7 @@ export class MovimentacaoProdutoService {
     return this.http.get<PageResponse<MovimentacaoProduto>>(`${this.apiUrl}/por-id`, { headers, params });
   }
 
-  // Buscar movimentações de uma organização por produto, nome ou categoria, e por intervalo de datas
+  // Buscar movimentações por produto, nome ou categoria, e por intervalo de datas
   buscarPorProdutoNomeCategoriaIdAndIntervalo(
     nome: string | null,
     categoria: string | null,
@@ -135,9 +150,13 @@ export class MovimentacaoProdutoService {
       throw new Error('As datas de início e fim são obrigatórias');
     }
     
+    // Formata as datas para o formato ISO.DATE_TIME se necessário
+    const inicioFormatado = inicio.includes('T') ? inicio : `${inicio}T00:00:00`;
+    const fimFormatado = fim.includes('T') ? fim : `${fim}T23:59:59`;
+    
     let params = new HttpParams()
-      .set('inicio', inicio)
-      .set('fim', fim)
+      .set('inicio', inicioFormatado)
+      .set('fim', fimFormatado)
       .set('page', page.toString())
       .set('size', size.toString());
 
@@ -155,8 +174,6 @@ export class MovimentacaoProdutoService {
     return this.http.get<PageResponse<MovimentacaoProduto>>(`${this.apiUrl}/por-intervalo`, { headers, params });
   }
 
-
-
   // Buscar movimentações por tipos (ENTRADA/SAIDA)
   buscarPorTipos(tipos: TipoMovimentacao[], page: number = 0, size: number = 20): Observable<PageResponse<MovimentacaoProduto>> {
     const headers = this.getAuthHeaders();
@@ -166,5 +183,21 @@ export class MovimentacaoProdutoService {
       .set('size', size.toString());
 
     return this.http.get<PageResponse<MovimentacaoProduto>>(`${this.apiUrl}/por-tipos`, { headers, params });
+  }
+
+  // Buscar movimentações por consumidor (novo endpoint)
+  buscarPorConsumidor(nomeConsumidor: string, page: number = 0, size: number = 20): Observable<PageResponse<MovimentacaoProduto>> {
+    const headers = this.getAuthHeaders();
+    const nomeConsumidorTrimmed = nomeConsumidor?.trim() || '';
+    if (nomeConsumidorTrimmed.length === 0) {
+      throw new Error('O nome do consumidor não pode estar vazio');
+    }
+    
+    const params = new HttpParams()
+      .set('nome', nomeConsumidorTrimmed)
+      .set('page', page.toString())
+      .set('size', size.toString());
+    
+    return this.http.get<PageResponse<MovimentacaoProduto>>(`${this.apiUrl}/por-consumidor`, { headers, params });
   }
 }
