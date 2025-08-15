@@ -8,6 +8,7 @@ import { EntregasComponent } from './entregas/entregas.component';
 import { CategoriaComponent } from './categoria/categoria.component';
 import { HomeComponent } from './home/home.component';
 import { MovimentacaoProdutoComponent } from './movimentacao/movimentacao.produto.component';
+import { RelatoriosComponent } from './relatorios/relatorios.component';
 import { AdminGuard } from './guards/admin.guard';
 import { AuthGuard } from './guards/Auth.Guard';
 
@@ -29,6 +30,7 @@ export const routes: Routes = [
       { path: 'consumidores', component: ConsumersComponent },
       { path: 'entregas', component: EntregasComponent },
       { path: 'movimentacoes', component: MovimentacaoProdutoComponent },
+      { path: 'relatorios', component: RelatoriosComponent },
     ],
   },
 ];

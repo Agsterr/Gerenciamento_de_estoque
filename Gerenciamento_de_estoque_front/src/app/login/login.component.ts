@@ -6,6 +6,7 @@ import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
 import { LoginRequest } from '../models/login-request.model';
 import { MatIconModule } from '@angular/material/icon';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -71,7 +72,9 @@ export class LoginComponent implements OnInit {
 
       this.authService.login(loginData).subscribe({
         next: (response) => {
-          console.log('Resposta do login:', response);
+          if (!environment.production) {
+            console.log('Resposta do login:', response);
+          }
           if (!response.token) {
             this.errorMessage = 'Credenciais inválidas.';
           }

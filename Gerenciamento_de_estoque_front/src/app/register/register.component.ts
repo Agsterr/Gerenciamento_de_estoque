@@ -8,6 +8,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-register',
@@ -86,7 +87,9 @@ export class RegisterComponent implements OnInit {
         .register({ username, senha, email, orgId, roles })
         .subscribe({
           next: (response) => {
-            console.log('Registro bem-sucedido:', response);
+            if (!environment.production) {
+              console.log('Registro bem-sucedido:', response);
+            }
             this.successMessage = 'Usuário registrado com sucesso!';
             this.snackBar.open(this.successMessage, 'Fechar', {
               duration: 3000,

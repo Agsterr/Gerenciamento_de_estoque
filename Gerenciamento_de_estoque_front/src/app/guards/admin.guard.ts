@@ -1,36 +1,39 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { environment } from '../../environments/environment';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class AdminGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
 
   canActivate(): boolean {
-    const user = this.authService.getLoggedUser(); // Recupera os dados do usuário
+    const user = this.authService.getLoggedUser();
 
-    console.log('Dados do Usuário Recuperados:', user); // Verifique o que está sendo retornado pelo getLoggedUser()
-
-    if (!user || !user.roles || !Array.isArray(user.roles)) {
-      console.log('Usuário não encontrado ou roles não definidas');
-      this.router.navigate(['/login']);
-      return false; // Redireciona para login se o usuário não estiver autenticado ou não tiver roles
+    if (!environment.production) {
+      // Logs somente em desenvolvimento para depuração
+      console.log('Dados do Usuário Recuperados:', user);
     }
 
-    // Verificando se a role ROLE_ADMIN está presente no array de roles
-    const isAdmin = user.roles.includes('ROLE_ADMIN'); // Verifica se a role é 'ROLE_ADMIN'
+    if (!user || !user.roles) {
+      if (!environment.production) {
+        console.log('Usuário não encontrado ou roles não definidas');
+      }
+      this.router.navigate(['/login']);
+      return false;
+    }
 
-    console.log('Usuário tem a role ROLE_ADMIN?', isAdmin); // Verifica se a role 'ROLE_ADMIN' está presente
+    const isAdmin = user.roles.includes('ROLE_ADMIN');
+
+    if (!environment.production) {
+      console.log('Usuário tem a role ROLE_ADMIN?', isAdmin);
+    }
 
     if (!isAdmin) {
-      alert('Você não tem permissão para acessar esta página. Somente administradores podem acessar.');
-      this.router.navigate(['/dashboard']);
-      return false; // Redireciona para o dashboard se o usuário não for admin
+      this.router.navigate(['/home']);
+      return false;
     }
 
-    // Permite o acesso se for admin
     return true;
   }
 }

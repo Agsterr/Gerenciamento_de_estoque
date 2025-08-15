@@ -5,6 +5,7 @@ import { ApiService } from './api.service';
 import { LoginRequest } from '../models/login-request.model';
 import { LoginResponse } from '../models/login-response.model';
 import { jwtDecode } from 'jwt-decode';  // Importando jwt-decode corretamente
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -25,8 +26,10 @@ export class AuthService {
           // Decodificar o token JWT
           const decodedToken: any = jwtDecode(response.token);
           
-          // Adicionando log para verificar o conteúdo do decodedToken
-          console.log('Token Decodificado:', decodedToken);
+          // Log apenas em desenvolvimento
+          if (!environment.production) {
+            console.log('Token Decodificado:', decodedToken);
+          }
           
           const userInfo = {
             username: decodedToken.sub,
@@ -35,8 +38,10 @@ export class AuthService {
             roles: decodedToken.roles || []
           };
 
-          // Logando as informações do usuário
-          console.log('Informações do Usuário:', userInfo);
+          // Log apenas em desenvolvimento
+          if (!environment.production) {
+            console.log('Informações do Usuário:', userInfo);
+          }
 
           // Armazenando o usuário no localStorage
           localStorage.setItem('loggedUser', JSON.stringify(userInfo));
@@ -58,17 +63,19 @@ export class AuthService {
    * Realiza o registro de um novo usuário.
    */
   register(data: any): Observable<any> {
-  return this.apiService.postWithAuth('/auth/register', data);
-}
-
+    return this.apiService.postWithAuth('/auth/register', data);
+  }
 
   /**
    * Retorna os dados do usuário logado a partir do localStorage.
    */
   getLoggedUser(): any {
     const userData = localStorage.getItem('loggedUser');
-    // Adicionando log para verificar o que está sendo recuperado do localStorage
-    console.log('Dados do Usuário Recuperados do localStorage:', userData);
+    
+    // Remover log verboso - só loggar em caso de debug específico
+    // if (!environment.production) {
+    //   console.log('Dados do Usuário Recuperados do localStorage:', userData);
+    // }
 
     return userData ? JSON.parse(userData) : null;
   }
@@ -87,8 +94,11 @@ export class AuthService {
    */
   isLoggedIn(): boolean {
     const loggedIn = !!localStorage.getItem('jwtToken');
-    // Log para verificar se o usuário está autenticado
-    console.log('Usuário Logado:', loggedIn);
+    
+    // Remover log verboso - só loggar em caso de debug específico
+    // if (!environment.production) {
+    //   console.log('Usuário Logado:', loggedIn);
+    // }
 
     return loggedIn;
   }

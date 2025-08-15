@@ -9,7 +9,7 @@ import { CategoriaService } from '../services/categoria.service';
 import { MovimentacaoProdutoService } from '../services/movimentacao-produto.service';
 import { EntregaResponse } from '../models/src/app/models/entrega/entrega-response.model';
 import { Categoria } from '../models/categoria.model';
-import { MovimentacaoProduto } from '../models/movimentacao-produto.model';
+import { MovimentacaoProduto, PageResponse } from '../models/movimentacao-produto.model';
 
 // ✅ Angular Material para ícones
 import { MatIconModule } from '@angular/material/icon';
@@ -31,6 +31,12 @@ export class DashboardComponent implements OnInit {
   categorias: Categoria[] = [];
   movimentacoes: MovimentacaoProduto[] = [];
 
+  totalProdutos = 0;
+  totalConsumidores = 0;
+  totalEntregas = 0;
+  totalCategorias = 0;
+  totalMovimentacoes = 0;
+
   constructor(
     private produtoService: ProdutoService,
     private consumidorService: ConsumidorService,
@@ -51,7 +57,8 @@ export class DashboardComponent implements OnInit {
  carregarProdutos(): void {
   this.produtoService.listarProdutos().subscribe({
     next: (data) => {
-      this.produtos = data.content; // ✅ Corrigido
+      this.produtos = data.content;
+      this.totalProdutos = data.totalElements ?? this.produtos.length;
     },
     error: (err) => {
       console.error('Erro ao carregar produtos:', err);
@@ -59,11 +66,11 @@ export class DashboardComponent implements OnInit {
   });
 }
 
-
   carregarConsumidores(): void {
-    this.consumidorService.listarConsumidores().subscribe({
-      next: (data: Consumer[]) => {
-        this.consumidores = data;
+    this.consumidorService.listarConsumidoresPaged().subscribe({
+      next: (data) => {
+        this.consumidores = data.content || [];
+        this.totalConsumidores = data.totalElements ?? this.consumidores.length;
       },
       error: (err) => {
         console.error('Erro ao carregar consumidores:', err);
@@ -72,10 +79,10 @@ export class DashboardComponent implements OnInit {
   }
 
   carregarEntregas(): void {
-    // Busca a primeira página de entregas (ajuste se necessário)
     this.entregasService.listarEntregas(0, 10).subscribe({
       next: (data) => {
         this.entregas = data.content || [];
+        this.totalEntregas = data.totalElements ?? this.entregas.length;
       },
       error: (err) => {
         console.error('Erro ao carregar entregas:', err);
@@ -87,6 +94,7 @@ export class DashboardComponent implements OnInit {
     this.categoriaService.listarCategorias(0, 10).subscribe({
       next: (data) => {
         this.categorias = data.content || [];
+        this.totalCategorias = data.totalElements ?? this.categorias.length;
       },
       error: (err) => {
         console.error('Erro ao carregar categorias:', err);
@@ -95,10 +103,10 @@ export class DashboardComponent implements OnInit {
   }
 
   carregarMovimentacoes(): void {
-    // Busca movimentações da primeira página (ajuste se necessário)
     this.movimentacaoProdutoService.buscarPorAno(new Date().getFullYear(), 0, 10).subscribe({
-      next: (data) => {
+      next: (data: PageResponse<MovimentacaoProduto>) => {
         this.movimentacoes = data.content || [];
+        this.totalMovimentacoes = data.totalElements ?? this.movimentacoes.length;
       },
       error: (err) => {
         console.error('Erro ao carregar movimentações:', err);

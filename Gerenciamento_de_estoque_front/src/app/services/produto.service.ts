@@ -4,12 +4,13 @@ import { Observable, throwError } from 'rxjs';
 import { Produto } from '../models/produto.model';
 import { map, catchError } from 'rxjs/operators';
 import { Categoria } from '../models/categoria.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ProdutoService {
-  private apiUrl = 'http://localhost:8081/produtos';
+  private apiUrl = `${environment.apiUrl}/produtos`;
 
   constructor(private http: HttpClient) {}
 
@@ -82,15 +83,14 @@ export class ProdutoService {
   }
 
   // ✅ Atualizar produto
-atualizarProduto(produto: Produto, id: number): Observable<Produto> {
-  const orgId = this.getOrgId();
-  const headers = this.getAuthHeaders();
-  // Inclui orgId no corpo do produto para o backend receber
-  const body = { ...produto, orgId };
-  // Passa orgId também como query param conforme sua API espera
-  return this.http.put<Produto>(`${this.apiUrl}/${id}?orgId=${orgId}`, body, { headers });
-}
-
+  atualizarProduto(produto: Produto, id: number): Observable<Produto> {
+    const orgId = this.getOrgId();
+    const headers = this.getAuthHeaders();
+    // Inclui orgId no corpo do produto para o backend receber
+    const body = { ...produto, orgId };
+    // Passa orgId também como query param conforme sua API espera
+    return this.http.put<Produto>(`${this.apiUrl}/${id}?orgId=${orgId}`, body, { headers });
+  }
 
   // ✅ Atualizar quantidade
   atualizarProdutoQuantidade(produtoId: number, quantidade: number): Observable<Produto> {
