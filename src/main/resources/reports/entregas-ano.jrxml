@@ -9,72 +9,111 @@
     <field name="nomeEntregador" class="java.lang.String"/>
     <field name="quantidade" class="java.lang.Integer"/>
     <field name="horarioEntrega" class="java.time.LocalDateTime"/>
-    <!-- Ordenação -->
     <sortField name="nomeConsumidor" order="Ascending"/>
     <sortField name="nomeProduto" order="Ascending"/>
-    <!-- Variáveis globais -->
-    <variable name="TOTAL_QTD" class="java.lang.Integer" calculation="Sum">
-        <variableExpression><![CDATA[$F{quantidade}]]></variableExpression>
-    </variable>
-    <variable name="TOTAL_REGISTROS" class="java.lang.Integer" calculation="Count">
-        <variableExpression><![CDATA[$F{id}]]></variableExpression>
-    </variable>
-    <variable name="SUM_QTD_CONSUMIDOR" class="java.lang.Integer" calculation="Sum" resetType="Group" resetGroup="ConsumidorGroup">
-        <variableExpression><![CDATA[$F{quantidade}]]></variableExpression>
-    </variable>
-    <!-- Subtotal por produto dentro do consumidor -->
-    <variable name="SUM_QTD_PRODUTO" class="java.lang.Integer" calculation="Sum" resetType="Group" resetGroup="ProdutoGroup">
-        <variableExpression><![CDATA[$F{quantidade}]]></variableExpression>
-    </variable>
+    <variable name="TOTAL_QTD" class="java.lang.Integer" calculation="Sum"><variableExpression><![CDATA[$F{quantidade}]]></variableExpression></variable>
+    <variable name="TOTAL_REGISTROS" class="java.lang.Integer" calculation="Count"><variableExpression><![CDATA[$F{id}]]></variableExpression></variable>
+    <variable name="SUM_QTD_CONSUMIDOR" class="java.lang.Integer" calculation="Sum" resetType="Group" resetGroup="ConsumidorGroup"><variableExpression><![CDATA[$F{quantidade}]]></variableExpression></variable>
+    <variable name="SUM_QTD_PRODUTO" class="java.lang.Integer" calculation="Sum" resetType="Group" resetGroup="ProdutoGroup"><variableExpression><![CDATA[$F{quantidade}]]></variableExpression></variable>
+
+    <!-- Grupos (antes das bandas) -->
+    <group name="ConsumidorGroup">
+        <groupExpression><![CDATA[$F{nomeConsumidor}]]></groupExpression>
+        <groupHeader>
+            <band height="16">
+                <textField>
+                    <reportElement x="0" y="1" width="555" height="14"/>
+                    <textElement><font isBold="true"/></textElement>
+                    <textFieldExpression><![CDATA["Consumidor: " + ($F{nomeConsumidor}==null?"(Sem nome)":$F{nomeConsumidor})]]></textFieldExpression>
+                </textField>
+            </band>
+        </groupHeader>
+        <groupFooter>
+            <band height="16">
+                <textField>
+                    <reportElement x="240" y="0" width="315" height="16"/>
+                    <textElement textAlignment="Right"><font isBold="true" size="9"/></textElement>
+                    <textFieldExpression><![CDATA["Total consumidor: " + $V{SUM_QTD_CONSUMIDOR} + " (" + ($V{TOTAL_QTD}!=null && $V{TOTAL_QTD}>0 ? new java.text.DecimalFormat("0.00").format((double)$V{SUM_QTD_CONSUMIDOR}/(double)$V{TOTAL_QTD}*100) : "0.00") + "%)" ]]></textFieldExpression>
+                </textField>
+            </band>
+        </groupFooter>
+    </group>
+    <group name="ProdutoGroup">
+        <groupExpression><![CDATA[$F{nomeProduto}]]></groupExpression>
+        <groupHeader>
+            <band height="14">
+                <textField>
+                    <reportElement x="10" y="0" width="535" height="14"/>
+                    <textElement><font size="9" isBold="true"/></textElement>
+                    <textFieldExpression><![CDATA["Produto: " + ($F{nomeProduto}==null?"(Sem nome)":$F{nomeProduto})]]></textFieldExpression>
+                </textField>
+            </band>
+        </groupHeader>
+        <groupFooter>
+            <band height="14">
+                <textField>
+                    <reportElement x="300" y="0" width="255" height="14"/>
+                    <textElement textAlignment="Right"><font size="8" isBold="true"/></textElement>
+                    <textFieldExpression><![CDATA["Subtotal produto: " + $V{SUM_QTD_PRODUTO} + " (" + ($V{SUM_QTD_CONSUMIDOR}!=null && $V{SUM_QTD_CONSUMIDOR}>0 ? new java.text.DecimalFormat("0.00").format((double)$V{SUM_QTD_PRODUTO}/(double)$V{SUM_QTD_CONSUMIDOR}*100) : "0.00") + "%)" ]]></textFieldExpression>
+                </textField>
+            </band>
+        </groupFooter>
+    </group>
 
     <title>
-        <band height="60">
+        <band height="75">
             <staticText>
-                <reportElement x="0" y="0" width="555" height="25"/>
+                <reportElement x="0" y="0" width="555" height="26"/>
                 <textElement textAlignment="Center"><font size="18" isBold="true"/></textElement>
-                <text><![CDATA[Relatório de Entregas do Ano]]></text>
+                <text><![CDATA[Entregas por Ano]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="0" y="27" width="555" height="16"/>
+                <textElement textAlignment="Center"><font size="11"/></textElement>
+                <text><![CDATA[Relatório anual de todas as entregas]]></text>
             </staticText>
             <textField>
-                <reportElement x="0" y="28" width="555" height="15"/>
+                <reportElement x="0" y="46" width="555" height="14"/>
                 <textElement textAlignment="Center"/>
                 <textFieldExpression><![CDATA["Ano: " + $P{ANO}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="0" y="44" width="555" height="15"/>
+                <reportElement x="0" y="60" width="555" height="14"/>
                 <textElement textAlignment="Center"/>
                 <textFieldExpression><![CDATA["Org ID: " + $P{ORGANIZACAO_ID}]]></textFieldExpression>
             </textField>
         </band>
     </title>
+
     <columnHeader>
         <band height="25">
-            <staticText><reportElement x="0" y="0" width="40" height="25"/><box><pen lineWidth="1"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[ID]]></text></staticText>
-            <staticText><reportElement x="40" y="0" width="140" height="25"/><box><pen lineWidth="1"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Consumidor]]></text></staticText>
-            <staticText><reportElement x="180" y="0" width="140" height="25"/><box><pen lineWidth="1"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Produto]]></text></staticText>
-            <staticText><reportElement x="320" y="0" width="100" height="25"/><box><pen lineWidth="1"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Entregador]]></text></staticText>
-            <staticText><reportElement x="420" y="0" width="60" height="25"/><box><pen lineWidth="1"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Qtd]]></text></staticText>
-            <staticText><reportElement x="480" y="0" width="75" height="25"/><box><pen lineWidth="1"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Horário]]></text></staticText>
+            <staticText><reportElement x="0" y="0" width="35" height="25"/><box leftPadding="2" rightPadding="2"><pen lineWidth="1"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[ID]]></text></staticText>
+            <staticText><reportElement x="35" y="0" width="130" height="25"/><box leftPadding="4" rightPadding="4"><pen lineWidth="1"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Consumidor]]></text></staticText>
+            <staticText><reportElement x="165" y="0" width="130" height="25"/><box leftPadding="4" rightPadding="4"><pen lineWidth="1"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Produto]]></text></staticText>
+            <staticText><reportElement x="295" y="0" width="95" height="25"/><box leftPadding="4" rightPadding="4"><pen lineWidth="1"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Entregador]]></text></staticText>
+            <staticText><reportElement x="390" y="0" width="55" height="25"/><box leftPadding="2" rightPadding="2"><pen lineWidth="1"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Qtd]]></text></staticText>
+            <staticText><reportElement x="445" y="0" width="110" height="25"/><box leftPadding="4" rightPadding="4"><pen lineWidth="1"/></box><textElement textAlignment="Left" verticalAlignment="Middle"/><text><![CDATA[Horário]]></text></staticText>
         </band>
     </columnHeader>
+
     <detail>
-        <!-- Formatar horário -->
         <band height="18">
-            <textField><reportElement x="0" y="0" width="40" height="18"/><box><pen lineWidth="1"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{id}]]></textFieldExpression></textField>
-            <textField><reportElement x="40" y="0" width="140" height="18"/><box><pen lineWidth="1"/></box><textElement verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{nomeConsumidor}]]></textFieldExpression></textField>
-            <textField><reportElement x="180" y="0" width="140" height="18"/><box><pen lineWidth="1"/></box><textElement verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{nomeProduto}]]></textFieldExpression></textField>
-            <textField><reportElement x="320" y="0" width="100" height="18"/><box><pen lineWidth="1"/></box><textElement verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{nomeEntregador}]]></textFieldExpression></textField>
-            <textField><reportElement x="420" y="0" width="60" height="18"/><box><pen lineWidth="1"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{quantidade}]]></textFieldExpression></textField>
-            <textField><reportElement x="480" y="0" width="75" height="18"/><box><pen lineWidth="1"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{horarioEntrega} != null ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format($F{horarioEntrega}) : "" ]]></textFieldExpression></textField>
+            <textField><reportElement x="0" y="0" width="35" height="18"/><box leftPadding="2" rightPadding="2"><pen lineWidth="1"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{id}]]></textFieldExpression></textField>
+            <textField><reportElement x="35" y="0" width="130" height="18"/><box leftPadding="4" rightPadding="4"><pen lineWidth="1"/></box><textElement verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{nomeConsumidor}]]></textFieldExpression></textField>
+            <textField><reportElement x="165" y="0" width="130" height="18"/><box leftPadding="4" rightPadding="4"><pen lineWidth="1"/></box><textElement verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{nomeProduto}]]></textFieldExpression></textField>
+            <textField><reportElement x="295" y="0" width="95" height="18"/><box leftPadding="4" rightPadding="4"><pen lineWidth="1"/></box><textElement verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{nomeEntregador}]]></textFieldExpression></textField>
+            <textField><reportElement x="390" y="0" width="55" height="18"/><box leftPadding="2" rightPadding="2"><pen lineWidth="1"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{quantidade}]]></textFieldExpression></textField>
+            <textField><reportElement x="445" y="0" width="110" height="18"/><box leftPadding="4" rightPadding="4"><pen lineWidth="1"/></box><textElement textAlignment="Left" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{horarioEntrega}!=null?java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format($F{horarioEntrega}):"" ]]></textFieldExpression></textField>
         </band>
     </detail>
+
     <pageFooter>
-        <!-- ...existing code... -->
         <band height="15">
             <textField><reportElement x="455" y="0" width="100" height="15"/><textElement textAlignment="Right"/><textFieldExpression><![CDATA["Página " + $V{PAGE_NUMBER}]]></textFieldExpression></textField>
         </band>
     </pageFooter>
+
     <summary>
-        <!-- Adicionar percentuais globais (consumidores não acumulam individualmente aqui) -->
         <band height="55">
             <staticText>
                 <reportElement x="0" y="5" width="200" height="15"/>
@@ -96,53 +135,10 @@
             </textField>
         </band>
     </summary>
+
     <noData>
         <band height="30">
             <staticText><reportElement x="0" y="5" width="555" height="20"/><textElement textAlignment="Center"/><text><![CDATA[Nenhum registro encontrado.]]></text></staticText>
         </band>
     </noData>
-    <!-- Grupo Produto (aninhado) -->
-    <group name="ProdutoGroup">
-        <groupExpression><![CDATA[$F{nomeProduto}]]></groupExpression>
-        <groupHeader>
-            <band height="12">
-                <textField>
-                    <reportElement x="10" y="0" width="535" height="12"/>
-                    <textElement><font size="9" isBold="true"/></textElement>
-                    <textFieldExpression><![CDATA["Produto: " + ($F{nomeProduto}==null?"(Sem nome)":$F{nomeProduto})]]></textFieldExpression>
-                </textField>
-            </band>
-        </groupHeader>
-        <groupFooter>
-            <band height="12">
-                <textField>
-                    <reportElement x="300" y="0" width="255" height="12"/>
-                    <textElement textAlignment="Right"><font size="8" isBold="true"/></textElement>
-                    <textFieldExpression><![CDATA["Subtotal produto: " + $V{SUM_QTD_PRODUTO} + " (" + ($V{SUM_QTD_CONSUMIDOR}!=null && $V{SUM_QTD_CONSUMIDOR}>0 ? new java.text.DecimalFormat("0.00").format((double)$V{SUM_QTD_PRODUTO}/(double)$V{SUM_QTD_CONSUMIDOR}*100) : "0.00") + "%)" ]]></textFieldExpression>
-                </textField>
-            </band>
-        </groupFooter>
-    </group>
-    <!-- Grupo Consumidor ajustado com percentual -->
-    <group name="ConsumidorGroup">
-        <groupExpression><![CDATA[$F{nomeConsumidor}]]></groupExpression>
-        <groupHeader>
-            <band height="14">
-                <textField>
-                    <reportElement x="0" y="0" width="555" height="14"/>
-                    <textElement><font isBold="true"/></textElement>
-                    <textFieldExpression><![CDATA["Consumidor: " + ($F{nomeConsumidor}==null?"(Sem nome)":$F{nomeConsumidor})]]></textFieldExpression>
-                </textField>
-            </band>
-        </groupHeader>
-        <groupFooter>
-            <band height="14">
-                <textField>
-                    <reportElement x="240" y="0" width="315" height="14"/>
-                    <textElement textAlignment="Right"><font isBold="true" size="9"/></textElement>
-                    <textFieldExpression><![CDATA["Total consumidor: " + $V{SUM_QTD_CONSUMIDOR} + " (" + ($V{TOTAL_QTD}!=null && $V{TOTAL_QTD}>0 ? new java.text.DecimalFormat("0.00").format((double)$V{SUM_QTD_CONSUMIDOR}/(double)$V{TOTAL_QTD}*100) : "0.00") + "%)" ]]></textFieldExpression>
-                </textField>
-            </band>
-        </groupFooter>
-    </group>
 </jasperReport>

@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -135,10 +136,13 @@ public class ReportController {
                     .body(pdfVazio);
         }
 
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        String inicioFmt = inicio.atZoneSameInstant(inicio.getOffset()).toLocalDateTime().format(fmt);
+        String fimFmt = fim.atZoneSameInstant(fim.getOffset()).toLocalDateTime().format(fmt);
         Map<String, Object> params = new HashMap<>();
         params.put("TITULO", "Relatório de Entregas por Período");
-        params.put("DATA_INICIO", inicio.toString());
-        params.put("DATA_FIM", fim.toString());
+        params.put("DATA_INICIO", inicioFmt);
+        params.put("DATA_FIM", fimFmt);
         params.put("ORGANIZACAO_ID", orgId);
 
         byte[] pdf = reportService.gerarPdfComBeans("/reports/entregas-periodo.jrxml", params, dados);
@@ -173,10 +177,13 @@ public class ReportController {
                     .body(xlsxVazio);
         }
 
+        DateTimeFormatter fmtX = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        String inicioFmtX = inicio.atZoneSameInstant(inicio.getOffset()).toLocalDateTime().format(fmtX);
+        String fimFmtX = fim.atZoneSameInstant(fim.getOffset()).toLocalDateTime().format(fmtX);
         Map<String, Object> params = new HashMap<>();
         params.put("TITULO", "Relatório de Entregas por Período");
-        params.put("DATA_INICIO", inicio.toString());
-        params.put("DATA_FIM", fim.toString());
+        params.put("DATA_INICIO", inicioFmtX);
+        params.put("DATA_FIM", fimFmtX);
 
         byte[] xlsx = reportService.gerarXlsx("/reports/entregas-periodo.jrxml", params, dados);
         return ResponseEntity.ok()
