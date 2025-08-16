@@ -163,6 +163,41 @@ public class EntregaController {
         return ResponseEntity.ok(pageDto);
     }
 
+    /**
+     * Endpoint para obter o total de entregas realizadas pela organização.
+     *
+     * @return ResponseEntity com o número total de entregas
+     */
+    @GetMapping("/total")
+    public ResponseEntity<Integer> getTotalEntregasRealizadas() {
+        Integer totalEntregas = entregaService.getTotalEntregasRealizadas();
+        return ResponseEntity.ok(totalEntregas);
+    }
+
+    /**
+     * Endpoint para obter o total de entregas realizadas por um consumidor.
+     *
+     * @param consumidorId ID do consumidor
+     * @return ResponseEntity com o número de entregas do consumidor
+     */
+    @GetMapping("/total/consumidor/{consumidorId}")
+    public ResponseEntity<Integer> getTotalEntregasPorConsumidor(@PathVariable Long consumidorId) {
+        Integer totalEntregas = entregaService.getTotalEntregasPorConsumidor(consumidorId);
+        return ResponseEntity.ok(totalEntregas);
+    }
+
+    /**
+     * Endpoint para obter o total de entregas realizadas com um produto específico.
+     *
+     * @param produtoId ID do produto
+     * @return ResponseEntity com o número de entregas do produto
+     */
+    @GetMapping("/total/produto/{produtoId}")
+    public ResponseEntity<Integer> getTotalEntregasPorProduto(@PathVariable Long produtoId) {
+        Integer totalEntregas = entregaService.getTotalEntregasPorProduto(produtoId);
+        return ResponseEntity.ok(totalEntregas);
+    }
+
 
 
 }

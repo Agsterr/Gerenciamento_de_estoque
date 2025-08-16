@@ -14,6 +14,9 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAut
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -95,15 +98,16 @@ class MovimentacaoProdutoControllerTest {
     void porData_DeveRetornarListaMovimentacaoPorData() throws Exception {
         List<MovimentacaoProdutoDto> lista = Arrays.asList(dtoEntrada);
         LocalDate data = LocalDate.now();
-        when(movimentacaoProdutoService.buscarPorData(eq(TipoMovimentacao.ENTRADA), eq(data)))
-                .thenReturn(lista);
+        Page<MovimentacaoProdutoDto> page = new PageImpl<>(lista);
+        when(movimentacaoProdutoService.buscarPorData(eq(TipoMovimentacao.ENTRADA), eq(data), any(Pageable.class)))
+                .thenReturn(page);
 
         mockMvc.perform(get("/movimentacoes/por-data")
                         .param("tipo", "ENTRADA")
                         .param("data", data.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1L))
-                .andExpect(jsonPath("$[0].nomeProduto").value("Produto A"));
+                .andExpect(jsonPath("$.content[0].id").value(1L))
+                .andExpect(jsonPath("$.content[0].nomeProduto").value("Produto A"));
     }
 
     @Test
@@ -111,44 +115,48 @@ class MovimentacaoProdutoControllerTest {
         List<MovimentacaoProdutoDto> lista = Arrays.asList(dtoSaida);
         LocalDateTime inicio = LocalDateTime.now().minusDays(1);
         LocalDateTime fim = LocalDateTime.now();
+        Page<MovimentacaoProdutoDto> page = new PageImpl<>(lista);
 
         when(movimentacaoProdutoService.buscarPorPeriodo(
                 eq(TipoMovimentacao.SAIDA),
                 eq(inicio),
-                eq(fim)))
-                .thenReturn(lista);
+                eq(fim),
+                any(Pageable.class)))
+                .thenReturn(page);
 
         mockMvc.perform(get("/movimentacoes/por-periodo")
                         .param("tipo", "SAIDA")
                         .param("inicio", inicio.toString())
                         .param("fim", fim.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(2L))
-                .andExpect(jsonPath("$[0].nomeProduto").value("Produto B"));
+                .andExpect(jsonPath("$.content[0].id").value(2L))
+                .andExpect(jsonPath("$.content[0].nomeProduto").value("Produto B"));
     }
 
     @Test
     void porAno_DeveRetornarListaMovimentacaoPorAno() throws Exception {
         List<MovimentacaoProdutoDto> lista = Arrays.asList(dtoEntrada, dtoSaida);
-        when(movimentacaoProdutoService.listarDetalhadoPorAno(2025)).thenReturn(lista);
+        Page<MovimentacaoProdutoDto> page = new PageImpl<>(lista);
+        when(movimentacaoProdutoService.listarDetalhadoPorAno(eq(2025), any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/movimentacoes/por-ano")
                         .param("ano", "2025"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1L))
-                .andExpect(jsonPath("$[1].id").value(2L));
+                .andExpect(jsonPath("$.content[0].id").value(1L))
+                .andExpect(jsonPath("$.content[1].id").value(2L));
     }
 
     @Test
     void porMes_DeveRetornarListaMovimentacaoPorMes() throws Exception {
         List<MovimentacaoProdutoDto> lista = Arrays.asList(dtoEntrada);
-        when(movimentacaoProdutoService.listarDetalhadoPorMes(2025, 5)).thenReturn(lista);
+        Page<MovimentacaoProdutoDto> page = new PageImpl<>(lista);
+        when(movimentacaoProdutoService.listarDetalhadoPorMes(eq(2025), eq(5), any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/movimentacoes/por-mes")
                         .param("ano", "2025")
                         .param("mes", "5"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1L))
-                .andExpect(jsonPath("$[0].nomeProduto").value("Produto A"));
+                .andExpect(jsonPath("$.content[0].id").value(1L))
+                .andExpect(jsonPath("$.content[0].nomeProduto").value("Produto A"));
     }
 }

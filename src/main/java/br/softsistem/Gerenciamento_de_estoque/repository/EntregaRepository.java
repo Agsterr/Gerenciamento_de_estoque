@@ -10,37 +10,59 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 
+/**
+ * Repositório para operações de CRUD e consultas customizadas sobre Entrega.
+ */
 @Repository
 public interface EntregaRepository extends JpaRepository<Entrega, Long> {
 
     // ======================================================
     // PAGINAÇÃO: listar todas as entregas de uma organização
     // ======================================================
-    @Query("SELECT e " +
-            "FROM Entrega e " +
-            "WHERE e.org.id = :orgId")
+
+    /**
+     * Busca todas as entregas pertencentes à organização especificada, com paginação.
+     *
+     * @param orgId   ID da organização
+     * @param pageable parâmetros de paginação (página atual, tamanho, ordenação)
+     * @return página de entidades Entrega filtradas pela organização
+     */
+    @Query("SELECT e FROM Entrega e WHERE e.org.id = :orgId")
     Page<Entrega> findByOrgId(@Param("orgId") Long orgId, Pageable pageable);
 
     // ======================================================
-    // SOMA DE VALORES (deixamos, mas não vamos mais usar para retorno)
+    // SOMA DE VALORES (usados em relatórios de intervalo)
     // ======================================================
-    @Query("SELECT COALESCE(SUM(e.valor), 0) " +
-            "FROM Entrega e " +
-            "WHERE e.horarioEntrega >= :inicio " +
-            "  AND e.horarioEntrega <= :fim " +
-            "  AND e.org.id = :orgId")
+
+    /**
+     * Calcula a soma total dos valores de todas as entregas realizadas no intervalo de datas especificado.
+     *
+     * @param inicio data/hora inicial do intervalo (inclusive)
+     * @param fim    data/hora final do intervalo (inclusive)
+     * @param orgId  ID da organização
+     * @return soma dos valores das entregas no intervalo; retorna 0 se não houver entregas
+     */
+    @Query("SELECT COALESCE(SUM(e.valor), 0) FROM Entrega e " +
+            "WHERE e.horarioEntrega >= :inicio AND e.horarioEntrega <= :fim AND e.org.id = :orgId")
     java.math.BigDecimal totalPorIntervalo(
             @Param("inicio") LocalDateTime inicio,
             @Param("fim")    LocalDateTime fim,
             @Param("orgId")  Long orgId
     );
 
-    @Query("SELECT COALESCE(SUM(e.valor), 0) " +
-            "FROM Entrega e " +
+    /**
+     * Calcula a soma total dos valores de todas as entregas de um consumidor no intervalo de datas especificado.
+     *
+     * @param consumidorId ID do consumidor
+     * @param inicio       data/hora inicial do intervalo (inclusive)
+     * @param fim          data/hora final do intervalo (inclusive)
+     * @param orgId        ID da organização
+     * @return soma dos valores das entregas do consumidor no intervalo; retorna 0 se não houver entregas
+     */
+    @Query("SELECT COALESCE(SUM(e.valor), 0) FROM Entrega e " +
             "WHERE e.consumidor.id = :consumidorId " +
-            "  AND e.horarioEntrega >= :inicio " +
-            "  AND e.horarioEntrega <= :fim " +
-            "  AND e.org.id = :orgId")
+            "AND e.horarioEntrega >= :inicio AND e.horarioEntrega <= :fim " +
+            "AND e.org.id = :orgId")
     java.math.BigDecimal totalPorIntervaloPorConsumidor(
             @Param("consumidorId") Long consumidorId,
             @Param("inicio")       LocalDateTime inicio,
@@ -48,15 +70,36 @@ public interface EntregaRepository extends JpaRepository<Entrega, Long> {
             @Param("orgId")        Long orgId
     );
 
+    /**
+     * Calcula a soma total dos valores de todas as entregas de um consumidor em toda a organização.
+     *
+     * @param consumidorId ID do consumidor
+     * @param orgId        ID da organização
+     * @return soma dos valores de todas as entregas do consumidor; retorna 0 se não houver entregas
+     */
+    @Query("SELECT COALESCE(SUM(e.valor), 0) FROM Entrega e " +
+            "WHERE e.consumidor.id = :consumidorId AND e.org.id = :orgId")
+    java.math.BigDecimal totalPorConsumidor(
+            @Param("consumidorId") Long consumidorId,
+            @Param("orgId")        Long orgId
+    );
+
     // ======================================================
-    // DETALHAMENTO: listar entregas em intervalo genérico com paginação
+    // DETALHAMENTO: consultas com paginação e filtro de datas
     // ======================================================
-    @Query("SELECT e " +
-            "FROM Entrega e " +
-            "WHERE e.horarioEntrega >= :inicio " +
-            "  AND e.horarioEntrega <= :fim " +
-            "  AND e.org.id = :orgId " +
-            "ORDER BY e.horarioEntrega ASC")
+
+    /**
+     * Lista entregas de uma organização em um intervalo de datas, com paginação.
+     *
+     * @param inicio   data/hora inicial do intervalo (inclusive)
+     * @param fim      data/hora final do intervalo (inclusive)
+     * @param orgId    ID da organização
+     * @param pageable parâmetros de paginação
+     * @return página de entregas dentro do intervalo
+     */
+    @Query("SELECT e FROM Entrega e " +
+            "WHERE e.horarioEntrega >= :inicio AND e.horarioEntrega <= :fim " +
+            "AND e.org.id = :orgId ORDER BY e.horarioEntrega ASC")
     Page<Entrega> findByHorarioEntregaBetweenAndOrgId(
             @Param("inicio") LocalDateTime inicio,
             @Param("fim")    LocalDateTime fim,
@@ -64,17 +107,16 @@ public interface EntregaRepository extends JpaRepository<Entrega, Long> {
             Pageable pageable
     );
 
-    // ======================================================
-    // NOVOS MÉTODOS PARA BUSCAR POR CONSUMIDOR (DETALHADO) COM PAGINAÇÃO
-    // ======================================================
-
     /**
-     * Retorna todas as entregas de um consumidor em toda organização (sem intervalo de data) com paginação.
+     * Lista todas as entregas de um consumidor na organização, com paginação e sem filtro de datas.
+     *
+     * @param consumidorId ID do consumidor
+     * @param orgId        ID da organização
+     * @param pageable     parâmetros de paginação
+     * @return página de entregas do consumidor
      */
-    @Query("SELECT e " +
-            "FROM Entrega e " +
-            "WHERE e.consumidor.id = :consumidorId " +
-            "  AND e.org.id = :orgId " +
+    @Query("SELECT e FROM Entrega e " +
+            "WHERE e.consumidor.id = :consumidorId AND e.org.id = :orgId " +
             "ORDER BY e.horarioEntrega ASC")
     Page<Entrega> findByConsumidorIdAndOrgId(
             @Param("consumidorId") Long consumidorId,
@@ -83,15 +125,19 @@ public interface EntregaRepository extends JpaRepository<Entrega, Long> {
     );
 
     /**
-     * Retorna todas as entregas de um consumidor em um intervalo de data/hora, filtrando pela organização com paginação.
+     * Lista entregas de um consumidor em um intervalo de datas, com paginação.
+     *
+     * @param consumidorId ID do consumidor
+     * @param inicio       data/hora inicial do intervalo (inclusive)
+     * @param fim          data/hora final do intervalo (inclusive)
+     * @param orgId        ID da organização
+     * @param pageable     parâmetros de paginação
+     * @return página de entregas do consumidor no intervalo
      */
-    @Query("SELECT e " +
-            "FROM Entrega e " +
+    @Query("SELECT e FROM Entrega e " +
             "WHERE e.consumidor.id = :consumidorId " +
-            "  AND e.horarioEntrega >= :inicio " +
-            "  AND e.horarioEntrega <= :fim " +
-            "  AND e.org.id = :orgId " +
-            "ORDER BY e.horarioEntrega ASC")
+            "AND e.horarioEntrega >= :inicio AND e.horarioEntrega <= :fim " +
+            "AND e.org.id = :orgId ORDER BY e.horarioEntrega ASC")
     Page<Entrega> findByConsumidorIdAndHorarioEntregaBetweenAndOrgId(
             @Param("consumidorId") Long consumidorId,
             @Param("inicio")       LocalDateTime inicio,
@@ -101,15 +147,19 @@ public interface EntregaRepository extends JpaRepository<Entrega, Long> {
     );
 
     // ======================================================
-    // NOVO MÉTODO PARA BUSCAR POR PRODUTO E ORGANIZAÇÃO COM PAGINAÇÃO
+    // CONSULTAS POR PRODUTO COM PAGINAÇÃO E CONTAGEM
     // ======================================================
+
     /**
-     * Retorna todas as entregas de uma organização que contenham um produto específico com paginação.
+     * Lista entregas que contêm um determinado produto, filtradas pela organização, com paginação.
+     *
+     * @param produtoId ID do produto
+     * @param orgId     ID da organização
+     * @param pageable  parâmetros de paginação
+     * @return página de entregas contendo o produto
      */
-    @Query("SELECT e " +
-            "FROM Entrega e " +
-            "WHERE e.produto.id = :produtoId " + // Agora estamos filtrando pelo produto diretamente
-            "  AND e.org.id = :orgId " + // Garantindo que a entrega pertença à organização correta
+    @Query("SELECT e FROM Entrega e " +
+            "WHERE e.produto.id = :produtoId AND e.org.id = :orgId " +
             "ORDER BY e.horarioEntrega ASC")
     Page<Entrega> findByProdutoIdAndOrgId(
             @Param("produtoId") Long produtoId,
@@ -117,39 +167,129 @@ public interface EntregaRepository extends JpaRepository<Entrega, Long> {
             Pageable pageable
     );
 
-    @Query("SELECT COALESCE(SUM(e.valor), 0) " +
-            "FROM Entrega e " +
-            "WHERE e.horarioEntrega >= :inicio " +
-            "  AND e.horarioEntrega < :fim " +
-            "  AND e.org.id = :orgId")
+    // ======================================================
+    // MÉTRICAS SIMPLES: totais diários e contagens
+    // ======================================================
+
+    /**
+     * Soma dos valores de todas as entregas num dia específico.
+     *
+     * @param inicio data/hora inicial do dia (inclusive)
+     * @param fim    data/hora final do dia (exclusive)
+     * @param orgId  ID da organização
+     * @return soma dos valores das entregas no dia; retorna 0 se não houver entregas
+     */
+    @Query("SELECT COALESCE(SUM(e.valor), 0) FROM Entrega e " +
+            "WHERE e.horarioEntrega >= :inicio AND e.horarioEntrega < :fim " +
+            "AND e.org.id = :orgId")
     java.math.BigDecimal totalPorDia(
             @Param("inicio") LocalDateTime inicio,
-            @Param("fim") LocalDateTime fim,
-            @Param("orgId") Long orgId
+            @Param("fim")    LocalDateTime fim,
+            @Param("orgId")  Long orgId
     );
 
-    @Query("SELECT COALESCE(COUNT(e), 0) " +
-            "FROM Entrega e " +
-            "WHERE e.org.id = :orgId")
+    /**
+     * Conta o total de entregas realizadas pela organização.
+     *
+     * @param orgId ID da organização
+     * @return número total de entregas
+     */
+    @Query("SELECT COALESCE(COUNT(e), 0) FROM Entrega e WHERE e.org.id = :orgId")
     Integer totalEntregasRealizadas(@Param("orgId") Long orgId);
 
+    /**
+     * Conta o total de entregas realizadas por um consumidor na organização.
+     *
+     * @param consumidorId ID do consumidor
+     * @param orgId        ID da organização
+     * @return número de entregas do consumidor
+     */
+    @Query("SELECT COALESCE(COUNT(e), 0) FROM Entrega e " +
+            "WHERE e.consumidor.id = :consumidorId AND e.org.id = :orgId")
+    Integer totalEntregasPorConsumidor(
+            @Param("consumidorId") Long consumidorId,
+            @Param("orgId")        Long orgId
+    );
 
-    @Query("SELECT COALESCE(COUNT(e), 0) " +
-            "FROM Entrega e " +
+    /**
+     * Conta o total de entregas que envolveram um produto específico na organização.
+     *
+     * @param produtoId ID do produto
+     * @param orgId     ID da organização
+     * @return número de entregas do produto
+     */
+    @Query("SELECT COALESCE(COUNT(e), 0) FROM Entrega e " +
+            "WHERE e.produto.id = :produtoId AND e.org.id = :orgId")
+    Integer totalEntregasPorProduto(
+            @Param("produtoId") Long produtoId,
+            @Param("orgId")     Long orgId
+    );
+
+    /**
+     * Retorna o valor total (valor * quantidade) de uma única entrega
+     * para a organização atual.
+     */
+    @Query("SELECT COALESCE(e.valor, 0) FROM Entrega e " +
+            "WHERE e.id = :entregaId AND e.org.id = :orgId")
+    java.math.BigDecimal totalPorEntrega(
+            @Param("entregaId") Long entregaId,
+            @Param("orgId")     Long orgId
+    );
+
+    /**
+     * Retorna as entregas realizadas por um consumidor específico dentro de um intervalo anual para uma organização, com paginação.
+     */
+    @Query("SELECT e FROM Entrega e " +
             "WHERE e.consumidor.id = :consumidorId " +
-            "  AND e.org.id = :orgId")
-    Integer totalEntregasPorConsumidor(@Param("consumidorId") Long consumidorId, @Param("orgId") Long orgId);
+            "AND e.horarioEntrega >= :inicioAno AND e.horarioEntrega <= :fimAno " +
+            "AND e.org.id = :orgId ORDER BY e.horarioEntrega ASC")
+    Page<Entrega> findByConsumidorIdAndHorarioEntregaBetweenAndOrgIdAnnual(
+            @Param("consumidorId") Long consumidorId,
+            @Param("inicioAno") LocalDateTime inicioAno,
+            @Param("fimAno") LocalDateTime fimAno,
+            @Param("orgId") Long orgId,
+            Pageable pageable
+    );
 
+    /**
+     * Retorna as entregas realizadas por um consumidor específico dentro de um intervalo mensal para uma organização, com paginação.
+     */
+    @Query("SELECT e FROM Entrega e " +
+            "WHERE e.consumidor.id = :consumidorId " +
+            "AND e.horarioEntrega >= :inicioMes AND e.horarioEntrega <= :fimMes " +
+            "AND e.org.id = :orgId ORDER BY e.horarioEntrega ASC")
+    Page<Entrega> findByConsumidorIdAndHorarioEntregaBetweenAndOrgIdMonthly(
+            @Param("consumidorId") Long consumidorId,
+            @Param("inicioMes") LocalDateTime inicioMes,
+            @Param("fimMes") LocalDateTime fimMes,
+            @Param("orgId") Long orgId,
+            Pageable pageable
+    );
 
-    @Query("SELECT COALESCE(COUNT(e), 0) " +
-            "FROM Entrega e " +
-            "WHERE e.produto.id = :produtoId " +
-            "  AND e.org.id = :orgId")
-    Integer totalEntregasPorProduto(@Param("produtoId") Long produtoId, @Param("orgId") Long orgId);
+    /**
+     * Retorna as entregas realizadas por uma organização dentro de um intervalo anual, com paginação.
+     */
+    @Query("SELECT e FROM Entrega e " +
+            "WHERE e.horarioEntrega >= :inicioAno AND e.horarioEntrega <= :fimAno " +
+            "AND e.org.id = :orgId ORDER BY e.horarioEntrega ASC")
+    Page<Entrega> findByOrgIdAndHorarioEntregaBetweenAnnual(
+            @Param("inicioAno") LocalDateTime inicioAno,
+            @Param("fimAno") LocalDateTime fimAno,
+            @Param("orgId") Long orgId,
+            Pageable pageable
+    );
 
-
-
-
-
+    /**
+     * Retorna as entregas realizadas por uma organização dentro de um intervalo mensal, com paginação.
+     */
+    @Query("SELECT e FROM Entrega e " +
+            "WHERE e.horarioEntrega >= :inicioMes AND e.horarioEntrega <= :fimMes " +
+            "AND e.org.id = :orgId ORDER BY e.horarioEntrega ASC")
+    Page<Entrega> findByOrgIdAndHorarioEntregaBetweenMonthly(
+            @Param("inicioMes") LocalDateTime inicioMes,
+            @Param("fimMes") LocalDateTime fimMes,
+            @Param("orgId") Long orgId,
+            Pageable pageable
+    );
 
 }

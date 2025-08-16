@@ -33,6 +33,19 @@ public class MovimentacaoProduto {
     @JoinColumn(name = "org_id")
     private Org org;
 
+    @ManyToOne
+    @JoinColumn(name = "entrega_id")
+    private Entrega entrega;
+
+    // Novo campo para armazenar o usuário responsável
+    @ManyToOne
+    @JoinColumn(name = "usuario_id")
+    private Usuario usuario;
+
+    @ManyToOne
+    @JoinColumn(name = "consumidor_id")
+    private Consumidor consumidor; // Novo campo opcional
+
     public Long getId() {
         return id;
     }
@@ -79,5 +92,29 @@ public class MovimentacaoProduto {
 
     public void setOrg(Org org) {
         this.org = org;
+    }
+
+    public Entrega getEntrega() {
+        return entrega;
+    }
+
+    public void setEntrega(Entrega entrega) {
+        this.entrega = entrega;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
+    }
+
+    public Consumidor getConsumidor() {
+        return consumidor;
+    }
+
+    public void setConsumidor(Consumidor consumidor) {
+        this.consumidor = consumidor;
     }
 }

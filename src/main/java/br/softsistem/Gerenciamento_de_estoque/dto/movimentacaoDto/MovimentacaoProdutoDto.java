@@ -14,6 +14,13 @@ public class MovimentacaoProdutoDto {
     private LocalDateTime dataHora;
     private TipoMovimentacao tipo;
     private Long orgId;
+    private String nomeConsumidor;
+    private Long consumidorId; // novo
+    private Long usuarioId;
+    private String nomeUsuario;
+    private Long entregaId;
+    // novo campo para relatório
+    private String nomeEntregador;
 
     public MovimentacaoProdutoDto() {}
 
@@ -25,6 +32,22 @@ public class MovimentacaoProdutoDto {
         this.dataHora = movimentacao.getDataHora();
         this.tipo = movimentacao.getTipo();
         this.orgId = movimentacao.getOrg().getId();
+        if (movimentacao.getEntrega() != null) {
+            this.entregaId = movimentacao.getEntrega().getId();
+            if (movimentacao.getEntrega().getConsumidor() != null) {
+                this.nomeConsumidor = movimentacao.getEntrega().getConsumidor().getNome();
+                this.consumidorId = movimentacao.getEntrega().getConsumidor().getId();
+            }
+            if (movimentacao.getEntrega().getEntregador() != null) {
+                this.nomeEntregador = movimentacao.getEntrega().getEntregador().getUsername();
+            }
+        }
+        if (movimentacao.getConsumidor() != null) { // consumidor direto (sem entrega)
+            this.nomeConsumidor = movimentacao.getConsumidor().getNome();
+            this.consumidorId = movimentacao.getConsumidor().getId();
+        }
+        // usuario opcional (se existir no model)
+        // if (movimentacao.getUsuario() != null) { ... }
     }
 
     // Getters e setters
@@ -84,4 +107,42 @@ public class MovimentacaoProdutoDto {
     public void setOrgId(Long orgId) {
         this.orgId = orgId;
     }
+
+    public String getNomeConsumidor() {
+        return nomeConsumidor;
+    }
+
+    public void setNomeConsumidor(String nomeConsumidor) {
+        this.nomeConsumidor = nomeConsumidor;
+    }
+
+    public Long getConsumidorId() { return consumidorId; }
+    public void setConsumidorId(Long consumidorId) { this.consumidorId = consumidorId; }
+
+    public Long getUsuarioId() {
+        return usuarioId;
+    }
+
+    public void setUsuarioId(Long usuarioId) {
+        this.usuarioId = usuarioId;
+    }
+
+    public String getNomeUsuario() {
+        return nomeUsuario;
+    }
+
+    public void setNomeUsuario(String nomeUsuario) {
+        this.nomeUsuario = nomeUsuario;
+    }
+
+    public Long getEntregaId() {
+        return entregaId;
+    }
+
+    public void setEntregaId(Long entregaId) {
+        this.entregaId = entregaId;
+    }
+
+    public String getNomeEntregador() { return nomeEntregador; }
+    public void setNomeEntregador(String nomeEntregador) { this.nomeEntregador = nomeEntregador; }
 }

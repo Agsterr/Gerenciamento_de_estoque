@@ -34,6 +34,29 @@ public class MovimentacaoProdutoController {
     }
 
     /**
+     * Edita uma movimentação existente.
+     * Exemplo de chamada: PUT /movimentacoes/1
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<MovimentacaoProdutoDto> editar(
+            @PathVariable Long id,
+            @RequestBody @Valid MovimentacaoProdutoDto dto) {
+        MovimentacaoProdutoDto response = service.editarMovimentacao(id, dto);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Lista todas as movimentações de um produto específico.
+     * Exemplo de chamada: GET /movimentacoes/produto/1
+     */
+    @GetMapping("/produto/{produtoId}")
+    public ResponseEntity<List<MovimentacaoProdutoDto>> listarPorProduto(
+            @PathVariable Long produtoId) {
+        List<MovimentacaoProdutoDto> movimentacoes = service.buscarPorIdProduto(produtoId);
+        return ResponseEntity.ok(movimentacoes);
+    }
+
+    /**
      * Retorna todas as movimentações de um dia específico, detalhadas.
      * Exemplo de chamada: GET /movimentacoes/por-data?tipo=ENTRADA&data=2025-05-31
      */
@@ -156,5 +179,29 @@ public class MovimentacaoProdutoController {
     ) {
         Page<MovimentacaoProdutoDto> dtoPage = service.buscarPorTipos(tipos, pageable);
         return ResponseEntity.ok(dtoPage);
+    }
+
+    /**
+     * Retorna todas as movimentações relacionadas a um consumidor pelo nome.
+     * Exemplo de chamada: GET /movimentacoes/por-consumidor?nome=João Silva
+     */
+    @GetMapping("/por-consumidor")
+    public ResponseEntity<Page<MovimentacaoProdutoDto>> buscarPorConsumidor(
+            @RequestParam(name = "nome") String nomeConsumidor,
+            Pageable pageable
+    ) {
+        Page<MovimentacaoProdutoDto> dtoPage = service.buscarPorNomeConsumidor(nomeConsumidor, pageable);
+        return ResponseEntity.ok(dtoPage);
+    }
+
+    /**
+     * Atualiza apenas o consumidor vinculado à movimentação.
+     * Exemplo de chamada: PATCH /movimentacoes/1/consumidor?consumidorId=2
+     */
+    @PatchMapping("/{id}/consumidor")
+    public ResponseEntity<MovimentacaoProdutoDto> atualizarConsumidor(
+            @PathVariable Long id,
+            @RequestParam Long consumidorId) {
+        return ResponseEntity.ok(service.atualizarConsumidor(id, consumidorId));
     }
 }

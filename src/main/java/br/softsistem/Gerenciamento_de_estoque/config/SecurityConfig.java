@@ -4,14 +4,17 @@ import br.softsistem.Gerenciamento_de_estoque.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.util.List;
@@ -46,6 +49,10 @@ public class SecurityConfig {
                     corsConfig.setAllowCredentials(true);
                     return corsConfig;
                 }))
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(e -> e
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/swagger-ui/**",
@@ -54,10 +61,13 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/favicon.ico"
                         ).permitAll()
-                        .requestMatchers("/register").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers("/auth/register").hasRole("ADMIN")
+                        .requestMatchers("/roles/**").hasRole("ADMIN")
                         .requestMatchers("/usuarios/reativar-usuario").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/usuarios/{id}/desativar").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/relatorios/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

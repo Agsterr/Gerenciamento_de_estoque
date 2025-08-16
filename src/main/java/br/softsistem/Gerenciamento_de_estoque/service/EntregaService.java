@@ -106,6 +106,7 @@ public class EntregaService {
         movimentacao.setDataHora(LocalDateTime.now());
         movimentacao.setTipo(TipoMovimentacao.SAIDA);
         movimentacao.setOrg(produto.getOrg());
+        movimentacao.setEntrega(entregaSalva);
         movimentacaoProdutoRepository.save(movimentacao);
 
         // Retorna DTO com flag e mensagem
@@ -142,17 +143,34 @@ public class EntregaService {
         Produto produto = produtoRepository.findByIdAndOrgId(entregaRequest.getProdutoId(), orgId)
                 .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado ou não pertence à organização"));
 
-        // Se a quantidade mudou, ajustar estoque se necessário:
+        // Se a quantidade mudou ou o produto mudou, ajustar estoque de forma correta
+        Produto produtoAntigo = entregaExistente.getProduto();
         int quantidadeAnterior = entregaExistente.getQuantidade();
         int novaQuantidade = entregaRequest.getQuantidade();
-        if (novaQuantidade != quantidadeAnterior) {
-            int diff = novaQuantidade - quantidadeAnterior;
-            // Se diff > 0, significa que vamos retirar mais do estoque
-            if (diff > 0 && produto.getQuantidade() < diff) {
-                throw new IllegalArgumentException("Estoque insuficiente para a alteração da quantidade.");
+
+        if (!produtoAntigo.getId().equals(produto.getId())) {
+            // Produto mudou: devolve ao estoque do antigo e subtrai do novo
+            produtoAntigo.setQuantidade(produtoAntigo.getQuantidade() + quantidadeAnterior);
+            if (produto.getQuantidade() < novaQuantidade) {
+                throw new IllegalArgumentException("Estoque insuficiente para a alteração do produto/quantidade.");
             }
-            produto.setQuantidade(produto.getQuantidade() - diff);
+            produto.setQuantidade(produto.getQuantidade() - novaQuantidade);
+            produtoRepository.save(produtoAntigo);
             produtoRepository.save(produto);
+        } else {
+            // Mesmo produto: ajustar pela diferença
+            int diff = novaQuantidade - quantidadeAnterior;
+            if (diff > 0) { // retirar mais do estoque
+                if (produto.getQuantidade() < diff) {
+                    throw new IllegalArgumentException("Estoque insuficiente para a alteração da quantidade.");
+                }
+                produto.setQuantidade(produto.getQuantidade() - diff);
+            } else if (diff < 0) { // devolver ao estoque
+                produto.setQuantidade(produto.getQuantidade() + Math.abs(diff));
+            }
+            if (diff != 0) {
+                produtoRepository.save(produto);
+            }
         }
 
         entregaExistente.setConsumidor(consumidor);
@@ -165,7 +183,20 @@ public class EntregaService {
         );
         entregaExistente.calcularValor();
 
-        return entregaRepository.save(entregaExistente);
+        Entrega entregaAtualizada = entregaRepository.save(entregaExistente);
+
+        // Atualizar movimentação associada à entrega (se existir)
+        movimentacaoProdutoRepository.findByEntregaId(entregaAtualizada.getId()).ifPresent(mov -> {
+            mov.setProduto(produto);
+            mov.setQuantidade(novaQuantidade);
+            mov.setDataHora(LocalDateTime.now());
+            mov.setTipo(TipoMovimentacao.SAIDA);
+            mov.setOrg(produto.getOrg());
+            mov.setEntrega(entregaAtualizada);
+            movimentacaoProdutoRepository.save(mov);
+        });
+
+        return entregaAtualizada;
     }
 
     // ================================
@@ -188,6 +219,9 @@ public class EntregaService {
         Produto produto = entrega.getProduto();
         produto.setQuantidade(produto.getQuantidade() + entrega.getQuantidade());
         produtoRepository.save(produto);
+
+        // Remover movimentação associada, se houver
+        movimentacaoProdutoRepository.deleteByEntregaId(entrega.getId());
 
         entregaRepository.delete(entrega);
     }
@@ -378,5 +412,48 @@ public class EntregaService {
     private Produto buscarProdutoPorId(Long produtoId, Long orgId) {
         return produtoRepository.findByIdAndOrgId(produtoId, orgId)
                 .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado ou não pertence à organização."));
+    }
+
+
+
+    /**
+     * Retorna o total de entregas realizadas pela organização.
+     *
+     * @return número total de entregas
+     */
+    public Integer getTotalEntregasRealizadas() {
+        Long orgId = SecurityUtils.getCurrentOrgId();
+        if (orgId == null) {
+            throw new OrganizacaoNaoEncontradaException("Organização não encontrada no contexto de segurança");
+        }
+        return entregaRepository.totalEntregasRealizadas(orgId);
+    }
+
+    /**
+     * Retorna o total de entregas realizadas por um consumidor na organização.
+     *
+     * @param consumidorId ID do consumidor
+     * @return número de entregas do consumidor
+     */
+    public Integer getTotalEntregasPorConsumidor(Long consumidorId) {
+        Long orgId = SecurityUtils.getCurrentOrgId();
+        if (orgId == null) {
+            throw new OrganizacaoNaoEncontradaException("Organização não encontrada no contexto de segurança");
+        }
+        return entregaRepository.totalEntregasPorConsumidor(consumidorId, orgId);
+    }
+
+    /**
+     * Retorna o total de entregas realizadas com um produto específico na organização.
+     *
+     * @param produtoId ID do produto
+     * @return número de entregas do produto
+     */
+    public Integer getTotalEntregasPorProduto(Long produtoId) {
+        Long orgId = SecurityUtils.getCurrentOrgId();
+        if (orgId == null) {
+            throw new OrganizacaoNaoEncontradaException("Organização não encontrada no contexto de segurança");
+        }
+        return entregaRepository.totalEntregasPorProduto(produtoId, orgId);
     }
 }
