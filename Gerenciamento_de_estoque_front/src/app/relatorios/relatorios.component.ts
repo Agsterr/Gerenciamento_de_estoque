@@ -412,6 +412,168 @@ export class RelatoriosComponent {
     });
   }
 
+  // Entregas por mês
+  baixarEntregasMesPdf() {
+    if (this.loading) return;
+    this.resetStatus();
+    
+    // Validação dos parâmetros
+    if (!this.ano || this.ano < 2000 || this.ano > 2099) {
+      this.erro = 'Ano inválido. Informe um ano entre 2000 e 2099.';
+      this.showMessage('Ano inválido para o relatório', true);
+      return;
+    }
+    
+    if (!this.mes || this.mes < 1 || this.mes > 12) {
+      this.erro = 'Mês inválido. Informe um mês entre 1 e 12.';
+      this.showMessage('Mês inválido para o relatório', true);
+      return;
+    }
+    
+    // Validação: não pode ser mês futuro para o ano atual
+    const hoje = new Date();
+    const anoAtual = hoje.getFullYear();
+    const mesAtual = hoje.getMonth() + 1;
+    
+    if (this.ano === anoAtual && this.mes > mesAtual) {
+      this.erro = 'Não é possível gerar relatório para meses futuros';
+      this.showMessage('Mês futuro não permitido', true);
+      return;
+    }
+    
+    this.loading = true;
+    this.relatoriosService.entregasMesPdf(this.ano, this.mes).subscribe({
+      next: (blob) => { 
+        const mesNome = this.meses.find(m => m.valor === this.mes)?.nome;
+        this.saveBlob(blob, `relatorio-entregas-${mesNome}-${this.ano}.pdf`); 
+        this.loading = false; 
+      },
+      error: (error) => { 
+        console.error('Erro ao gerar relatório de entregas por mês:', error);
+        this.erro = 'Erro ao gerar PDF de entregas por mês. Verifique se existem dados para o período selecionado.'; 
+        this.loading = false;
+        this.showMessage('Erro ao gerar relatório de entregas por mês', true);
+      }
+    });
+  }
+
+  baixarEntregasMesXlsx() {
+    if (this.loading) return;
+    this.resetStatus();
+    
+    // Validação dos parâmetros
+    if (!this.ano || this.ano < 2000 || this.ano > 2099) {
+      this.erro = 'Ano inválido. Informe um ano entre 2000 e 2099.';
+      this.showMessage('Ano inválido para o relatório', true);
+      return;
+    }
+    
+    if (!this.mes || this.mes < 1 || this.mes > 12) {
+      this.erro = 'Mês inválido. Informe um mês entre 1 e 12.';
+      this.showMessage('Mês inválido para o relatório', true);
+      return;
+    }
+    
+    // Validação: não pode ser mês futuro para o ano atual
+    const hoje = new Date();
+    const anoAtual = hoje.getFullYear();
+    const mesAtual = hoje.getMonth() + 1;
+    
+    if (this.ano === anoAtual && this.mes > mesAtual) {
+      this.erro = 'Não é possível gerar relatório para meses futuros';
+      this.showMessage('Mês futuro não permitido', true);
+      return;
+    }
+    
+    this.loading = true;
+    this.relatoriosService.entregasMesXlsx(this.ano, this.mes).subscribe({
+      next: (blob) => { 
+        const mesNome = this.meses.find(m => m.valor === this.mes)?.nome;
+        this.saveBlob(blob, `relatorio-entregas-${mesNome}-${this.ano}.xlsx`); 
+        this.loading = false; 
+      },
+      error: (error) => { 
+        console.error('Erro ao gerar relatório de entregas por mês:', error);
+        this.erro = 'Erro ao gerar XLSX de entregas por mês. Verifique se existem dados para o período selecionado.'; 
+        this.loading = false;
+        this.showMessage('Erro ao gerar relatório de entregas por mês', true);
+      }
+    });
+  }
+
+  // Entregas por ano
+  baixarEntregasAnoPdf() {
+    if (this.loading) return;
+    this.resetStatus();
+    
+    // Validação dos parâmetros
+    if (!this.ano || this.ano < 2000 || this.ano > 2099) {
+      this.erro = 'Ano inválido. Informe um ano entre 2000 e 2099.';
+      this.showMessage('Ano inválido para o relatório', true);
+      return;
+    }
+    
+    // Validação: não pode ser ano futuro
+    const hoje = new Date();
+    const anoAtual = hoje.getFullYear();
+    
+    if (this.ano > anoAtual) {
+      this.erro = 'Não é possível gerar relatório para anos futuros';
+      this.showMessage('Ano futuro não permitido', true);
+      return;
+    }
+    
+    this.loading = true;
+    this.relatoriosService.entregasAnoPdf(this.ano).subscribe({
+      next: (blob) => { 
+        this.saveBlob(blob, `relatorio-entregas-${this.ano}.pdf`); 
+        this.loading = false; 
+      },
+      error: (error) => { 
+        console.error('Erro ao gerar relatório de entregas por ano:', error);
+        this.erro = 'Erro ao gerar PDF de entregas por ano. Verifique se existem dados para o ano selecionado.'; 
+        this.loading = false;
+        this.showMessage('Erro ao gerar relatório de entregas por ano', true);
+      }
+    });
+  }
+
+  baixarEntregasAnoXlsx() {
+    if (this.loading) return;
+    this.resetStatus();
+    
+    // Validação dos parâmetros
+    if (!this.ano || this.ano < 2000 || this.ano > 2099) {
+      this.erro = 'Ano inválido. Informe um ano entre 2000 e 2099.';
+      this.showMessage('Ano inválido para o relatório', true);
+      return;
+    }
+    
+    // Validação: não pode ser ano futuro
+    const hoje = new Date();
+    const anoAtual = hoje.getFullYear();
+    
+    if (this.ano > anoAtual) {
+      this.erro = 'Não é possível gerar relatório para anos futuros';
+      this.showMessage('Ano futuro não permitido', true);
+      return;
+    }
+    
+    this.loading = true;
+    this.relatoriosService.entregasAnoXlsx(this.ano).subscribe({
+      next: (blob) => { 
+        this.saveBlob(blob, `relatorio-entregas-${this.ano}.xlsx`); 
+        this.loading = false; 
+      },
+      error: (error) => { 
+        console.error('Erro ao gerar relatório de entregas por ano:', error);
+        this.erro = 'Erro ao gerar XLSX de entregas por ano. Verifique se existem dados para o ano selecionado.'; 
+        this.loading = false;
+        this.showMessage('Erro ao gerar relatório de entregas por ano', true);
+      }
+    });
+  }
+
   // Método para gerar OffsetDateTime (ISO 8601 com timezone) - Backend espera isso
   private toOffsetDateTime(date: Date, endOfDay: boolean): string {
     const d = new Date(date);

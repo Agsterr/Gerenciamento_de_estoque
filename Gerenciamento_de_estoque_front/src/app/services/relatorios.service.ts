@@ -64,6 +64,48 @@ export class RelatoriosService {
     });
   }
 
+  // Entregas por mês
+  entregasMesPdf(ano: number, mes: number): Observable<Blob> {
+    const params = new HttpParams().set('ano', ano.toString()).set('mes', mes.toString());
+    const headers = this.getAuthHeaders().set('Accept', 'application/pdf');
+    return this.http.get(`${this.baseUrl}/entregas-mes.pdf`, {
+      params,
+      responseType: 'blob',
+      headers,
+    });
+  }
+
+  entregasMesXlsx(ano: number, mes: number): Observable<Blob> {
+    const params = new HttpParams().set('ano', ano.toString()).set('mes', mes.toString());
+    const headers = this.getAuthHeaders().set('Accept', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    return this.http.get(`${this.baseUrl}/entregas-mes.xlsx`, {
+      params,
+      responseType: 'blob',
+      headers,
+    });
+  }
+
+  // Entregas por ano
+  entregasAnoPdf(ano: number): Observable<Blob> {
+    const params = new HttpParams().set('ano', ano.toString());
+    const headers = this.getAuthHeaders().set('Accept', 'application/pdf');
+    return this.http.get(`${this.baseUrl}/entregas-ano.pdf`, {
+      params,
+      responseType: 'blob',
+      headers,
+    });
+  }
+
+  entregasAnoXlsx(ano: number): Observable<Blob> {
+    const params = new HttpParams().set('ano', ano.toString());
+    const headers = this.getAuthHeaders().set('Accept', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    return this.http.get(`${this.baseUrl}/entregas-ano.xlsx`, {
+      params,
+      responseType: 'blob',
+      headers,
+    });
+  }
+
   // Movimentações por mês
   movimentacoesMesPdf(ano: number, mes: number): Observable<Blob> {
     const params = new HttpParams().set('ano', ano.toString()).set('mes', mes.toString());

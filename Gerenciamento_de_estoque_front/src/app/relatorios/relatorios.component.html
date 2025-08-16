@@ -129,6 +129,72 @@
         </button>
       </mat-card-actions>
     </mat-card>
+
+    <!-- Entregas por Mês -->
+    <mat-card class="report-card">
+      <mat-card-header>
+        <mat-card-title>
+          <i class="fas fa-calendar-week"></i>
+          Entregas por Mês
+        </mat-card-title>
+        <mat-card-subtitle>Relatório de entregas de um mês específico</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="month-inputs">
+          <mat-form-field appearance="outline">
+            <mat-label>Ano</mat-label>
+            <input matInput type="number" [(ngModel)]="ano" min="2000" max="2099">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Mês</mat-label>
+            <mat-select [(ngModel)]="mes">
+              <mat-option *ngFor="let mesItem of meses" [value]="mesItem.valor">
+                {{ mesItem.nome }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button color="primary" (click)="baixarEntregasMesPdf()" [disabled]="loading">
+          <mat-icon>picture_as_pdf</mat-icon>
+          PDF
+        </button>
+        <button mat-raised-button color="accent" (click)="baixarEntregasMesXlsx()" [disabled]="loading">
+          <mat-icon>grid_on</mat-icon>
+          Excel
+        </button>
+      </mat-card-actions>
+    </mat-card>
+
+    <!-- Entregas por Ano -->
+    <mat-card class="report-card">
+      <mat-card-header>
+        <mat-card-title>
+          <i class="fas fa-calendar"></i>
+          Entregas por Ano
+        </mat-card-title>
+        <mat-card-subtitle>Relatório anual de todas as entregas</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="month-inputs">
+          <mat-form-field appearance="outline">
+            <mat-label>Ano</mat-label>
+            <input matInput type="number" [(ngModel)]="ano" min="2000" max="2099">
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button color="primary" (click)="baixarEntregasAnoPdf()" [disabled]="loading">
+          <mat-icon>picture_as_pdf</mat-icon>
+          PDF
+        </button>
+        <button mat-raised-button color="accent" (click)="baixarEntregasAnoXlsx()" [disabled]="loading">
+          <mat-icon>grid_on</mat-icon>
+          Excel
+        </button>
+      </mat-card-actions>
+    </mat-card>
   </div>
 
   <!-- Botão para limpar filtros -->

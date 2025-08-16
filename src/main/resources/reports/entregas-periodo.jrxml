@@ -44,18 +44,18 @@
     <group name="ConsumidorGroup">
         <groupExpression><![CDATA[$F{nomeConsumidor}]]></groupExpression>
         <groupHeader>
-            <band height="14">
+            <band height="18">
                 <textField>
-                    <reportElement x="0" y="0" width="555" height="14"/>
+                    <reportElement x="0" y="2" width="555" height="14"/>
                     <textElement><font isBold="true"/></textElement>
                     <textFieldExpression><![CDATA["Consumidor: " + ($F{nomeConsumidor}==null?"(Sem nome)":$F{nomeConsumidor})]]></textFieldExpression>
                 </textField>
             </band>
         </groupHeader>
         <groupFooter>
-            <band height="14">
+            <band height="16">
                 <textField>
-                    <reportElement x="240" y="0" width="315" height="14"/>
+                    <reportElement x="240" y="0" width="315" height="16"/>
                     <textElement textAlignment="Right"><font isBold="true" size="9"/></textElement>
                     <textFieldExpression><![CDATA["Total consumidor: " + $V{SUM_QTD_CONSUMIDOR} + " (" + ($V{TOTAL_QTD}>0 ? new java.text.DecimalFormat("0.00").format((double)$V{SUM_QTD_CONSUMIDOR}/(double)$V{TOTAL_QTD}*100):"0.00") + "%)" ]]></textFieldExpression>
                 </textField>
@@ -65,18 +65,18 @@
     <group name="ProdutoGroup">
         <groupExpression><![CDATA[$F{nomeProduto}]]></groupExpression>
         <groupHeader>
-            <band height="12">
+            <band height="16">
                 <textField>
-                    <reportElement x="10" y="0" width="535" height="12"/>
+                    <reportElement x="10" y="0" width="535" height="14"/>
                     <textElement><font size="9" isBold="true"/></textElement>
                     <textFieldExpression><![CDATA["Produto: " + ($F{nomeProduto}==null?"(Sem nome)":$F{nomeProduto})]]></textFieldExpression>
                 </textField>
             </band>
         </groupHeader>
         <groupFooter>
-            <band height="12">
+            <band height="16">
                 <textField>
-                    <reportElement x="300" y="0" width="255" height="12"/>
+                    <reportElement x="300" y="0" width="255" height="16"/>
                     <textElement textAlignment="Right"><font size="8" isBold="true"/></textElement>
                     <textFieldExpression><![CDATA["Subtotal produto: " + $V{SUM_QTD_PRODUTO} + " (" + ($V{SUM_QTD_CONSUMIDOR}>0 ? new java.text.DecimalFormat("0.00").format((double)$V{SUM_QTD_PRODUTO}/(double)$V{SUM_QTD_CONSUMIDOR}*100):"0.00") + "%)" ]]></textFieldExpression>
                 </textField>
@@ -115,39 +115,39 @@
     <columnHeader>
         <band height="30">
             <staticText>
-                <reportElement x="0" y="0" width="40" height="30"/>
-                <box><pen lineWidth="1"/></box>
+                <reportElement x="0" y="0" width="35" height="30"/>
+                <box leftPadding="2" rightPadding="2"><pen lineWidth="1"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font isBold="true"/></textElement>
                 <text><![CDATA[ID]]></text>
             </staticText>
             <staticText>
-                <reportElement x="40" y="0" width="140" height="30"/>
-                <box><pen lineWidth="1"/></box>
+                <reportElement x="35" y="0" width="130" height="30"/>
+                <box leftPadding="4" rightPadding="4"><pen lineWidth="1"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font isBold="true"/></textElement>
                 <text><![CDATA[Consumidor]]></text>
             </staticText>
             <staticText>
-                <reportElement x="180" y="0" width="140" height="30"/>
-                <box><pen lineWidth="1"/></box>
+                <reportElement x="165" y="0" width="130" height="30"/>
+                <box leftPadding="4" rightPadding="4"><pen lineWidth="1"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font isBold="true"/></textElement>
                 <text><![CDATA[Produto]]></text>
             </staticText>
             <staticText>
-                <reportElement x="320" y="0" width="100" height="30"/>
-                <box><pen lineWidth="1"/></box>
+                <reportElement x="295" y="0" width="95" height="30"/>
+                <box leftPadding="4" rightPadding="4"><pen lineWidth="1"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font isBold="true"/></textElement>
                 <text><![CDATA[Entregador]]></text>
             </staticText>
             <staticText>
-                <reportElement x="420" y="0" width="60" height="30"/>
-                <box><pen lineWidth="1"/></box>
+                <reportElement x="390" y="0" width="55" height="30"/>
+                <box leftPadding="2" rightPadding="2"><pen lineWidth="1"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font isBold="true"/></textElement>
                 <text><![CDATA[Qtd]]></text>
             </staticText>
             <staticText>
-                <reportElement x="480" y="0" width="75" height="30"/>
-                <box><pen lineWidth="1"/></box>
-                <textElement textAlignment="Center" verticalAlignment="Middle"><font isBold="true"/></textElement>
+                <reportElement x="445" y="0" width="110" height="30"/>
+                <box leftPadding="4" rightPadding="4"><pen lineWidth="1"/></box>
+                <textElement textAlignment="Left" verticalAlignment="Middle"><font isBold="true"/></textElement>
                 <text><![CDATA[Horário]]></text>
             </staticText>
         </band>
@@ -157,41 +157,40 @@
     <detail>
         <band height="20">
             <textField>
-                <reportElement x="0" y="0" width="40" height="20"/>
-                <box><pen lineWidth="1"/></box>
+                <reportElement x="0" y="0" width="35" height="20"/>
+                <box leftPadding="2" rightPadding="2"><pen lineWidth="1"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font size="9"/></textElement>
                 <textFieldExpression><![CDATA[$F{id}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="40" y="0" width="140" height="20"/>
-                <box><pen lineWidth="1"/></box>
-                <textElement textAlignment="Left" verticalAlignment="Middle"><font size="9"/></textElement>
+                <reportElement x="35" y="0" width="130" height="20"/>
+                <box leftPadding="4" rightPadding="4"><pen lineWidth="1"/></box>
+                <textElement verticalAlignment="Middle"><font size="9"/></textElement>
                 <textFieldExpression><![CDATA[$F{nomeConsumidor}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="180" y="0" width="140" height="20"/>
-                <box><pen lineWidth="1"/></box>
-                <textElement textAlignment="Left" verticalAlignment="Middle"><font size="9"/></textElement>
+                <reportElement x="165" y="0" width="130" height="20"/>
+                <box leftPadding="4" rightPadding="4"><pen lineWidth="1"/></box>
+                <textElement verticalAlignment="Middle"><font size="9"/></textElement>
                 <textFieldExpression><![CDATA[$F{nomeProduto}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="320" y="0" width="100" height="20"/>
-                <box><pen lineWidth="1"/></box>
-                <textElement textAlignment="Left" verticalAlignment="Middle"><font size="9"/></textElement>
+                <reportElement x="295" y="0" width="95" height="20"/>
+                <box leftPadding="4" rightPadding="4"><pen lineWidth="1"/></box>
+                <textElement verticalAlignment="Middle"><font size="9"/></textElement>
                 <textFieldExpression><![CDATA[$F{nomeEntregador}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="420" y="0" width="60" height="20"/>
-                <box><pen lineWidth="1"/></box>
+                <reportElement x="390" y="0" width="55" height="20"/>
+                <box leftPadding="2" rightPadding="2"><pen lineWidth="1"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font size="9"/></textElement>
                 <textFieldExpression><![CDATA[$F{quantidade}]]></textFieldExpression>
             </textField>
-            <!-- Data formatada via FMT -->
             <textField>
-                <reportElement x="480" y="0" width="75" height="20"/>
-                <box><pen lineWidth="1"/></box>
-                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="9"/></textElement>
-                <textFieldExpression><![CDATA[$F{horarioEntrega} != null ? $F{horarioEntrega}.toString() : "" ]]></textFieldExpression>
+                <reportElement x="445" y="0" width="110" height="20"/>
+                <box leftPadding="4" rightPadding="4"><pen lineWidth="1"/></box>
+                <textElement textAlignment="Left" verticalAlignment="Middle"><font size="9"/></textElement>
+                <textFieldExpression><![CDATA[$F{horarioEntrega} != null ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format($F{horarioEntrega}) : "" ]]></textFieldExpression>
             </textField>
         </band>
     </detail>
