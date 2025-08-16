@@ -138,4 +138,16 @@ public interface MovimentacaoProdutoRepository extends JpaRepository<Movimentaca
      */
     Page<MovimentacaoProduto> findByTipoInAndOrgId(List<TipoMovimentacao> tipos, Long orgId, Pageable pageable);
 
+    // Vinculo com entrega para facilitar edição/remoção de movimentações relacionadas a entregas
+    java.util.Optional<MovimentacaoProduto> findByEntregaId(Long entregaId);
+    void deleteByEntregaId(Long entregaId);
+
+    /**
+     * Busca a movimentação mais recente de um produto específico.
+     * @param produtoId ID do produto
+     * @param orgId ID da organização
+     * @return movimentação mais recente do produto
+     */
+    @Query("SELECT m FROM MovimentacaoProduto m WHERE m.produto.id = :produtoId AND m.org.id = :orgId ORDER BY m.dataHora DESC")
+    java.util.Optional<MovimentacaoProduto> findFirstByProdutoIdAndOrgIdOrderByDataHoraDesc(@Param("produtoId") Long produtoId, @Param("orgId") Long orgId);
 }
