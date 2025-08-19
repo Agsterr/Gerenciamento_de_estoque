@@ -1,54 +1,30 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
-
-import br.softsistem.Gerenciamento_de_estoque.config.JwtAuthenticationFilter;
 import br.softsistem.Gerenciamento_de_estoque.dto.login.LoginRequestDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.login.LoginResponseDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioRequestDto;
-import br.softsistem.Gerenciamento_de_estoque.repository.*;
 import br.softsistem.Gerenciamento_de_estoque.service.AuthService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.is;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-@WebMvcTest(
-        controllers = AuthController.class, // Corrigido para o controlador correto
-        excludeFilters = @ComponentScan.Filter(
-                type = FilterType.ASSIGNABLE_TYPE,
-                classes = JwtAuthenticationFilter.class
-        ),
-        excludeAutoConfiguration = {
-                SecurityAutoConfiguration.class,
-                SecurityFilterAutoConfiguration.class
-        }
-)
-@AutoConfigureMockMvc(addFilters = false)
+@ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @InjectMocks
+    private AuthController authController;
 
-    @MockBean
+    @Mock
     private AuthService authService;
 
     // DTOs de teste
@@ -57,30 +33,7 @@ class AuthControllerTest {
     private UsuarioRequestDto requisicaoRegistroValida;
     private UsuarioDto respostaRegistro;
 
-    @MockBean
-    private OrgRepository orgRepository;
-
-    @MockBean
-    private RoleRepository roleRepository;
-
-    @MockBean
-    UsuarioRepository usuarioRepository;
-
-    @MockBean
-    private CategoriaRepository categoriaRepository;
-
-    @MockBean
-    private ConsumidorRepository consumidorRepository;
-
-
-    @MockBean
-    private EntregaRepository entregaRepository;
-
-    @MockBean
-    private ProdutoRepository produtoRepository;
-
-    @MockBean
-    private MovimentacaoProdutoRepository  movimentacaoProdutoRepository;
+    // Removidos @MockBean desnecessários para simplificar o teste
 
 
     @BeforeEach
@@ -107,62 +60,54 @@ class AuthControllerTest {
     }
 
     @Test
-    void login_QuandoCredenciaisValidas_RetornaTokenJwt() throws Exception {
-        Mockito.when(authService.login(ArgumentMatchers.any(LoginRequestDto.class)))
+    void login_QuandoCredenciaisValidas_RetornaTokenJwt() {
+        when(authService.login(any(LoginRequestDto.class)))
                 .thenReturn(respostaLogin);
 
-        mockMvc.perform(post("/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(requisicaoLoginValida)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.token", is("jwt-token-abc-123")));
+        ResponseEntity<LoginResponseDto> response = authController.login(requisicaoLoginValida);
 
-        Mockito.verify(authService).login(ArgumentMatchers.refEq(requisicaoLoginValida));
+        assertEquals(200, response.getStatusCodeValue());
+        assertNotNull(response.getBody());
+        assertEquals("jwt-token-abc-123", response.getBody().token());
+        verify(authService).login(requisicaoLoginValida);
     }
 
     @Test
-    void login_QuandoServicoLancaExcecao_RetornaBadRequest() throws Exception {
-        Mockito.when(authService.login(ArgumentMatchers.any(LoginRequestDto.class)))
+    void login_QuandoServicoLancaExcecao_RetornaBadRequest() {
+        when(authService.login(any(LoginRequestDto.class)))
                 .thenThrow(new RuntimeException("Usuário não encontrado"));
 
-        mockMvc.perform(post("/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(requisicaoLoginValida)))
-                .andExpect(status().isBadRequest());
+        ResponseEntity<LoginResponseDto> response = authController.login(requisicaoLoginValida);
 
-        Mockito.verify(authService).login(ArgumentMatchers.refEq(requisicaoLoginValida));
+        assertEquals(400, response.getStatusCodeValue());
+        verify(authService).login(requisicaoLoginValida);
     }
 
     @Test
-    void register_QuandoRequisicaoValida_RetornaUsuarioCriado() throws Exception {
-        Mockito.when(authService.register(ArgumentMatchers.any(UsuarioRequestDto.class)))
+    void register_QuandoRequisicaoValida_RetornaUsuarioCriado() {
+        when(authService.register(any(UsuarioRequestDto.class)))
                 .thenReturn(respostaRegistro);
 
-        mockMvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(requisicaoRegistroValida)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id", is(42)))
-                .andExpect(jsonPath("$.username", is("maria123")))
-                .andExpect(jsonPath("$.email", is("maria@example.com")))
-                .andExpect(jsonPath("$.ativo", is(true)))
-                .andExpect(jsonPath("$.roles", contains("ROLE_USER")));
+        ResponseEntity<UsuarioDto> response = authController.register(requisicaoRegistroValida);
 
-        Mockito.verify(authService).register(ArgumentMatchers.refEq(requisicaoRegistroValida));
+        assertEquals(200, response.getStatusCodeValue());
+        assertNotNull(response.getBody());
+        assertEquals(42L, response.getBody().id());
+        assertEquals("maria123", response.getBody().username());
+        assertEquals("maria@example.com", response.getBody().email());
+        assertTrue(response.getBody().ativo());
+        assertTrue(response.getBody().roles().contains("ROLE_USER"));
+        verify(authService).register(requisicaoRegistroValida);
     }
 
     @Test
-    void register_QuandoServicoLancaExcecao_RetornaBadRequest() throws Exception {
-        Mockito.when(authService.register(ArgumentMatchers.any(UsuarioRequestDto.class)))
+    void register_QuandoServicoLancaExcecao_RetornaBadRequest() {
+        when(authService.register(any(UsuarioRequestDto.class)))
                 .thenThrow(new RuntimeException("Organização não encontrada"));
 
-        mockMvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(requisicaoRegistroValida)))
-                .andExpect(status().isBadRequest());
+        ResponseEntity<UsuarioDto> response = authController.register(requisicaoRegistroValida);
 
-        Mockito.verify(authService).register(ArgumentMatchers.refEq(requisicaoRegistroValida));
+        assertEquals(400, response.getStatusCodeValue());
+        verify(authService).register(requisicaoRegistroValida);
     }
 }

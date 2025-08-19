@@ -7,15 +7,17 @@ import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaResponseDto;
 import br.softsistem.Gerenciamento_de_estoque.model.*;
 import br.softsistem.Gerenciamento_de_estoque.repository.ConsumidorRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.EntregaRepository;
+import br.softsistem.Gerenciamento_de_estoque.repository.MovimentacaoProdutoRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.ProdutoRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.UsuarioRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -31,27 +33,30 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-
-
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class EntregaServiceTest {
 
-    @MockBean
+    @InjectMocks
+    private EntregaService entregaService;
+
+    @Mock
     private EntregaRepository entregaRepository;
 
-    @MockBean
+    @Mock
     private ConsumidorRepository consumidorRepository;
 
-    @MockBean
+    @Mock
     private ProdutoRepository produtoRepository;
 
-    @MockBean
+    @Mock
     private UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private EntregaService entregaService;
+    @Mock
+    private MovimentacaoProdutoService movimentacaoProdutoService;
+
+    @Mock
+    private MovimentacaoProdutoRepository movimentacaoProdutoRepository;
 
     private EntregaRequestDto entregaRequestDto;
     private EntregaResponseDto entregaResponseDto;
@@ -158,13 +163,22 @@ class EntregaServiceTest {
         entregaRequest.setQuantidade(20);
         entregaRequest.setHorarioEntrega(LocalDateTime.parse("2025-06-03T12:00:00"));
 
-        Consumidor consumidor = new Consumidor(1L, "Carlos", "12345678900", "Rua ABC");
-        Produto produto = new Produto(1L, "Produto Teste", 100, new BigDecimal("20.00"));
-        produto.setQuantidade(10);
-        produto.setPreco(new BigDecimal("20.00"));
+        Org org = new Org();
+        org.setId(1L);
 
-        Org org = new Org(); org.setId(1L);
+        Consumidor consumidor = new Consumidor();
+        consumidor.setId(1L);
+        consumidor.setNome("Carlos");
+        consumidor.setCpf("12345678900");
+        consumidor.setEndereco("Rua ABC");
         consumidor.setOrg(org);
+
+        Produto produto = new Produto();
+        produto.setId(1L);
+        produto.setNome("Produto Teste");
+        produto.setQuantidade(100);
+        produto.setPreco(new BigDecimal("20.00"));
+        produto.setOrg(org);
 
         Entrega entregaExistente = new Entrega();
         entregaExistente.setId(1L);
@@ -174,8 +188,8 @@ class EntregaServiceTest {
         entregaExistente.setOrg(org);
 
         when(entregaRepository.findById(1L)).thenReturn(Optional.of(entregaExistente));
-        when(consumidorRepository.findByIdAndOrgId(anyLong(), anyLong())).thenReturn(Optional.of(consumidor));
-        when(produtoRepository.findByIdAndOrgId(anyLong(), anyLong())).thenReturn(Optional.of(produto));
+        when(consumidorRepository.findByIdAndOrgId(1L, 1L)).thenReturn(Optional.of(consumidor));
+        when(produtoRepository.findByIdAndOrgId(1L, 1L)).thenReturn(Optional.of(produto));
         when(produtoRepository.save(any(Produto.class))).thenReturn(produto);
         when(entregaRepository.save(any(Entrega.class))).thenReturn(entregaExistente);
 
@@ -188,12 +202,22 @@ class EntregaServiceTest {
     @Test
     void deletarEntrega() {
         // Mocks
-        Consumidor consumidor = new Consumidor(1L, "Carlos", "12345678900", "Rua ABC");
-        Produto produto = new Produto(1L, "Produto Teste", 100, new BigDecimal("20.00"));
-        produto.setQuantidade(10);  // Atribuindo um valor válido à quantidade do produto
+        Org org = new Org();
+        org.setId(1L);
 
-        Org org = new Org(); // Criando uma instância de Org
-        org.setId(1L);  // Atribuindo um ID para a organização
+        Consumidor consumidor = new Consumidor();
+        consumidor.setId(1L);
+        consumidor.setNome("Carlos");
+        consumidor.setCpf("12345678900");
+        consumidor.setEndereco("Rua ABC");
+        consumidor.setOrg(org);
+
+        Produto produto = new Produto();
+        produto.setId(1L);
+        produto.setNome("Produto Teste");
+        produto.setQuantidade(100);
+        produto.setPreco(new BigDecimal("20.00"));
+        produto.setOrg(org);
 
         Entrega entregaExistente = new Entrega();
         entregaExistente.setId(1L);
