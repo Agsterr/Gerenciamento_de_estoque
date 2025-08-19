@@ -1,28 +1,25 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
-import br.softsistem.Gerenciamento_de_estoque.config.JwtAuthenticationFilter;
 import br.softsistem.Gerenciamento_de_estoque.dto.CategoriaDto.CategoriaRequest;
 import br.softsistem.Gerenciamento_de_estoque.model.Categoria;
 import br.softsistem.Gerenciamento_de_estoque.service.CategoriaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,27 +29,14 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(
-        controllers = CategoriaController.class,
-        excludeFilters = @ComponentScan.Filter(
-                type = FilterType.ASSIGNABLE_TYPE,
-                classes = JwtAuthenticationFilter.class
-        ),
-        excludeAutoConfiguration = {
-                SecurityAutoConfiguration.class,
-                SecurityFilterAutoConfiguration.class
-        }
-)
-@AutoConfigureMockMvc(addFilters = false)
+@ExtendWith(MockitoExtension.class)
 class CategoriaControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @Mock
     private CategoriaService categoriaService;
 
-    @Autowired
     private ObjectMapper objectMapper;
 
     private Categoria exemploCategoria;
@@ -61,6 +45,13 @@ class CategoriaControllerTest {
 
     @BeforeEach
     void setUp() {
+        objectMapper = new ObjectMapper();
+        CategoriaController controller = new CategoriaController(categoriaService);
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+                .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
+                .build();
+
         exemploCategoria = new Categoria();
         exemploCategoria.setId(1L);
         exemploCategoria.setNome("Eletrônicos");
@@ -80,9 +71,10 @@ class CategoriaControllerTest {
         Mockito.when(categoriaService.listarTodos(ArgumentMatchers.eq(2L), ArgumentMatchers.any(Pageable.class)))
                 .thenReturn(pageMock);
 
-        mockMvc.perform(get("/categorias/{orgId}", 2L)
+        mockMvc.perform(get("/categorias/org/{orgId}", 2L)
                         .param("page", "0")
-                        .param("size", "10"))
+                        .param("size", "10")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.content", hasSize(1)))
@@ -97,7 +89,8 @@ class CategoriaControllerTest {
         Mockito.when(categoriaService.buscarPorNomeEOrgId("Eletrônicos", 2L))
                 .thenReturn(Optional.of(exemploCategoria));
 
-        mockMvc.perform(get("/categorias/{orgId}/nome/{nome}", 2L, "Eletrônicos"))
+        mockMvc.perform(get("/categorias/org/{orgId}/nome/{nome}", 2L, "Eletrônicos")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id", is(1)))
@@ -111,7 +104,8 @@ class CategoriaControllerTest {
         Mockito.when(categoriaService.buscarPorNomeEOrgId("Inexistente", 2L))
                 .thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/categorias/{orgId}/nome/{nome}", 2L, "Inexistente"))
+        mockMvc.perform(get("/categorias/org/{orgId}/nome/{nome}", 2L, "Inexistente")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
         Mockito.verify(categoriaService).buscarPorNomeEOrgId("Inexistente", 2L);
@@ -123,9 +117,10 @@ class CategoriaControllerTest {
         Mockito.when(categoriaService.buscarPorParteDoNomeEOrgId("Eletr", 2L, pageable))
                 .thenReturn(pageMock);
 
-        mockMvc.perform(get("/categorias/{orgId}/parte-do-nome/{parteDoNome}", 2L, "Eletr")
+        mockMvc.perform(get("/categorias/org/{orgId}/parte-do-nome/{parteDoNome}", 2L, "Eletr")
                         .param("page", "0")
-                        .param("size", "10"))
+                        .param("size", "10")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.content", hasSize(1)))
@@ -145,9 +140,10 @@ class CategoriaControllerTest {
         Mockito.when(categoriaService.salvarCategoria(ArgumentMatchers.any(CategoriaRequest.class), ArgumentMatchers.eq(2L)))
                 .thenReturn(categoriaSalva);
 
-        mockMvc.perform(post("/categorias/{orgId}", 2L)
+        mockMvc.perform(post("/categorias/org/{orgId}", 2L)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(exemploRequest)))
+                        .content(objectMapper.writeValueAsString(exemploRequest))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id", is(5)))
@@ -168,9 +164,10 @@ class CategoriaControllerTest {
 
         var requestAtualizado = new CategoriaRequest("Eletrônicos Atualizado", "Descrição atualizada");
 
-        mockMvc.perform(put("/categorias/{orgId}/{id}", 2L, 1L)
+        mockMvc.perform(put("/categorias/org/{orgId}/{id}", 2L, 1L)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestAtualizado)))
+                        .content(objectMapper.writeValueAsString(requestAtualizado))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id", is(1)))
@@ -186,9 +183,10 @@ class CategoriaControllerTest {
 
         var requestAtualizado = new CategoriaRequest("NomeX", "DescX");
 
-        mockMvc.perform(put("/categorias/{orgId}/{id}", 2L, 999L)
+        mockMvc.perform(put("/categorias/org/{orgId}/{id}", 2L, 999L)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestAtualizado)))
+                        .content(objectMapper.writeValueAsString(requestAtualizado))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
         Mockito.verify(categoriaService).editarCategoria(ArgumentMatchers.eq(999L), ArgumentMatchers.refEq(requestAtualizado), ArgumentMatchers.eq(2L));
@@ -199,7 +197,8 @@ class CategoriaControllerTest {
         Mockito.when(categoriaService.excluirCategoria(ArgumentMatchers.eq(1L), ArgumentMatchers.eq(2L)))
                 .thenReturn(true);
 
-        mockMvc.perform(delete("/categorias/{orgId}/{id}", 2L, 1L))
+        mockMvc.perform(delete("/categorias/org/{orgId}/{id}", 2L, 1L)
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
         Mockito.verify(categoriaService).excluirCategoria(1L, 2L);
@@ -210,7 +209,8 @@ class CategoriaControllerTest {
         Mockito.when(categoriaService.excluirCategoria(ArgumentMatchers.eq(999L), ArgumentMatchers.eq(2L)))
                 .thenReturn(false);
 
-        mockMvc.perform(delete("/categorias/{orgId}/{id}", 2L, 999L))
+        mockMvc.perform(delete("/categorias/org/{orgId}/{id}", 2L, 999L)
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
         Mockito.verify(categoriaService).excluirCategoria(999L, 2L);

@@ -1,6 +1,17 @@
 <div class="entrega-container">
   <h2>Gerenciamento de Entregas</h2>
 
+  <!-- Resumo das Entregas -->
+  <div class="summary-section" *ngIf="totalEntregasOrganizacao > 0">
+    <div class="summary-card">
+      <i class="fas fa-truck"></i>
+      <div class="summary-content">
+        <span class="summary-label">Total de Entregas</span>
+        <span class="summary-value">{{ totalEntregasOrganizacao }}</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Mensagens de Sucesso e Erro -->
   <div *ngIf="mensagem" class="alert alert-success">
     <i class="fas fa-check-circle"></i> {{ mensagem }}
@@ -208,10 +219,10 @@
       <td data-label="Quantidade">{{ entrega.quantidade }}</td>
       <td data-label="Horário">{{ formatarDataHoraBrasil(entrega.horarioEntrega) }}</td>
       
-<!-- Coluna Total -->
-<td data-label="Total">
-  {{ entrega.total | currency:'BRL' }}
-</td>
+      <!-- Coluna Total -->
+      <td data-label="Total">
+        {{ formatarTotal(entrega) }}
+      </td>
 
   
 

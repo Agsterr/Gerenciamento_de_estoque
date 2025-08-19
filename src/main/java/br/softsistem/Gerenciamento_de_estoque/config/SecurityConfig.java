@@ -3,6 +3,7 @@ package br.softsistem.Gerenciamento_de_estoque.config;
 import br.softsistem.Gerenciamento_de_estoque.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,6 +23,7 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity // Habilita o uso de @PreAuthorize
+@Profile("!test")
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
