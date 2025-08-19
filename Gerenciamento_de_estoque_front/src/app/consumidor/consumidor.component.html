@@ -11,6 +11,17 @@
   </div>
 </header>
 
+<!-- Resumo dos Consumidores -->
+<div class="summary-section" *ngIf="totalConsumidoresOrganizacao > 0">
+  <div class="summary-card">
+    <i class="fas fa-users"></i>
+    <div class="summary-content">
+      <span class="summary-label">Total de Consumidores</span>
+      <span class="summary-value">{{ totalConsumidoresOrganizacao }}</span>
+    </div>
+  </div>
+</div>
+
 <!-- Mensagens de feedback -->
 <div *ngIf="mensagem" class="mensagem-feedback sucesso animate">
   <i class="fas fa-check-circle"></i> {{ mensagem }}
@@ -42,25 +53,25 @@
     <table class="tabela-consumidores">
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Nome</th>
-          <th>CPF</th>
-          <th>Endereço</th>
-          <th>Ações</th>
+          <th><i class="fas fa-hashtag"></i> ID</th>
+          <th><i class="fas fa-user"></i> Nome</th>
+          <th><i class="fas fa-id-card"></i> CPF</th>
+          <th><i class="fas fa-map-marker-alt"></i> Endereço</th>
+          <th><i class="fas fa-cogs"></i> Ações</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let consumer of filteredConsumers">
-          <td>{{ consumer.id }}</td>
-          <td>{{ consumer.nome }}</td>
-          <td>{{ consumer.cpf }}</td>
-          <td>{{ consumer.endereco }}</td>
-          <td class="acoes-tabela">
-            <button class="botao-editar" (click)="editConsumer(consumer)" title="Editar">
-              <i class="fas fa-pen"></i>
+          <td data-label="ID">{{ consumer.id }}</td>
+          <td data-label="Nome">{{ consumer.nome }}</td>
+          <td data-label="CPF">{{ consumer.cpf }}</td>
+          <td data-label="Endereço">{{ consumer.endereco }}</td>
+          <td class="acoes-tabela" data-label="Ações">
+            <button (click)="editConsumer(consumer)" class="btn btn-primary btn-sm" title="Editar">
+              <i class="fas fa-edit"></i>
             </button>
-            <button class="botao-deletar" (click)="deleteConsumer(consumer.id)" title="Excluir">
-              <i class="fas fa-trash"></i>
+            <button (click)="deleteConsumer(consumer.id)" class="btn btn-danger btn-sm" title="Deletar">
+              <i class="fas fa-trash-alt"></i>
             </button>
           </td>
         </tr>

@@ -26,7 +26,10 @@ export class ConsumersComponent implements OnInit {
   mensagem = '';
   mensagemErro = '';
   mensagemTipo = '';
-  loading = false; // <--- NOVO
+  loading = false;
+
+  // Total de consumidores da organização
+  totalConsumidoresOrganizacao: number = 0;
 
   // Paginação
   currentPage = 0;
@@ -48,6 +51,7 @@ export class ConsumersComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchConsumers();
+    this.fetchTotalConsumidoresOrganizacao();
   }
 
   /** Busca paginada de consumidores */
@@ -70,6 +74,20 @@ export class ConsumersComponent implements OnInit {
           this.onError('Erro ao buscar consumidores!');
         }
       });
+  }
+
+  // Método para buscar o total de consumidores da organização
+  fetchTotalConsumidoresOrganizacao(): void {
+    // Como não há endpoint específico para total, usamos o totalElements da paginação
+    this.consumidorService.listarConsumidoresPaged(0, 1).subscribe({
+      next: (resp: ConsumerPagedResponse) => {
+        this.totalConsumidoresOrganizacao = resp.totalElements;
+        console.log('Total de consumidores da organização:', this.totalConsumidoresOrganizacao);
+      },
+      error: (error) => {
+        console.error('Erro ao buscar total de consumidores:', error);
+      }
+    });
   }
 
 

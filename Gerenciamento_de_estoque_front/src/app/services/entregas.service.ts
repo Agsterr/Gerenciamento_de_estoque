@@ -237,5 +237,41 @@ export class EntregasService {
     );
   }
 
-	
+  // =========================
+  // NOVOS MÉTODOS PARA TOTAIS
+  // =========================
+
+  /**
+   * Obtém o total de entregas realizadas pela organização
+   */
+  getTotalEntregasRealizadas(): Observable<number> {
+    return this.http.get<number>(`${this.apiUrl}/total`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Obtém o total de entregas realizadas por um consumidor específico
+   */
+  getTotalEntregasPorConsumidor(consumidorId: number): Observable<number> {
+    return this.http.get<number>(`${this.apiUrl}/total/consumidor/${consumidorId}`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Obtém o total de entregas realizadas com um produto específico
+   */
+  getTotalEntregasPorProduto(produtoId: number): Observable<number> {
+    return this.http.get<number>(`${this.apiUrl}/total/produto/${produtoId}`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
 }

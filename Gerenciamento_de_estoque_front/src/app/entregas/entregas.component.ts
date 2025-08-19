@@ -30,10 +30,11 @@ export class EntregasComponent implements OnInit {
   consumidores: any[] = [];
   porDia: EntregaResponse[] = [];
 
-
   totais: { [entregaId: number]: number } = {};
   errosTotais: { [entregaId: number]: string } = {};
 
+  // Total de entregas da organização
+  totalEntregasOrganizacao: number = 0;
 
   novaEntrega: Partial<EntregaRequest> = {};
   currentPage = 0;
@@ -62,6 +63,20 @@ export class EntregasComponent implements OnInit {
     this.carregarConsumidores();
     this.showList = true;
     this.fetchEntregas(this.currentPage);
+    this.fetchTotalEntregasOrganizacao();
+  }
+
+  // Método para buscar o total de entregas da organização
+  fetchTotalEntregasOrganizacao(): void {
+    this.entregasService.getTotalEntregasRealizadas().subscribe({
+      next: (total) => {
+        this.totalEntregasOrganizacao = total;
+        console.log('Total de entregas da organização:', total);
+      },
+      error: (error) => {
+        console.error('Erro ao buscar total de entregas:', error);
+      }
+    });
   }
 
   // Método para capturar o evento emitido pelo BuscaEntregaComponent
@@ -96,9 +111,12 @@ export class EntregasComponent implements OnInit {
         this.currentPage = data.number;  // Número da página atual
         this.totalPages = data.totalPages;  // Total de páginas
         this.totalElements = data.totalElements; // Total de elementos
-        this.applyFilter();  // Aplica o filtro
-
-       
+        
+        // Debug: verificar se o total está sendo retornado
+        console.log('Entregas carregadas:', this.entregas);
+        
+        // Aplica o filtro
+        this.applyFilter();
       },
       error: () => {
         this.mensagemErro = 'Erro ao carregar entregas.';
@@ -122,6 +140,32 @@ export class EntregasComponent implements OnInit {
       second: '2-digit',
       timeZone: 'America/Sao_Paulo'
     }).format(data);
+  }
+
+  // Método para calcular o total da entrega (fallback se o backend não fornecer)
+  calcularTotalEntrega(entrega: EntregaResponse): number {
+    // Se o backend já forneceu o total, use-o
+    if (entrega.total !== undefined && entrega.total !== null) {
+      return entrega.total;
+    }
+    
+    // Caso contrário, calcule baseado na quantidade e preço do produto
+    const produto = this.produtos.find(p => p.id === entrega.produtoId);
+    if (produto && produto.preco) {
+      return entrega.quantidade * produto.preco;
+    }
+    
+    // Se não conseguir calcular, retorne 0
+    return 0;
+  }
+
+  // Método para formatar o total em moeda brasileira
+  formatarTotal(entrega: EntregaResponse): string {
+    const total = this.calcularTotalEntrega(entrega);
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(total);
   }
 
   // Método para adicionar uma nova entrega

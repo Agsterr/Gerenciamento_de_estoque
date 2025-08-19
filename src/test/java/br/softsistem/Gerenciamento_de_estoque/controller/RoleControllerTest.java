@@ -1,19 +1,21 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
-import br.softsistem.Gerenciamento_de_estoque.config.JwtAuthenticationFilter;
 import br.softsistem.Gerenciamento_de_estoque.model.Org;
 import br.softsistem.Gerenciamento_de_estoque.model.Role;
-import br.softsistem.Gerenciamento_de_estoque.service.JwtService;
 import br.softsistem.Gerenciamento_de_estoque.service.RoleService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,43 +26,35 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
-@WebMvcTest(
-        controllers = RoleController.class,
-        excludeAutoConfiguration = {
-                org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class,
-                org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration.class
-        }
-)
-@AutoConfigureMockMvc(addFilters = false)
+@ExtendWith(MockitoExtension.class)
 class RoleControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
-    private JwtService jwtService;
-
-
-    @MockBean
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
-
-
-    @MockBean
+    @Mock
     private RoleService roleService;
 
-    @Autowired
     private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setup() {
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        RoleController controller = new RoleController(roleService);
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
+                .build();
+    }
 
     private Role criarRole() {
         Org org = new Org();
         org.setId(1L);
         org.setNome("Org Exemplo");
-
         Role role = new Role();
         role.setId(1L);
         role.setNome("ADMIN");
         role.setOrg(org);
-
         return role;
     }
 
@@ -69,7 +63,7 @@ class RoleControllerTest {
         Role role = criarRole();
         Mockito.when(roleService.getAllRoles()).thenReturn(List.of(role));
 
-        mockMvc.perform(get("/roles"))
+        mockMvc.perform(get("/roles").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].nome").value("ADMIN"));
     }
@@ -78,7 +72,7 @@ class RoleControllerTest {
     void getAllRoles_deveRetornarNoContentQuandoVazio() throws Exception {
         Mockito.when(roleService.getAllRoles()).thenReturn(List.of());
 
-        mockMvc.perform(get("/roles"))
+        mockMvc.perform(get("/roles").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
     }
 
@@ -87,7 +81,7 @@ class RoleControllerTest {
         Role role = criarRole();
         Mockito.when(roleService.getRoleById(1L)).thenReturn(Optional.of(role));
 
-        mockMvc.perform(get("/roles/1"))
+        mockMvc.perform(get("/roles/1").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nome").value("ADMIN"));
     }
@@ -96,7 +90,7 @@ class RoleControllerTest {
     void getRoleById_naoEncontrado() throws Exception {
         Mockito.when(roleService.getRoleById(1L)).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/roles/1"))
+        mockMvc.perform(get("/roles/1").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
 

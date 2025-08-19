@@ -4,15 +4,17 @@ import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.OrgDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.OrgRequestDto;
 import br.softsistem.Gerenciamento_de_estoque.service.OrgService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/orgs")
+@RequestMapping(value = "/api/orgs", produces = MediaType.APPLICATION_JSON_VALUE)
 public class OrgController {
 
     private final OrgService orgService;
@@ -26,11 +28,10 @@ public class OrgController {
     public ResponseEntity<?> createOrg(@Valid @RequestBody OrgRequestDto orgRequestDto) {
         Optional<OrgDto> orgDto = orgService.createOrg(orgRequestDto);
         if (orgDto.isEmpty()) {
-            // Caso de conflito (nome já existe)
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new ApiError("Já existe uma organização com este nome."));
+            Map<String,String> body = Map.of("error", "Já existe uma organização com este nome.");
+            return ResponseEntity.status(HttpStatus.CONFLICT).contentType(MediaType.APPLICATION_JSON).body(body);
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(orgDto.get());
+        return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.APPLICATION_JSON).body(orgDto.get());
     }
 
     // --- Listar todas as organizações ---
@@ -52,10 +53,10 @@ public class OrgController {
     public ResponseEntity<?> updateOrg(@PathVariable Long id, @Valid @RequestBody OrgRequestDto orgRequestDto) {
         Optional<OrgDto> updatedOrg = orgService.updateOrg(id, orgRequestDto);
         if (updatedOrg == null) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new ApiError("Já existe outra organização com este nome."));
+            Map<String,String> body = Map.of("error", "Já existe outra organização com este nome.");
+            return ResponseEntity.status(HttpStatus.CONFLICT).contentType(MediaType.APPLICATION_JSON).body(body);
         }
-        return updatedOrg.map(ResponseEntity::ok)
+        return updatedOrg.<ResponseEntity<?>>map(o -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(o))
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -78,7 +79,4 @@ public class OrgController {
         }
         return ResponseEntity.notFound().build();
     }
-
-    // Classe utilitária para mensagens de erro (API padrão)
-    public record ApiError(String error) {}
 }
