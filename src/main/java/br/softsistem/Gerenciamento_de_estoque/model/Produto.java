@@ -41,7 +41,13 @@ public class Produto {
     @Column(nullable = false)
     private Boolean ativo = true;
 
-    public Produto(long l, String produtoTeste, int i, BigDecimal bigDecimal) {
+    public Produto(long id, String nome, int quantidade, BigDecimal preco) {
+        this.id = id;
+        this.nome = nome;
+        this.quantidade = quantidade;
+        this.preco = preco;
+        this.ativo = true;
+        this.criadoEm = LocalDateTime.now();
     }
 
     public Produto() {

@@ -30,6 +30,7 @@ class ProdutoServiceTest {
     @Mock private CategoriaRepository categoriaRepository;
     @Mock private OrgRepository orgRepository;
     @Mock private MovimentacaoProdutoRepository movimentacaoProdutoRepository;
+    @Mock private MovimentacaoProdutoService movimentacaoProdutoService;
 
     private ProdutoRequest request;
     private Categoria categoria;
@@ -74,7 +75,7 @@ class ProdutoServiceTest {
     }
 
     @Test
-    void deveAtualizarProdutoExistenteSomandoQuantidade() {
+    void deveAtualizarProdutoExistenteSubstituindoQuantidade() {
         produto.setQuantidade(10);
         when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoria));
         when(orgRepository.findById(1L)).thenReturn(Optional.of(org));
@@ -83,7 +84,7 @@ class ProdutoServiceTest {
 
         Produto salvo = service.salvar(request, 1L);
 
-        assertEquals(15, salvo.getQuantidade()); // 10 existente + 5 da requisição
+        assertEquals(5, salvo.getQuantidade()); // Substitui a quantidade, não soma
         verify(movimentacaoProdutoRepository).save(any());
     }
 

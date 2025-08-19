@@ -31,8 +31,12 @@ public class AuthController {
     public ResponseEntity<LoginResponseDto> login(
             @Valid @RequestBody LoginRequestDto request
     ) {
-        LoginResponseDto response = authService.login(request);
-        return ResponseEntity.ok(response);
+        try {
+            LoginResponseDto response = authService.login(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     /**
@@ -44,7 +48,11 @@ public class AuthController {
     public ResponseEntity<UsuarioDto> register(
             @RequestBody @Valid UsuarioRequestDto usuarioRequestDto
     ) {
-        UsuarioDto criado = authService.register(usuarioRequestDto);
-        return ResponseEntity.ok(criado);
+        try {
+            UsuarioDto criado = authService.register(usuarioRequestDto);
+            return ResponseEntity.ok(criado);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }
