@@ -8,8 +8,8 @@ import org.springframework.context.annotation.ComponentScan;
 @ComponentScan(basePackages = "br.softsistem.Gerenciamento_de_estoque")
 public class GerenciamentoDeEstoqueApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(GerenciamentoDeEstoqueApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(GerenciamentoDeEstoqueApplication.class, args);
+    }
 
 }
