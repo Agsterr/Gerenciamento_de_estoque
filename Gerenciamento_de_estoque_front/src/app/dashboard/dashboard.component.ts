@@ -11,17 +11,13 @@ import { EntregaResponse } from '../models/src/app/models/entrega/entrega-respon
 import { Categoria } from '../models/categoria.model';
 import { MovimentacaoProduto, PageResponse } from '../models/movimentacao-produto.model';
 
-// ✅ Angular Material para ícones
-import { MatIconModule } from '@angular/material/icon';
-
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
   imports: [
-    RouterModule,
-    MatIconModule
+    RouterModule
   ],
 })
 export class DashboardComponent implements OnInit {
