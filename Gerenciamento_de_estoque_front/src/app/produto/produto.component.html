@@ -11,12 +11,23 @@
   </div>
 </header>
 
+<!-- Resumo dos Produtos -->
+<div class="summary-section" *ngIf="totalElements > 0">
+  <div class="summary-card">
+    <i class="fas fa-box"></i>
+    <div class="summary-content">
+      <span class="summary-label">Total de Produtos</span>
+      <span class="summary-value">{{ totalElements }}</span>
+    </div>
+  </div>
+</div>
+
 <!-- Mensagens de feedback -->
-<div *ngIf="mensagem" class="mensagem-feedback sucesso animate">
+<div *ngIf="mensagem" class="alert alert-success">
   <i class="fas fa-check-circle"></i> {{ mensagem }}
 </div>
-<div *ngIf="mensagemErro" class="mensagem-feedback erro animate">
-  <i class="fas fa-exclamation-circle"></i> {{ mensagemErro }}
+<div *ngIf="mensagemErro" class="alert alert-danger">
+  <i class="fas fa-exclamation-triangle"></i> {{ mensagemErro }}
 </div>
 
 <!-- Spinner de carregamento -->
@@ -28,18 +39,15 @@
   <!-- Card Lista -->
   <div class="card-lista" *ngIf="showList">
     <div class="busca-container">
-      <div class="busca-input-wrapper">
-        <i class="fas fa-search"></i>
-        <input
-          class="campo-busca"
-          type="text"
-          placeholder="Buscar por nome, código ou categoria..."
-          [(ngModel)]="searchTerm"
-          (input)="applyFilter()"
-        />
-      </div>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="applyFilter()"
+        placeholder="Buscar produtos..."
+        class="search-input"
+      />
     </div>
-    <table class="tabela-produtos">
+    <table class="entrega-table">
       <colgroup>
         <col style="width: 70px">
         <col style="width: 18%">
@@ -52,31 +60,31 @@
       </colgroup>
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Nome</th>
-          <th>Descrição</th>
-          <th>Categoria</th>
-          <th>Quantidade</th>
-          <th>Qtd. Mínima</th>
-          <th>Preço</th>
-          <th>Ações</th>
+          <th><i class="fas fa-hashtag"></i> ID</th>
+          <th><i class="fas fa-box"></i> Nome</th>
+          <th><i class="fas fa-align-left"></i> Descrição</th>
+          <th><i class="fas fa-list-alt"></i> Categoria</th>
+          <th><i class="fas fa-layer-group"></i> Quantidade</th>
+          <th><i class="fas fa-exclamation-circle"></i> Qtd. Mínima</th>
+          <th><i class="fas fa-dollar-sign"></i> Preço</th>
+          <th><i class="fas fa-cogs"></i> Ações</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let produto of filteredProdutos">
-          <td>{{ produto.id }}</td>
-          <td>{{ produto.nome }}</td>
-          <td>{{ produto.descricao }}</td>
-          <td>{{ produto.categoriaNome }}</td>
-          <td>{{ produto.quantidade }}</td>
-          <td>{{ produto.quantidadeMinima }}</td>
-          <td>{{ produto.preco | currency:'BRL' }}</td>
-          <td class="acoes-tabela">
-            <button class="botao-editar" (click)="editProduto(produto)" title="Editar">
-              <i class="fas fa-pen"></i>
+          <td data-label="ID">{{ produto.id }}</td>
+          <td data-label="Nome">{{ produto.nome }}</td>
+          <td data-label="Descrição">{{ produto.descricao }}</td>
+          <td data-label="Categoria">{{ produto.categoriaNome }}</td>
+          <td data-label="Quantidade">{{ produto.quantidade }}</td>
+          <td data-label="Qtd. Mínima">{{ produto.quantidadeMinima }}</td>
+          <td data-label="Preço">{{ produto.preco | currency:'BRL' }}</td>
+          <td data-label="Ações">
+            <button (click)="editProduto(produto)" class="btn btn-primary btn-sm" title="Editar">
+              <i class="fas fa-edit"></i>
             </button>
-            <button class="botao-deletar" (click)="deleteProduto(produto.id)" title="Excluir">
-              <i class="fas fa-trash"></i>
+            <button (click)="deleteProduto(produto.id)" class="btn btn-danger btn-sm" title="Excluir">
+              <i class="fas fa-trash-alt"></i>
             </button>
           </td>
         </tr>
@@ -85,7 +93,7 @@
     <!-- Paginação -->
   <div class="pagination-bar" *ngIf="totalPages > 0">
     <div class="pagination-info-left">
-      Página {{ currentPage + 1 }} de {{ totalPages }} ({{ totalElements || 0 }} entregas)
+      Página {{ currentPage + 1 }} de {{ totalPages }} ({{ totalElements || 0 }} produtos)
     </div>
     <div class="pagination-row">
       <button (click)="paginaAnterior()" [disabled]="currentPage === 0" class="btn-pag">
@@ -104,14 +112,14 @@
         <i class="fas fa-chevron-right"></i>
       </button>
     </div>
-    <div class="pagination-info-right page-size-box">
-      <label>
-        <span>Exibir</span>
-        <select [(ngModel)]="pageSize" (change)="onPageSizeChange($event)">
+    <div class="pagination-info-right">
+      <div class="select-page-size">
+        <label for="pageSizeSelect">Exibir</label>
+        <select id="pageSizeSelect" [(ngModel)]="pageSize" (change)="onPageSizeChange($event)">
           <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
         </select>
         <span>por página</span>
-      </label>
+      </div>
     </div>
   </div>
 </div>

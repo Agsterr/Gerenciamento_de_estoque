@@ -5,11 +5,22 @@
     <i class="fas fa-list-alt"></i> Lista de Categorias
   </h2>
 
+  <!-- Resumo das Categorias -->
+  <div class="summary-section" *ngIf="totalElements > 0">
+    <div class="summary-card">
+      <i class="fas fa-list-alt"></i>
+      <div class="summary-content">
+        <span class="summary-label">Total de Categorias</span>
+        <span class="summary-value">{{ totalElements }}</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Mensagens de Sucesso ou Erro -->
-  <div *ngIf="mensagem" class="mensagem mensagem--sucesso" role="alert" aria-live="assertive">
+  <div *ngIf="mensagem" class="alert alert-success">
     <i class="fas fa-check-circle"></i> {{ mensagem }}
   </div>
-  <div *ngIf="mensagemErro" class="mensagem mensagem--erro" role="alert" aria-live="assertive">
+  <div *ngIf="mensagemErro" class="alert alert-danger">
     <i class="fas fa-exclamation-triangle"></i> {{ mensagemErro }}
   </div>
 
@@ -63,7 +74,7 @@
   <!-- Lista de Categorias -->
   <div class="categoria-lista">
     <h3><i class="fas fa-folder-open"></i> Categorias Existentes</h3>
-    <table class="categoria-tabela" role="table">
+    <table class="entrega-table" role="table">
       <colgroup>
         <col style="width: 70%">
         <col style="width: 120px">
@@ -76,9 +87,9 @@
       </thead>
       <tbody>
         <tr *ngFor="let categoria of categorias">
-          <td>{{ categoria.nome }}</td>
-          <td>
-            <button type="button" class="btn btn--deletar" (click)="deletarCategoria(categoria.id)" title="Excluir">
+          <td data-label="Nome">{{ categoria.nome }}</td>
+          <td data-label="Ações">
+            <button type="button" class="btn btn-danger btn-sm" (click)="deletarCategoria(categoria.id)" title="Excluir">
               <i class="fas fa-trash-alt"></i>
             </button>
           </td>
@@ -107,12 +118,14 @@
           <i class="fas fa-chevron-right"></i>
         </button>
       </div>
-      <div class="pagination-info-right select-page-size">
-        <label for="pageSizeSelect">Exibir</label>
-        <select id="pageSizeSelect" [(ngModel)]="size" (change)="onPageSizeChange()">
-          <option *ngFor="let s of [10, 20, 30, 40]" [value]="s">{{s}}</option>
-        </select>
-        <span>por página</span>
+      <div class="pagination-info-right">
+        <div class="select-page-size">
+          <label for="pageSizeSelect">Exibir</label>
+          <select id="pageSizeSelect" [(ngModel)]="size" (change)="onPageSizeChange()">
+            <option *ngFor="let s of [10, 20, 30, 40]" [value]="s">{{s}}</option>
+          </select>
+          <span>por página</span>
+        </div>
       </div>
     </div>
 
