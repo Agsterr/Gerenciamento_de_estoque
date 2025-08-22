@@ -20,8 +20,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class EntregaService {
@@ -95,6 +93,10 @@ public class EntregaService {
         Entrega entrega = entregaRequest.toEntity(produto, consumidor);
         entrega.setEntregador(entregador);
         entrega.setOrg(produto.getOrg());
+        // Definir data/hora atual se não informada no request
+        if (entrega.getHorarioEntrega() == null) {
+            entrega.setHorarioEntrega(LocalDateTime.now());
+        }
         entrega.calcularValor();
 
         Entrega entregaSalva = entregaRepository.save(entrega);
@@ -103,10 +105,14 @@ public class EntregaService {
         MovimentacaoProduto movimentacao = new MovimentacaoProduto();
         movimentacao.setProduto(produto);
         movimentacao.setQuantidade(entregaSalva.getQuantidade());
-        movimentacao.setDataHora(LocalDateTime.now());
+        // alinhar data/hora da movimentação ao horário da entrega
+        movimentacao.setDataHora(entregaSalva.getHorarioEntrega());
         movimentacao.setTipo(TipoMovimentacao.SAIDA);
         movimentacao.setOrg(produto.getOrg());
         movimentacao.setEntrega(entregaSalva);
+        // enriquecer com usuário/consumidor
+        movimentacao.setUsuario(entregador);
+        movimentacao.setConsumidor(consumidor);
         movimentacaoProdutoRepository.save(movimentacao);
 
         // Retorna DTO com flag e mensagem
@@ -186,14 +192,29 @@ public class EntregaService {
         Entrega entregaAtualizada = entregaRepository.save(entregaExistente);
 
         // Atualizar movimentação associada à entrega (se existir)
-        movimentacaoProdutoRepository.findByEntregaId(entregaAtualizada.getId()).ifPresent(mov -> {
+        movimentacaoProdutoRepository.findByEntregaId(entregaAtualizada.getId()).ifPresentOrElse(mov -> {
             mov.setProduto(produto);
             mov.setQuantidade(novaQuantidade);
-            mov.setDataHora(LocalDateTime.now());
+            // alinhar com a data/hora da entrega
+            mov.setDataHora(entregaAtualizada.getHorarioEntrega());
             mov.setTipo(TipoMovimentacao.SAIDA);
             mov.setOrg(produto.getOrg());
             mov.setEntrega(entregaAtualizada);
+            // manter usuario existente; atualizar consumidor caso tenha mudado
+            mov.setConsumidor(entregaAtualizada.getConsumidor());
             movimentacaoProdutoRepository.save(mov);
+        }, () -> {
+            // Caso não exista movimentação (consistência), cria uma vinculada à entrega atualizada
+            MovimentacaoProduto novoMov = new MovimentacaoProduto();
+            novoMov.setProduto(produto);
+            novoMov.setQuantidade(novaQuantidade);
+            novoMov.setDataHora(entregaAtualizada.getHorarioEntrega());
+            novoMov.setTipo(TipoMovimentacao.SAIDA);
+            novoMov.setOrg(produto.getOrg());
+            novoMov.setEntrega(entregaAtualizada);
+            novoMov.setUsuario(entregaAtualizada.getEntregador());
+            novoMov.setConsumidor(entregaAtualizada.getConsumidor());
+            movimentacaoProdutoRepository.save(novoMov);
         });
 
         return entregaAtualizada;
