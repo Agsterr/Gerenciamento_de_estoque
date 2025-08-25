@@ -38,6 +38,20 @@ export class AppComponent {
     return user?.username || 'Usuário';
   }
 
+  // Verifica se o usuário é admin
+  get isAdmin(): boolean {
+    const user = this.authService.getLoggedUser();
+    if (!user || !Array.isArray(user.roles)) return false;
+    try {
+      return user.roles.some((role: any) => {
+        if (typeof role === 'string') return role === 'ROLE_ADMIN';
+        return role?.name === 'ROLE_ADMIN' || role?.authority === 'ROLE_ADMIN' || role?.role === 'ROLE_ADMIN';
+      });
+    } catch {
+      return false;
+    }
+  }
+
   // Faz logout
   logout(): void {
     this.authService.logout();

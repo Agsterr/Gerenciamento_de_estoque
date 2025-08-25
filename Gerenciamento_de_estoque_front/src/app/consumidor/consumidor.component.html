@@ -23,11 +23,11 @@
 </div>
 
 <!-- Mensagens de feedback -->
-<div *ngIf="mensagem" class="alert alert-success">
+<div *ngIf="mensagem" class="mensagem-feedback sucesso animate">
   <i class="fas fa-check-circle"></i> {{ mensagem }}
 </div>
-<div *ngIf="mensagemErro" class="alert alert-danger">
-  <i class="fas fa-exclamation-triangle"></i> {{ mensagemErro }}
+<div *ngIf="mensagemErro" class="mensagem-feedback erro animate">
+  <i class="fas fa-exclamation-circle"></i> {{ mensagemErro }}
 </div>
 
 <!-- Spinner de carregamento -->
@@ -39,22 +39,18 @@
   <!-- Card Lista -->
   <div class="card-lista" *ngIf="showList">
     <div class="busca-container">
-      <input
-        type="text"
-        [(ngModel)]="searchTerm"
-        (input)="applyFilter()"
-        placeholder="Buscar consumidores..."
-        class="search-input"
-      />
+      <div class="busca-input-wrapper">
+        <i class="fas fa-search"></i>
+        <input
+          class="campo-busca"
+          type="text"
+          placeholder="Buscar por nome, CPF ou endereço..."
+          [(ngModel)]="searchTerm"
+          (input)="applyFilter()"
+        />
+      </div>
     </div>
-    <table class="entrega-table">
-      <colgroup>
-        <col style="width: 70px">
-        <col style="width: 25%">
-        <col style="width: 20%">
-        <col style="width: 35%">
-        <col style="width: 120px">
-      </colgroup>
+    <table class="tabela-consumidores">
       <thead>
         <tr>
           <th><i class="fas fa-hashtag"></i> ID</th>
@@ -70,7 +66,7 @@
           <td data-label="Nome">{{ consumer.nome }}</td>
           <td data-label="CPF">{{ consumer.cpf }}</td>
           <td data-label="Endereço">{{ consumer.endereco }}</td>
-          <td data-label="Ações">
+          <td class="acoes-tabela" data-label="Ações">
             <button (click)="editConsumer(consumer)" class="btn btn-primary btn-sm" title="Editar">
               <i class="fas fa-edit"></i>
             </button>
@@ -103,14 +99,12 @@
           <i class="fas fa-chevron-right"></i>
         </button>
       </div>
-      <div class="pagination-info-right">
-        <div class="select-page-size">
-          <label for="pageSizeSelect">Exibir</label>
-          <select id="pageSizeSelect" [(ngModel)]="pageSize" (change)="onPageSizeChange($event)">
-            <option *ngFor="let size of [10, 20, 30, 40]" [value]="size">{{size}}</option>
-          </select>
-          <span>por página</span>
-        </div>
+      <div class="pagination-info-right select-page-size">
+        <label for="pageSizeSelect">Exibir</label>
+        <select id="pageSizeSelect" [(ngModel)]="pageSize" (change)="onPageSizeChange($event)">
+          <option *ngFor="let size of [10, 20, 30, 40]" [value]="size">{{size}}</option>
+        </select>
+        <span>por página</span>
       </div>
     </div>
   </div>

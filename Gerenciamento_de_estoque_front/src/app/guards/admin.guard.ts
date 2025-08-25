@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { CanActivate, Router } from '@angular/router';
+import { CanActivate, Router, UrlTree } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { environment } from '../../environments/environment';
 
@@ -7,7 +7,7 @@ import { environment } from '../../environments/environment';
 export class AdminGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
 
-  canActivate(): boolean {
+  canActivate(): boolean | UrlTree {
     const user = this.authService.getLoggedUser();
 
     if (!environment.production) {
@@ -19,19 +19,21 @@ export class AdminGuard implements CanActivate {
       if (!environment.production) {
         console.log('Usuário não encontrado ou roles não definidas');
       }
-      this.router.navigate(['/login']);
-      return false;
+      return this.router.createUrlTree(['/login']);
     }
 
-    const isAdmin = user.roles.includes('ROLE_ADMIN');
+    const isAdmin = Array.isArray(user.roles) && user.roles.some((role: any) => {
+      if (typeof role === 'string') return role === 'ROLE_ADMIN';
+      if (role && typeof role === 'object' && 'nome' in role) return role.nome === 'ROLE_ADMIN';
+      return false;
+    });
 
     if (!environment.production) {
       console.log('Usuário tem a role ROLE_ADMIN?', isAdmin);
     }
 
     if (!isAdmin) {
-      this.router.navigate(['/home']);
-      return false;
+      return this.router.createUrlTree(['/home'], { queryParams: { notice: 'admin_required' } });
     }
 
     return true;

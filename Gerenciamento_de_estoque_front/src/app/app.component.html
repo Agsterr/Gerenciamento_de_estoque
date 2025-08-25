@@ -22,6 +22,12 @@
           <mat-icon>person_add</mat-icon>
           Register
         </a>
+        <ng-container *ngIf="isAdmin">
+          <a routerLink="/orgs" routerLinkActive="active" class="nav-link">
+            <mat-icon>business</mat-icon>
+            Organizações
+          </a>
+        </ng-container>
         <ng-container *ngIf="isLoggedIn">
           <a routerLink="/dashboard" routerLinkActive="active" class="nav-link dashboard-link">
             <mat-icon>dashboard</mat-icon>
