@@ -352,11 +352,52 @@ $transition: 0.18s cubic-bezier(.4,0,.2,1);
   text-align: center;
 }
 
-// Estilo para botões na tabela (igual ao entregas)
+// Estilo de botões de ação (copiado de entregas)
+.btn {
+  padding: 0.7em 1.7em;
+  border: none;
+  border-radius: $radius;
+  font-weight: 600;
+  cursor: pointer;
+  transition: $transition;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.05rem;
+  background: $primary;
+  color: $white;
+  box-shadow: 0 2px 8px 0 rgba(30,41,59,0.08);
+  outline: none;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+}
+
+.btn-success { background: $success; }
+.btn-info    { background: $info; }
+.btn-primary { background: $primary; }
+.btn-danger  { background: $danger; }
+.btn-sm      { padding: 0.45em 1.1em; font-size: 0.97em; }
+
+.btn:disabled {
+  background: $disabled;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.btn:focus-visible, .btn:focus {
+  outline: 2px solid $secondary;
+  outline-offset: 2px;
+}
+
+.btn:hover:not(:disabled), .btn:active:not(:disabled) {
+  filter: brightness(0.93);
+  box-shadow: 0 4px 18px 0 rgba(30,41,59,0.13);
+  transform: translateY(-2px) scale(1.03);
+}
+
+// Estilo específico para os botões na tabela
 .tabela-consumidores .btn {
   margin: 0 2px;
-  font-size: 0.8rem;
-  padding: 6px 10px;
 }
 
 // Paginação
