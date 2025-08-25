@@ -86,13 +86,13 @@
   font-size: 1rem;
   width: 100%;
   box-sizing: border-box;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
   background: #f9fafb;
 
   &:focus {
     outline: none;
     border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
     background: #ffffff;
   }
 
@@ -122,9 +122,9 @@
   border: none;
   cursor: pointer;
   padding: 8px;
-  border-radius: 4px;
+  border-radius: 6px;
   color: #6b7280;
-  transition: color 0.2s, background-color 0.2s;
+  transition: color 0.2s, background-color 0.2s, transform 0.1s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -134,10 +134,15 @@
     background-color: #f3f4f6;
   }
 
-  &:focus {
+  &:active {
+    transform: translateY(-50%) scale(0.98);
+  }
+
+  &:focus-visible {
     outline: none;
-    color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
     background-color: #eff6ff;
+    color: #2563eb;
   }
 
   mat-icon {
@@ -185,7 +190,7 @@
   width: 20px;
   background-color: #f9fafb;
   border: 2px solid #e5e7eb;
-  border-radius: 4px;
+  border-radius: 6px;
   position: relative;
   transition: all 0.2s;
 
@@ -223,19 +228,26 @@
   font-weight: 500;
 }
 
+.checkbox-help {
+  display: block;
+  margin-left: 36px;
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+
 /* Botões */
 .btn {
   padding: 14px 24px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.1s ease, box-shadow 0.2s ease, background 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   text-decoration: none;
   width: 100%;
 
@@ -244,7 +256,7 @@
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.65;
     cursor: not-allowed;
   }
 }
@@ -252,23 +264,32 @@
 .btn-primary {
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
 
   &:hover:not(:disabled) {
     background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.45);
   }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  }
+}
+
+.btn-primary .mat-mdc-progress-spinner {
+  --mdc-circular-progress-active-indicator-color: #fff;
 }
 
 /* Alertas */
 .alert {
   padding: 16px;
-  border-radius: 8px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   gap: 12px;
-  font-weight: 500;
+  font-weight: 600;
 
   mat-icon {
     font-size: 1.2rem;

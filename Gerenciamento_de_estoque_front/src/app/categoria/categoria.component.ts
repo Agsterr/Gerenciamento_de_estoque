@@ -18,6 +18,9 @@ import { PageCategoriaResponse } from '../models/page-categoria-response.model';
 export class CategoriaComponent implements OnInit {
   categoriaForm: FormGroup;
   categorias: Categoria[] = [];
+  // Adicionado: lista filtrada e termo de busca
+  filteredCategorias: Categoria[] = [];
+  searchTerm: string = '';
   mensagem: string = '';
   mensagemErro: string = '';
   mensagemTipo: 'sucesso' | 'erro' | '' = '';
@@ -51,25 +54,26 @@ export class CategoriaComponent implements OnInit {
     }
   }
 
+  /** Carrega categorias com paginação */
+  carregarCategorias(pagina: number = 0): void {
+    this.limparMensagens();
 
-/** Carrega categorias com paginação */
-carregarCategorias(pagina: number = 0): void {
-  this.limparMensagens();
-
-  this.categoriaService.listarCategorias(pagina, this.size).subscribe({
-    next: (data: PageCategoriaResponse) => {
-      this.categorias = data.content; // Apenas o array de categorias
-      this.number = data.number; // Número da página atual
-      this.totalPages = data.totalPages; // Número total de páginas
-      this.totalElements = data.totalElements; // Número total de elementos
-      this.size = data.size; // Tamanho da página
-    },
-    error: (error: HttpErrorResponse) => {
-      this.mensagemErro = 'Erro ao carregar categorias.';
-      console.error('Erro ao carregar categorias:', error);
-    }
-  });
-}
+    this.categoriaService.listarCategorias(pagina, this.size).subscribe({
+      next: (data: PageCategoriaResponse) => {
+        this.categorias = data.content; // Apenas o array de categorias
+        this.number = data.number; // Número da página atual
+        this.totalPages = data.totalPages; // Número total de páginas
+        this.totalElements = data.totalElements; // Número total de elementos
+        this.size = data.size; // Tamanho da página
+        // Aplica o filtro após carregar
+        this.applyFilter();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.mensagemErro = 'Erro ao carregar categorias.';
+        console.error('Erro ao carregar categorias:', error);
+      }
+    });
+  }
 
   onPageSizeChange() {
     this.carregarCategorias(0);
@@ -149,5 +153,16 @@ carregarCategorias(pagina: number = 0): void {
     this.mensagem = '';
     this.mensagemErro = '';
     this.mensagemTipo = '';
+  }
+
+  /** Filtro local como em Entregas */
+  applyFilter(): void {
+    const term = (this.searchTerm || '').toLowerCase().trim();
+    this.filteredCategorias = term
+      ? this.categorias.filter(c =>
+          (c.nome || '').toLowerCase().includes(term) ||
+          (c.descricao || '').toLowerCase().includes(term)
+        )
+      : [...this.categorias];
   }
 }

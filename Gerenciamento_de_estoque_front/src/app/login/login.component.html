@@ -1,16 +1,16 @@
 <div class="login-container">
-  <div class="login-wrapper">
+  <div class="login-wrapper" role="main" aria-labelledby="login-title">
     <header class="login-header">
-      <mat-icon class="login-icon">account_circle</mat-icon>
-      <h2 class="login-title">Acesso ao Sistema</h2>
+      <mat-icon class="login-icon" aria-hidden="true">account_circle</mat-icon>
+      <h2 class="login-title" id="login-title">Acesso ao Sistema</h2>
       <p class="login-subtitle">Faça login para acessar o sistema de gerenciamento de estoque</p>
     </header>
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form" novalidate>
       <!-- Campo: Usuário -->
       <div class="form-group">
         <label for="username">
-          <mat-icon>person</mat-icon>
+          <mat-icon aria-hidden="true">person</mat-icon>
           Usuário
         </label>
         <input 
@@ -19,9 +19,13 @@
           type="text" 
           class="form-control" 
           placeholder="Digite seu usuário"
+          required
+          autocomplete="username"
+          [attr.aria-invalid]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched"
+          [attr.aria-describedby]="loginForm.get('username')?.invalid ? 'username-error' : null"
         />
-        <div *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.hasError('required')" class="error">
-          <mat-icon>warning</mat-icon>
+        <div *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.hasError('required')" class="error" id="username-error" aria-live="polite">
+          <mat-icon aria-hidden="true">warning</mat-icon>
           <span>Usuário é obrigatório</span>
         </div>
       </div>
@@ -29,7 +33,7 @@
       <!-- Campo: Senha -->
       <div class="form-group">
         <label for="senha">
-          <mat-icon>lock</mat-icon>
+          <mat-icon aria-hidden="true">lock</mat-icon>
           Senha
         </label>
         <div class="password-input-container">
@@ -39,6 +43,10 @@
             formControlName="senha" 
             class="form-control password-input" 
             placeholder="Digite sua senha"
+            required
+            autocomplete="current-password"
+            [attr.aria-invalid]="loginForm.get('senha')?.invalid && loginForm.get('senha')?.touched"
+            [attr.aria-describedby]="loginForm.get('senha')?.invalid ? 'senha-error' : null"
           />
           <button 
             type="button" 
@@ -46,11 +54,11 @@
             (click)="hidePassword = !hidePassword"
             [attr.aria-label]="hidePassword ? 'Mostrar senha' : 'Ocultar senha'"
           >
-            <mat-icon>{{ hidePassword ? 'visibility' : 'visibility_off' }}</mat-icon>
+            <mat-icon aria-hidden="true">{{ hidePassword ? 'visibility' : 'visibility_off' }}</mat-icon>
           </button>
         </div>
-        <div *ngIf="loginForm.get('senha')?.touched && loginForm.get('senha')?.hasError('required')" class="error">
-          <mat-icon>warning</mat-icon>
+        <div *ngIf="loginForm.get('senha')?.touched && loginForm.get('senha')?.hasError('required')" class="error" id="senha-error" aria-live="polite">
+          <mat-icon aria-hidden="true">warning</mat-icon>
           <span>Senha é obrigatória</span>
         </div>
       </div>
@@ -58,22 +66,28 @@
       <!-- Campo: ID da Organização -->
       <div class="form-group">
         <label for="orgId">
-          <mat-icon>business</mat-icon>
+          <mat-icon aria-hidden="true">business</mat-icon>
           ID da Organização
         </label>
         <input 
           id="orgId" 
-          type="number" 
+          type="text" 
+          inputmode="numeric"
+          pattern="^[0-9]+$"
           formControlName="orgId" 
           class="form-control" 
           placeholder="Ex: 1"
+          required
+          autocomplete="off"
+          [attr.aria-invalid]="loginForm.get('orgId')?.invalid && loginForm.get('orgId')?.touched"
+          [attr.aria-describedby]="(loginForm.get('orgId')?.invalid && loginForm.get('orgId')?.touched) ? 'orgId-error' : null"
         />
-        <div *ngIf="loginForm.get('orgId')?.touched && loginForm.get('orgId')?.hasError('required')" class="error">
-          <mat-icon>warning</mat-icon>
+        <div class="error" *ngIf="loginForm.get('orgId')?.touched && loginForm.get('orgId')?.hasError('required')" id="orgId-error" aria-live="polite">
+          <mat-icon aria-hidden="true">warning</mat-icon>
           <span>ID da organização é obrigatório</span>
         </div>
-        <div *ngIf="loginForm.get('orgId')?.hasError('pattern')" class="error">
-          <mat-icon>warning</mat-icon>
+        <div *ngIf="loginForm.get('orgId')?.hasError('pattern')" class="error" aria-live="polite">
+          <mat-icon aria-hidden="true">warning</mat-icon>
           <span>Apenas números válidos são permitidos</span>
         </div>
       </div>
@@ -85,26 +99,29 @@
             type="checkbox" 
             formControlName="lembrarCredenciais"
             class="checkbox-input"
+            aria-describedby="lembrar-ajuda"
           />
-          <span class="checkbox-custom"></span>
-          <mat-icon class="checkbox-icon">save</mat-icon>
+          <span class="checkbox-custom" aria-hidden="true"></span>
+          <mat-icon class="checkbox-icon" aria-hidden="true">save</mat-icon>
           <span class="checkbox-label">Lembrar usuário, senha e organização</span>
         </label>
+        <small id="lembrar-ajuda" class="checkbox-help">Use em dispositivos pessoais e confiáveis.</small>
       </div>
 
       <!-- Botão -->
       <button 
         type="submit" 
-        [disabled]="loginForm.invalid" 
+        [disabled]="loginForm.invalid || isSubmitting" 
         class="btn btn-primary"
       >
-        <mat-icon>login</mat-icon>
-        <span>Entrar</span>
+        <mat-progress-spinner *ngIf="isSubmitting" mode="indeterminate" diameter="18" strokeWidth="3"></mat-progress-spinner>
+        <mat-icon *ngIf="!isSubmitting" aria-hidden="true">login</mat-icon>
+        <span>{{ isSubmitting ? 'Entrando...' : 'Entrar' }}</span>
       </button>
 
       <!-- Erro geral -->
-      <div *ngIf="errorMessage" class="alert alert-danger">
-        <mat-icon>error</mat-icon>
+      <div *ngIf="errorMessage" class="alert alert-danger" aria-live="assertive">
+        <mat-icon aria-hidden="true">error</mat-icon>
         <span>{{ errorMessage }}</span>
       </div>
     </form>

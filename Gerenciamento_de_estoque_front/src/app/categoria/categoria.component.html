@@ -74,6 +74,16 @@
   <!-- Lista de Categorias -->
   <div class="categoria-lista">
     <h3><i class="fas fa-folder-open"></i> Categorias Existentes</h3>
+
+    <!-- Campo de busca (estilo Entregas) -->
+    <input
+      type="text"
+      [(ngModel)]="searchTerm"
+      (input)="applyFilter()"
+      placeholder="Buscar categorias..."
+      class="search-input"
+    />
+
     <table class="entrega-table" role="table">
       <colgroup>
         <col style="width: 70%">
@@ -86,7 +96,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let categoria of categorias">
+        <tr *ngFor="let categoria of filteredCategorias">
           <td data-label="Nome">{{ categoria.nome }}</td>
           <td data-label="Ações">
             <button type="button" class="btn btn-danger btn-sm" (click)="deletarCategoria(categoria.id)" title="Excluir">
