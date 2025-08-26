@@ -41,7 +41,7 @@ export class EntregasComponent implements OnInit {
   totalPages = 0;
   totalElements = 0;
   pageSize = 10;
-  pageSizeOptions = [10, 5, 20, 50];
+  pageSizeOptions = [10, 5, 50];
 
   mensagem = '';
   mensagemErro = '';
