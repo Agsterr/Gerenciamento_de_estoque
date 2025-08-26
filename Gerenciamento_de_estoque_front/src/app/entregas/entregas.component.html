@@ -246,11 +246,12 @@
       Página {{ currentPage + 1 }} de {{ totalPages }} ({{ totalElements || 0 }} entregas)
     </div>
     <div class="pagination-row">
-      <button (click)="paginaAnterior()" [disabled]="currentPage === 0" class="btn-pag">
-        <i class="fas fa-chevron-left"></i>
+      <button type="button" (click)="paginaAnterior()" title="Página anterior" [disabled]="currentPage === 0" class="btn-pag">
+        <i class="fas fa-chevron-left" aria-hidden="true"></i>
       </button>
       <ng-container *ngFor="let page of [].constructor(totalPages); let i = index">
         <button
+          type="button"
           class="pagina-numero"
           [class.ativa]="i === currentPage"
           (click)="irParaPagina(i)"
@@ -258,15 +259,15 @@
           {{ i + 1 }}
         </button>
       </ng-container>
-      <button (click)="proximaPagina()" [disabled]="currentPage >= totalPages - 1 || totalPages === 0" class="btn-pag">
-        <i class="fas fa-chevron-right"></i>
+      <button type="button" (click)="proximaPagina()" title="Próxima página" [disabled]="currentPage >= totalPages - 1 || totalPages === 0" class="btn-pag">
+        <i class="fas fa-chevron-right" aria-hidden="true"></i>
       </button>
     </div>
     <div class="pagination-info-right">
       <div class="select-page-size">
         <label for="pageSizeSelect">Exibir</label>
         <select id="pageSizeSelect" [(ngModel)]="pageSize" (change)="onPageSizeChange($event)">
-          <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+          <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
         </select>
         <span>por página</span>
       </div>
