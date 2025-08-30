@@ -17,7 +17,7 @@ public class JwtServiceTest {
 
     @BeforeEach
     public void setup() {
-        jwtService = new JwtService();
+        jwtService = new JwtService("chave_teste_para_unit_test_123456");
 
         userDetails = Mockito.mock(UserDetails.class);
         Mockito.when(userDetails.getUsername()).thenReturn(mockUsername);
