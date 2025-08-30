@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # Banco de dados PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: gerenciamento-postgres
+    environment:
+      POSTGRES_DB: gerenciamento_estoque
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Aplicação Spring Boot
+  app:
+    build: .
+    container_name: gerenciamento-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Configurações do banco
+      JDBC_URL: jdbc:postgresql://postgres:5432/gerenciamento_estoque
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      
+      # Profile Spring
+      SPRING_PROFILES_ACTIVE: prod
+      
+      # Configurações da aplicação
+      SERVER_PORT: 8080
+      
+      # Configurações JVM
+      JAVA_OPTS: -Xmx512m -Xms256m -XX:+UseContainerSupport
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

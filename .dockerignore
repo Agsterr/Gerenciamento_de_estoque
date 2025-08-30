@@ -1,0 +1,40 @@
+# Arquivos de build e cache
+target/
+.mvn/wrapper/maven-wrapper.jar
+*.log
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Frontend (se não for servir via Spring Boot)
+Gerenciamento_de_estoque_front/
+Gerenciamento_de_estoque_front_backup/
+node_modules/
+package.json
+package-lock.json
+vercel.json
+
+# JDK local
+jdk-21_windows-x64_bin/
+
+# Arquivos temporários
+*.tmp
+*.temp
+hs_err_pid*.log
