@@ -1,5 +1,5 @@
 export const environment = {
     production: false,
-    apiUrl: 'https://gerenciamento-de-estoque-mw08.onrender.com', // URL base para o backend
+    apiUrl: 'http://localhost:8081', // URL base para o backend
   };
   
