@@ -13,6 +13,8 @@ import br.softsistem.Gerenciamento_de_estoque.repository.EntregaRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.MovimentacaoProdutoRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.ProdutoRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.UsuarioRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -48,6 +50,7 @@ public class EntregaService {
     // CRIAR ENTREGA (com entregador automático)
     // ================================
 
+    @CacheEvict(value = {"entregas-relatorios", "produtos"}, allEntries = true)
     public EntregaComAvisoResponseDto criarEntrega(EntregaRequestDto entregaRequest) {
         Long orgId = SecurityUtils.getCurrentOrgId();
         if (orgId == null) {
@@ -128,6 +131,7 @@ public class EntregaService {
     // ================================
     // EDITAR ENTREGA (mantém entregador antigo)
     // ================================
+    @CacheEvict(value = {"entregas-relatorios", "produtos"}, allEntries = true)
     public Entrega editarEntrega(Long id, EntregaRequestDto entregaRequest) {
         Long orgId = SecurityUtils.getCurrentOrgId();
         if (orgId == null) {
@@ -223,6 +227,7 @@ public class EntregaService {
     // ================================
     // DELETAR ENTREGA
     // ================================
+    @CacheEvict(value = {"entregas-relatorios", "produtos"}, allEntries = true)
     public void deletarEntrega(Long id) {
         Long orgId = SecurityUtils.getCurrentOrgId();
         if (orgId == null) {
@@ -291,6 +296,7 @@ public class EntregaService {
     }
 
 
+    @Cacheable(value = "entregas-relatorios", key = "'mes-' + #mes + '-' + #ano + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<EntregaResponseDto> listarEntregasPorMes(int mes, int ano, Pageable pageable) {
         Long orgId = SecurityUtils.getCurrentOrgId();
         if (orgId == null) {
@@ -309,6 +315,7 @@ public class EntregaService {
     }
 
 
+    @Cacheable(value = "entregas-relatorios", key = "'ano-' + #ano + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<EntregaResponseDto> listarEntregasPorAno(int ano, Pageable pageable) {
         Long orgId = SecurityUtils.getCurrentOrgId();
         if (orgId == null) {
@@ -393,6 +400,7 @@ public class EntregaService {
         return entregaRepository.totalPorIntervaloPorConsumidor(consumidorId, inicio, fim, orgId);
     }
 
+    @Cacheable(value = "entregas-relatorios", key = "'total-mes-atual-' + #root.target.getCurrentOrgId() + '-' + T(java.time.LocalDate).now().getMonthValue() + '-' + T(java.time.LocalDate).now().getYear()")
     public BigDecimal getTotalDoMesAtual() {
         Long orgId = SecurityUtils.getCurrentOrgId();
         LocalDate hoje = LocalDate.now();

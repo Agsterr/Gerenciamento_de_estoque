@@ -15,6 +15,8 @@ import br.softsistem.Gerenciamento_de_estoque.repository.OrgRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.ProdutoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -39,6 +41,7 @@ public class ProdutoService {
         this.movimentacaoProdutoService = movimentacaoProdutoService;
     }
 
+    @Cacheable(value = "produtos", key = "'estoque-baixo-' + #orgId")
     public List<Produto> listarProdutosComEstoqueBaixo(Long orgId) {
         return repository.findByAtivoTrueAndOrgId(orgId).stream()
                 .filter(Produto::isEstoqueBaixo)
@@ -47,6 +50,7 @@ public class ProdutoService {
 
 
 
+    @CacheEvict(value = "produtos", allEntries = true)
     public Produto salvar(ProdutoRequest produtoRequest, Long orgId) {
         Categoria categoria = categoriaRepository.findById(produtoRequest.getCategoriaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada."));
@@ -103,10 +107,12 @@ public class ProdutoService {
 
 
 
+    @Cacheable(value = "produtos", key = "'lista-' + #orgId + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<Produto> listarTodos(Long orgId, Pageable pageable) {
         return repository.findByAtivoTrueAndOrgId(orgId, pageable);
     }
 
+    @CacheEvict(value = "produtos", allEntries = true)
     public void excluir(Long id, Long orgId) {
         Produto produto = repository.findByIdAndOrgId(id, orgId)
                 .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado com o ID fornecido ou não pertence à organização."));
@@ -114,6 +120,7 @@ public class ProdutoService {
         repository.save(produto);
     }
 
+    @Cacheable(value = "produtos", key = "'produto-' + #id + '-' + #orgId")
     public Produto buscarPorId(Long id, Long orgId) {
         return repository.findByIdAndOrgId(id, orgId)
                 .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado com o ID fornecido ou não pertence à organização."));
@@ -123,6 +130,7 @@ public class ProdutoService {
         return repository.findByIdAndOrgId(id, orgId).isPresent();
     }
 
+    @CacheEvict(value = "produtos", allEntries = true)
     public Produto editar(Long id, ProdutoRequest produtoRequest, Long orgId) {
         Categoria categoria = categoriaRepository.findById(produtoRequest.getCategoriaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada."));
