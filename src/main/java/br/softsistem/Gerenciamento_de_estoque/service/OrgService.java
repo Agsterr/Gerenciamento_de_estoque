@@ -4,6 +4,8 @@ import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.OrgDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.OrgRequestDto;
 import br.softsistem.Gerenciamento_de_estoque.model.Org;
 import br.softsistem.Gerenciamento_de_estoque.repository.OrgRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +21,7 @@ public class OrgService {
         this.orgRepository = orgRepository;
     }
 
+    @CacheEvict(value = "organizacoes", allEntries = true)
     public Optional<OrgDto> createOrg(OrgRequestDto orgRequestDto) {
         // Verifica se já existe uma organização com este nome
         Optional<Org> existingOrg = orgRepository.findByNome(orgRequestDto.nome());
@@ -30,12 +33,14 @@ public class OrgService {
         return Optional.of(new OrgDto(org));
     }
 
+    @Cacheable(value = "organizacoes", key = "'todas'")
     public List<OrgDto> getAllOrgs() {
         return orgRepository.findAll().stream()
                 .map(OrgDto::new)
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "organizacoes", key = "'org-' + #id")
     public Optional<OrgDto> getOrgById(Long id) {
         return orgRepository.findById(id).map(OrgDto::new);
     }

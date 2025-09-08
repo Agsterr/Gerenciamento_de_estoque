@@ -7,6 +7,8 @@ import br.softsistem.Gerenciamento_de_estoque.repository.OrgRepository;
 import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
 import br.softsistem.Gerenciamento_de_estoque.exception.ConsumidorNaoEncontradoException;
 import br.softsistem.Gerenciamento_de_estoque.exception.OrganizacaoNaoEncontradaException;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ public class ConsumidorService {
     }
 
     // Listar todos os consumidores de uma organização com paginação
+    @Cacheable(value = "consumidores", key = "'lista-' + #root.target.getCurrentOrgId() + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<Consumidor> listarTodos(Pageable pageable) {
         Long orgId = SecurityUtils.getCurrentOrgId();  // Obtém o org_id do contexto de segurança
         if (orgId == null) {
@@ -36,6 +39,7 @@ public class ConsumidorService {
     }
 
     // Buscar um consumidor por nome e organização
+    @Cacheable(value = "consumidores", key = "'nome-' + #nome + '-' + #root.target.getCurrentOrgId()")
     public Optional<Consumidor> buscarPorNome(String nome) {
         Long orgId = SecurityUtils.getCurrentOrgId();  // Obtém o org_id do contexto de segurança
         if (orgId == null) {
@@ -45,6 +49,7 @@ public class ConsumidorService {
     }
 
     // Salvar um consumidor associado à organização
+    @CacheEvict(value = "consumidores", allEntries = true)
     public Consumidor salvar(Consumidor consumidor) {
         Long orgId = SecurityUtils.getCurrentOrgId();  // Obtém o org_id do contexto de segurança
         if (orgId == null) {
@@ -59,6 +64,7 @@ public class ConsumidorService {
     }
 
     // Editar um consumidor existente
+    @CacheEvict(value = "consumidores", allEntries = true)
     public Consumidor editar(Long id, Consumidor consumidorAtualizado) {
         // Busca o consumidor existente e atualiza seus dados
         Consumidor consumidorExistente = consumidorRepository.findById(id)
@@ -74,6 +80,7 @@ public class ConsumidorService {
     }
 
     // Excluir um consumidor existente
+    @CacheEvict(value = "consumidores", allEntries = true)
     public void excluir(Long id) {
         // Busca o consumidor a ser excluído
         Consumidor consumidor = consumidorRepository.findById(id)
