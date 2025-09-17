@@ -1,0 +1,1 @@
+org.springframework.context.ApplicationContextInitializer=br.softsistem.Gerenciamento_de_estoque.config.DotenvConfig

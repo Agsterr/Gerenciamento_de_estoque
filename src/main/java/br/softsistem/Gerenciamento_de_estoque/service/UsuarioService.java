@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UsuarioService {
@@ -51,5 +52,10 @@ public class UsuarioService {
     // Listar usuários ativos pela organização com paginação
     public Page<Usuario> listarUsuariosAtivos(Long orgId, Pageable pageable) {
         return usuarioRepository.findByAtivoTrueAndOrgId(orgId, pageable);
+    }
+    
+    // Buscar usuário por email (para autenticação e assinaturas)
+    public Optional<Usuario> findByEmail(String email) {
+        return usuarioRepository.findByEmail(email);
     }
 }

@@ -43,5 +43,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByEmailAndOrgId(@Param("email") String email,
                                           @Param("orgId") Long orgId);
 
+    // Busca usuário por email (sem filtro de organização - para autenticação)
+    Optional<Usuario> findByEmail(String email);
+
     Optional<Usuario> findByIdAndOrgId(Long id, Long orgId);
 }
