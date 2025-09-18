@@ -52,10 +52,13 @@ public class UsuarioService {
     // Listar usuários ativos pela organização com paginação
     public Page<Usuario> listarUsuariosAtivos(Long orgId, Pageable pageable) {
         return usuarioRepository.findByAtivoTrueAndOrgId(orgId, pageable);
+<<<<<<< HEAD
     }
     
     // Buscar usuário por email (para autenticação e assinaturas)
     public Optional<Usuario> findByEmail(String email) {
         return usuarioRepository.findByEmail(email);
+=======
+>>>>>>> 977b3b0aab201d82e28cc2ef2b8518837abb38ea
     }
 }

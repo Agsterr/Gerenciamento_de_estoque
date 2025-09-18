@@ -90,7 +90,10 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+<<<<<<< HEAD
             <version>1.18.34</version>
+=======
+>>>>>>> 977b3b0aab201d82e28cc2ef2b8518837abb38ea
             <optional>true</optional>
         </dependency>
 
@@ -132,6 +135,7 @@
             <version>6.21.0</version>
         </dependency>
 
+<<<<<<< HEAD
         <!-- Stripe -->
         <dependency>
             <groupId>com.stripe</groupId>
@@ -152,6 +156,8 @@
             <version>3.0.0</version>
         </dependency>
 
+=======
+>>>>>>> 977b3b0aab201d82e28cc2ef2b8518837abb38ea
         <!-- Devtools (somente em desenvolvimento) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -212,7 +218,11 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
+<<<<<<< HEAD
                             <version>1.18.34</version>
+=======
+                            <version>1.18.30</version>
+>>>>>>> 977b3b0aab201d82e28cc2ef2b8518837abb38ea
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
@@ -223,11 +233,18 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+<<<<<<< HEAD
                     <mainClass>br.softsistem.Gerenciamento_de_estoque.GerenciamentoDeEstoqueApplication</mainClass>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
+=======
+                    <excludes>
+                        <exclude>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-devtools</artifactId>
+>>>>>>> 977b3b0aab201d82e28cc2ef2b8518837abb38ea
                         </exclude>
                     </excludes>
                 </configuration>
