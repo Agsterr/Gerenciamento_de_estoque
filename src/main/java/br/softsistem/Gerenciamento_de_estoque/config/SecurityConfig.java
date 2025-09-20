@@ -70,6 +70,14 @@ public class SecurityConfig {
                         .requestMatchers("/usuarios/reativar-usuario").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/usuarios/{id}/desativar").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/relatorios/**").authenticated()
+                        // Webhooks do Stripe - sem autenticação JWT (usam validação de assinatura própria)
+                        .requestMatchers(HttpMethod.POST, "/api/webhooks/stripe").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/webhooks/stripe/test").permitAll()
+                        // Endpoints de planos - acesso público para visualização
+                        .requestMatchers(HttpMethod.GET, "/api/plans").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/plans/{id}").permitAll()
+                        // Endpoints de assinatura - requerem autenticação
+                        .requestMatchers("/api/subscriptions/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

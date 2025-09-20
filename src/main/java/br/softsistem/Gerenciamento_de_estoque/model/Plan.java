@@ -105,7 +105,10 @@ public class Plan {
     public Boolean getHasApiAccess() { return hasApiAccess; }
     public Boolean getIsActive() { return isActive; }
     
-    // Getters explícitos para integrações Stripe
+    // Getters e Setters explícitos para integrações Stripe
     public String getStripePriceId() { return stripePriceId; }
+    public void setStripePriceId(String stripePriceId) { this.stripePriceId = stripePriceId; }
+    
     public String getStripeProductId() { return stripeProductId; }
+    public void setStripeProductId(String stripeProductId) { this.stripeProductId = stripeProductId; }
 }

@@ -20,6 +20,11 @@ public enum SubscriptionStatus {
     CANCELED,
     
     /**
+     * Assinatura pausada temporariamente
+     */
+    PAUSED,
+    
+    /**
      * Assinatura suspensa por falta de pagamento
      */
     PAST_DUE,

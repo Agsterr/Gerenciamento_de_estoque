@@ -26,6 +26,11 @@ public interface PlanRepository extends JpaRepository<Plan, Long> {
     Optional<Plan> findByTypeAndIsActiveTrue(PlanType type);
     
     /**
+     * Busca plano por tipo (incluindo inativos)
+     */
+    Optional<Plan> findByType(PlanType type);
+    
+    /**
      * Busca plano por ID do produto Stripe
      */
     Optional<Plan> findByStripeProductId(String stripeProductId);

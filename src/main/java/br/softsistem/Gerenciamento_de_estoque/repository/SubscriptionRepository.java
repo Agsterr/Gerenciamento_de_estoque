@@ -47,14 +47,34 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     List<Subscription> findExpiredTrials(@Param("now") LocalDateTime now);
     
     /**
+     * Busca todas as assinaturas do usuário por ID
+     */
+    List<Subscription> findByUserIdOrderByCreatedAtDesc(Long userId);
+    
+    /**
      * Busca todas as assinaturas do usuário
      */
     List<Subscription> findByUserOrderByCreatedAtDesc(Usuario user);
     
     /**
+     * Busca assinatura por user ID
+     */
+    Optional<Subscription> findByUserId(Long userId);
+    
+    /**
+     * Busca assinatura ativa por user ID e status
+     */
+    Optional<Subscription> findByUserIdAndStatusIn(Long userId, List<SubscriptionStatus> statuses);
+    
+    /**
      * Busca assinaturas por customer ID do Stripe
      */
     List<Subscription> findByStripeCustomerId(String stripeCustomerId);
+    
+    /**
+     * Busca primeira assinatura por customer ID do Stripe
+     */
+    Optional<Subscription> findFirstByStripeCustomerId(String stripeCustomerId);
     
     /**
      * Verifica se usuário tem assinatura ativa

@@ -1,19 +1,47 @@
 package br.softsistem.Gerenciamento_de_estoque.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * Configuração web para interceptors e outras configurações
+ */
 @Configuration
+@EnableScheduling
 public class WebConfig implements WebMvcConfigurer {
+    
+    private final RateLimitingInterceptor rateLimitingInterceptor;
+    
+    @Autowired
+    public WebConfig(RateLimitingInterceptor rateLimitingInterceptor) {
+        this.rateLimitingInterceptor = rateLimitingInterceptor;
+    }
+    
     @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Configura para servir recursos estáticos apenas em caminhos específicos
-        registry.addResourceHandler("/static/**", "/public/**")
-                .addResourceLocations("classpath:/static/", "classpath:/public/");
-
-        // Evita que as APIs sejam tratadas como recursos estáticos
-        registry.addResourceHandler("/swagger-ui/**", "/swagger-ui.html")
-                .addResourceLocations("classpath:/META-INF/resources/");
+    public void addInterceptors(InterceptorRegistry registry) {
+        // Aplicar rate limiting apenas em endpoints específicos
+        registry.addInterceptor(rateLimitingInterceptor)
+                .addPathPatterns(
+                    "/api/subscriptions/**",
+                    "/api/webhooks/**"
+                )
+                .excludePathPatterns(
+                    "/api/webhooks/stripe/test", // Excluir endpoint de teste
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**"
+                );
+    }
+    
+    /**
+     * Scheduler para limpeza periódica de contadores antigos
+     * Executa a cada 5 minutos
+     */
+    @Scheduled(fixedRate = 300000) // 5 minutos
+    public void cleanupRateLimitCounters() {
+        rateLimitingInterceptor.cleanupOldCounters();
     }
 }
