@@ -67,6 +67,12 @@ export class ProdutoService {
     );
   }
 
+  // ✅ Buscar produto por código de barras
+  buscarPorCodigoBarras(codigo: string): Observable<Produto> {
+    const headers = this.getAuthHeaders();
+    return this.http.get<Produto>(`${this.apiUrl}/codigo-barras/${encodeURIComponent(codigo)}`, { headers });
+  }
+
   // ✅ Buscar produto por ID
   getProdutoById(produtoId: number): Observable<Produto> {
     const orgId = this.getOrgId();
@@ -76,20 +82,32 @@ export class ProdutoService {
 
   // ✅ Criar produto
   criarProduto(produto: Produto): Observable<Produto> {
-    const orgId = this.getOrgId();
-    const headers = this.getAuthHeaders().set('orgId', orgId.toString());
-    const body = { ...produto };
+    const orgId = Number(this.getOrgId());
+    const headers = this.getAuthHeaders();
+    const { id, categoriaNome, ativo, criadoEm, status, ...campos } = produto as any;
+    const body = {
+      ...campos,
+      categoriaId: Number(produto.categoriaId),
+      orgId,
+      sku: produto.sku?.trim() || undefined,
+      codigoBarras: produto.codigoBarras?.trim() || undefined,
+    };
     return this.http.post<Produto>(`${this.apiUrl}`, body, { headers });
   }
 
   // ✅ Atualizar produto
   atualizarProduto(produto: Produto, id: number): Observable<Produto> {
-    const orgId = this.getOrgId();
+    const orgId = Number(this.getOrgId());
     const headers = this.getAuthHeaders();
-    // Inclui orgId no corpo do produto para o backend receber
-    const body = { ...produto, orgId };
-    // Passa orgId também como query param conforme sua API espera
-    return this.http.put<Produto>(`${this.apiUrl}/${id}?orgId=${orgId}`, body, { headers });
+    const { categoriaNome, ativo, criadoEm, status, ...campos } = produto as any;
+    const body = {
+      ...campos,
+      categoriaId: Number(produto.categoriaId),
+      orgId,
+      sku: produto.sku?.trim() || undefined,
+      codigoBarras: produto.codigoBarras?.trim() || undefined,
+    };
+    return this.http.put<Produto>(`${this.apiUrl}/${id}`, body, { headers });
   }
 
   // ✅ Atualizar quantidade

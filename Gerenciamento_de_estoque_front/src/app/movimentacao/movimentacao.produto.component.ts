@@ -15,6 +15,8 @@ import { MovimentacaoProduto, TipoMovimentacao, PageResponse } from '../models/m
 import { MovimentacaoModalComponent, MovimentacaoModalData } from './movimentacao-modal/movimentacao-modal.component';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Observable } from 'rxjs';
+import { PageHintComponent } from '../shared/page-hint/page-hint.component';
+import { PAGE_HINTS } from '../shared/help/help-content.data';
 
 
 @Component({
@@ -35,10 +37,12 @@ import { Observable } from 'rxjs';
     MatNativeDateModule,
     MatPaginatorModule,
     MatDialogModule,
-    MatTooltipModule
+    MatTooltipModule,
+    PageHintComponent
   ]
 })
 export class MovimentacaoProdutoComponent implements OnInit {
+  pageHint = PAGE_HINTS['movimentacoes'];
   // ViewChild para o paginador
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -56,8 +60,8 @@ export class MovimentacaoProdutoComponent implements OnInit {
   pageIndex: number = 0;
   pageSizeOptions: number[] = [5, 10, 25, 50];
 
-  // Filtros
-  tipoMovimentacao: TipoMovimentacao = TipoMovimentacao.ENTRADA;
+  // Filtros — null = todos os tipos
+  tipoMovimentacao: TipoMovimentacao | null = null;
   tiposMovimentacao: TipoMovimentacao[] = [TipoMovimentacao.ENTRADA, TipoMovimentacao.SAIDA];
   data: Date | null = null;
   inicio: Date | null = null;
@@ -194,7 +198,7 @@ export class MovimentacaoProdutoComponent implements OnInit {
         return;
       }
 
-      // Prioridade 5: Filtro apenas por tipo
+      // Prioridade 5: Filtro apenas por tipo (se selecionado)
       if (this.tipoMovimentacao) {
         this.buscarPorTipo();
         return;
@@ -426,7 +430,10 @@ export class MovimentacaoProdutoComponent implements OnInit {
 
   // Método para buscar apenas por tipo
   private buscarPorTipo(): void {
-    console.log('🔍 Buscando apenas por tipo:', this.tipoMovimentacao);
+    if (!this.tipoMovimentacao) {
+      this.buscarPorTiposAmbos();
+      return;
+    }
     this.movimentacaoService.buscarPorTipos([this.tipoMovimentacao], this.pageIndex, this.pageSize)
       .subscribe({
         next: (response) => {
@@ -586,10 +593,7 @@ export class MovimentacaoProdutoComponent implements OnInit {
 
   // Método para limpar filtros
   limparFiltros(): void {
-    console.log('🧹 Limpando todos os filtros...');
-    
-    // Reset de todos os filtros para valores neutros
-    this.tipoMovimentacao = TipoMovimentacao.ENTRADA;
+    this.tipoMovimentacao = null;
     this.data = null;
     this.inicio = null;
     this.fim = null;
@@ -599,20 +603,24 @@ export class MovimentacaoProdutoComponent implements OnInit {
     this.categoriaProduto = '';
     this.produtoId = 0;
     this.nomeConsumidor = '';
-
-    // Reset da paginação
+    this.pageIndex = 0;
     if (this.paginator) {
       this.paginator.pageIndex = 0;
-      this.pageIndex = 0;
     }
     this.pageSize = 10;
-
-    // Limpa a lista e busca apenas por tipo (padrão)
     this.movimentacoes = [];
     this.totalItems = 0;
-    
-    console.log('✅ Filtros limpos. Buscando apenas por tipo padrão...');
-    this.buscarMovimentacoes();
+    this.buscarPorTiposAmbos();
+  }
+
+  getOrigem(mov: MovimentacaoProduto): string {
+    if (mov.pedidoVendaId) {
+      return `Pedido venda #${mov.pedidoVendaId}`;
+    }
+    if (mov.entregaId) {
+      return `Entrega #${mov.entregaId}`;
+    }
+    return mov.tipo === TipoMovimentacao.ENTRADA ? 'Entrada manual / Compra' : 'Saída manual';
   }
 
   // Método para aplicar filtros
@@ -634,15 +642,15 @@ export class MovimentacaoProdutoComponent implements OnInit {
 
   // Método para aplicar filtro por tipo de movimentação
   aplicarFiltroTipo(): void {
-    // Não limpa outros filtros - permite combinações
-    // Reseta apenas a paginação
     this.pageIndex = 0;
     if (this.paginator) {
       this.paginator.pageIndex = 0;
     }
-    
-    // Busca com todos os filtros ativos
-    this.buscarMovimentacoes();
+    if (!this.tipoMovimentacao) {
+      this.buscarPorTiposAmbos();
+    } else {
+      this.buscarMovimentacoes();
+    }
   }
 
   // Método para aplicar filtro por data

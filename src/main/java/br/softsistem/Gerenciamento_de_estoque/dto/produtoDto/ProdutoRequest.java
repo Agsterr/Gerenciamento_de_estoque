@@ -28,8 +28,14 @@ public class ProdutoRequest {
     @NotNull(message = "A categoria vinculada é obrigatória.")
     private Long categoriaId;
 
-    @NotNull(message = "O ID da organização é obrigatório.")
+    /** Opcional no body — o controller usa a organização do token JWT. */
     private Long orgId;
+
+    private String sku;
+
+    private String codigoBarras;
+
+    private BigDecimal custoMedio;
 
     // Getters e Setters
 
@@ -88,4 +94,11 @@ public class ProdutoRequest {
     public void setOrgId(Long orgId) {
         this.orgId = orgId;
     }
+
+    public String getSku() { return sku; }
+    public void setSku(String sku) { this.sku = sku; }
+    public String getCodigoBarras() { return codigoBarras; }
+    public void setCodigoBarras(String codigoBarras) { this.codigoBarras = codigoBarras; }
+    public BigDecimal getCustoMedio() { return custoMedio; }
+    public void setCustoMedio(BigDecimal custoMedio) { this.custoMedio = custoMedio; }
 }

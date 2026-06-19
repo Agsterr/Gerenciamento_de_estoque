@@ -23,8 +23,10 @@ Dockerfile*
 docker-compose*
 .dockerignore
 
-# Frontend (se não for servir via Spring Boot)
-Gerenciamento_de_estoque_front/
+# Frontend — mantém código-fonte para build do nginx; ignora artefatos pesados
+Gerenciamento_de_estoque_front/node_modules/
+Gerenciamento_de_estoque_front/dist/
+Gerenciamento_de_estoque_front/.angular/
 Gerenciamento_de_estoque_front_backup/
 node_modules/
 package.json

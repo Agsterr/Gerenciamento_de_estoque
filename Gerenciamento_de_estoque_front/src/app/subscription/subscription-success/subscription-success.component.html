@@ -1,0 +1,23 @@
+<div class="success-card">
+  <div *ngIf="confirmed" class="state confirmed">
+    <h2>Pagamento confirmado</h2>
+    <p>Sua assinatura está ativa. Obrigado!</p>
+    <p *ngIf="subscription?.currentPeriodEnd">
+      Válida até {{ subscription?.currentPeriodEnd | date:'dd/MM/yyyy' }}
+    </p>
+    <a routerLink="/dashboard" class="btn-primary">Ir para o Dashboard</a>
+  </div>
+
+  <div *ngIf="!confirmed" class="state pending">
+    <h2>Confirmando pagamento...</h2>
+    <p *ngIf="loading">Aguardando confirmação do Asaas (webhook ou sincronização).</p>
+    <p *ngIf="!loading">
+      No sandbox, use o botão abaixo para simular a confirmação via API do Asaas
+      (não depende do botão na página do Asaas).
+    </p>
+    <button type="button" class="btn-secondary" (click)="retrySync()" [disabled]="loading">
+      {{ loading ? 'Verificando...' : 'Simular / verificar pagamento' }}
+    </button>
+    <a routerLink="/assinatura" class="link-muted">Voltar para assinatura</a>
+  </div>
+</div>

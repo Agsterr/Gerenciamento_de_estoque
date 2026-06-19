@@ -37,6 +37,10 @@ public class MovimentacaoProduto {
     @JoinColumn(name = "entrega_id")
     private Entrega entrega;
 
+    @ManyToOne
+    @JoinColumn(name = "pedido_venda_id")
+    private PedidoVenda pedidoVenda;
+
     // Novo campo para armazenar o usuário responsável
     @ManyToOne
     @JoinColumn(name = "usuario_id")
@@ -100,6 +104,14 @@ public class MovimentacaoProduto {
 
     public void setEntrega(Entrega entrega) {
         this.entrega = entrega;
+    }
+
+    public PedidoVenda getPedidoVenda() {
+        return pedidoVenda;
+    }
+
+    public void setPedidoVenda(PedidoVenda pedidoVenda) {
+        this.pedidoVenda = pedidoVenda;
     }
 
     public Usuario getUsuario() {

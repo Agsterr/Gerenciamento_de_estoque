@@ -1,0 +1,19 @@
+# Copie para config.yml e ajuste após: cloudflared tunnel login && cloudflared tunnel create gerenciamento-estoque
+# Coloque cert.pem e <tunnel-id>.json nesta pasta (não versionar — já estão no .gitignore).
+#
+# Rota DNS (URL fixa):
+#   cloudflared tunnel route dns gerenciamento-estoque focodev.com.br
+#   cloudflared tunnel route dns gerenciamento-estoque www.focodev.com.br
+#
+# No painel Asaas, webhook:
+#   https://focodev.com.br/api/webhooks/asaas
+
+tunnel: SEU_TUNNEL_ID
+credentials-file: /etc/cloudflared/SEU_TUNNEL_ID.json
+
+ingress:
+  - hostname: focodev.com.br
+    service: http://nginx:80
+  - hostname: www.focodev.com.br
+    service: http://nginx:80
+  - service: http_status:404

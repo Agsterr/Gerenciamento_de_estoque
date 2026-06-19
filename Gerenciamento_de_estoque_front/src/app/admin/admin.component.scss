@@ -1,0 +1,66 @@
+@import '../shared/erp-page';
+
+pre {
+  background: white;
+  padding: 12px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  color: #1e293b;
+  margin: 0;
+}
+
+.linha-falha {
+  background: #fef2f2;
+}
+
+.badge-ok {
+  color: #15803d;
+  font-weight: 600;
+}
+
+.badge-erro {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.col-user-agent {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+}
+
+.paginacao {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  align-items: center;
+}
+
+.paginacao-info {
+  margin-left: 12px;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.sub-tabela-wrap {
+  padding: 0 0 12px 32px;
+  background: #f8fafc;
+}
+
+.sub-tabela {
+  margin-top: 8px;
+  font-size: 0.9rem;
+}
+
+.input-data-trial {
+  max-width: 140px;
+  padding: 4px 6px;
+  margin: 0 4px;
+}
+
+.acoes-tabela .btn-sm {
+  margin: 2px;
+}

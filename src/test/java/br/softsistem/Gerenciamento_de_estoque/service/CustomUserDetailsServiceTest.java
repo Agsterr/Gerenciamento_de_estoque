@@ -50,7 +50,7 @@ class CustomUserDetailsServiceTest {
     @Test
     void loadUserByUsername_deveRetornarUserDetails() {
         Usuario usuario = criarUsuarioComRole();
-        when(usuarioRepository.findByUsernameAndOrgId("usuario1", 1L))
+        when(usuarioRepository.findByUsername("usuario1"))
                 .thenReturn(Optional.of(usuario));
 
         UserDetails userDetails = customUserDetailsService.loadUserByUsername("usuario1");
@@ -70,7 +70,7 @@ class CustomUserDetailsServiceTest {
 
     @Test
     void loadUserByUsername_deveLancarExcecaoSeUsuarioNaoEncontrado() {
-        when(usuarioRepository.findByUsernameAndOrgId("inexistente", 1L))
+        when(usuarioRepository.findByUsername("inexistente"))
                 .thenReturn(Optional.empty());
 
         assertThrows(UsernameNotFoundException.class, () ->

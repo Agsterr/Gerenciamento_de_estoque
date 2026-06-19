@@ -1,503 +1,923 @@
 package br.softsistem.Gerenciamento_de_estoque.service;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import br.softsistem.Gerenciamento_de_estoque.config.AsaasConfig;
+import br.softsistem.Gerenciamento_de_estoque.config.MercadoPagoConfig;
+import br.softsistem.Gerenciamento_de_estoque.config.PaymentProviderConfig;
 import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
-import br.softsistem.Gerenciamento_de_estoque.config.StripeConfig;
-import br.softsistem.Gerenciamento_de_estoque.dto.SubscriptionDto;
+import br.softsistem.Gerenciamento_de_estoque.enumeracao.AsaasPaymentMode;
 import br.softsistem.Gerenciamento_de_estoque.enumeracao.SubscriptionStatus;
+import br.softsistem.Gerenciamento_de_estoque.exception.SubscriptionPersistenceException;
 import br.softsistem.Gerenciamento_de_estoque.model.Plan;
 import br.softsistem.Gerenciamento_de_estoque.model.Subscription;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
 import br.softsistem.Gerenciamento_de_estoque.repository.PlanRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.SubscriptionRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.UsuarioRepository;
-import com.stripe.exception.StripeException;
-import com.stripe.model.Customer;
-import com.stripe.model.checkout.Session;
-import com.stripe.param.CustomerCreateParams;
-import com.stripe.param.checkout.SessionCreateParams;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
- * Service para gerenciamento de assinaturas e integração com Stripe
+ * Service para gerenciamento de assinaturas (Asaas como provedor padrão).
  */
 @Service
 @Transactional
 public class SubscriptionService {
-    
+
     private static final Logger log = LoggerFactory.getLogger(SubscriptionService.class);
-    
+    private static final int PAID_PERIOD_DAYS = 30;
+
     private final SubscriptionRepository subscriptionRepository;
     private final PlanRepository planRepository;
     private final UsuarioRepository usuarioRepository;
-    private final StripeConfig stripeConfig;
-    
+    private final PaymentProviderConfig paymentProviderConfig;
+    private final AsaasService asaasService;
+    private final AsaasConfig asaasConfig;
+    private final MercadoPagoConfig mercadoPagoConfig;
+    private final MercadoPagoService mercadoPagoService;
+    private final MercadoPagoPlanService mercadoPagoPlanService;
+    private final TrialSubscriptionService trialSubscriptionService;
+
     @Autowired
     public SubscriptionService(
             SubscriptionRepository subscriptionRepository,
             PlanRepository planRepository,
             UsuarioRepository usuarioRepository,
-            StripeConfig stripeConfig
-    ) {
+            PaymentProviderConfig paymentProviderConfig,
+            AsaasService asaasService,
+            AsaasConfig asaasConfig,
+            MercadoPagoConfig mercadoPagoConfig,
+            TrialSubscriptionService trialSubscriptionService,
+            @Autowired(required = false) MercadoPagoService mercadoPagoService,
+            @Autowired(required = false) MercadoPagoPlanService mercadoPagoPlanService) {
         this.subscriptionRepository = subscriptionRepository;
         this.planRepository = planRepository;
         this.usuarioRepository = usuarioRepository;
-        this.stripeConfig = stripeConfig;
+        this.paymentProviderConfig = paymentProviderConfig;
+        this.asaasService = asaasService;
+        this.asaasConfig = asaasConfig;
+        this.mercadoPagoConfig = mercadoPagoConfig;
+        this.trialSubscriptionService = trialSubscriptionService;
+        this.mercadoPagoService = mercadoPagoService;
+        this.mercadoPagoPlanService = mercadoPagoPlanService;
     }
-    
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // MÉTODOS PRINCIPAIS
+    // ═══════════════════════════════════════════════════════════════════════
+
     /**
-     * Busca assinatura atual do usuário
+     * Assinatura visível ao usuário: TRIAL, ACTIVE ou INCOMPLETE com cobrança Asaas pendente.
      */
     public Optional<Subscription> getCurrentSubscription(Long userId) {
-        return subscriptionRepository.findByUserIdAndStatusIn(
-            userId, 
-            List.of(SubscriptionStatus.TRIAL, SubscriptionStatus.ACTIVE)
-        );
-    }
-    
-    /**
-     * Cria uma nova assinatura com trial de 14 dias
-     */
-    public Subscription createTrialSubscription(Long userId, Long planId) {
-        log.info("Criando assinatura trial para usuário {} com plano {}", userId, planId);
-        
-        Usuario user = usuarioRepository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
-        
-        Plan plan = planRepository.findById(planId)
-            .orElseThrow(() -> new IllegalArgumentException("Plano não encontrado"));
-        
-        // Verificar se usuário já tem assinatura ativa
-        Optional<Subscription> existingSubscription = getCurrentSubscription(userId);
-        if (existingSubscription.isPresent()) {
-            throw new IllegalStateException("Usuário já possui uma assinatura ativa");
+        Optional<Subscription> trialOrActive = subscriptionRepository.findByUserIdAndStatusIn(
+                userId,
+                List.of(SubscriptionStatus.TRIAL, SubscriptionStatus.ACTIVE));
+        if (trialOrActive.isPresent()) {
+            return trialOrActive;
         }
-        
+        return subscriptionRepository.findByUserId(userId)
+                .filter(sub -> sub.getStatus() == SubscriptionStatus.INCOMPLETE
+                        && sub.getAsaasPaymentId() != null
+                        && !sub.getAsaasPaymentId().isBlank());
+    }
+
+    /**
+     * ⭐ MÉTODO PRINCIPAL - Cria assinatura via Mercado Pago ⭐
+     *
+     * FLUXO CORRETO:
+     * 1. Valida usuário e plano
+     * 2. Cria subscription local (status INCOMPLETE)
+     * 3. Chama Mercado Pago para gerar checkout (COM free trial)
+     * 4. Retorna URL do checkout
+     *
+     * Quando cardTokenId não é enviado: usa link direto do plano (usuário preenche cartão na página do MP).
+     * Quando cardTokenId é enviado (Checkout Transparente): chama a API do MP para criar a assinatura com o cartão.
+     *
+     * @param payerEmail E-mail do pagador (opcional; se null, usa user.getEmail())
+     */
+    public Map<String, Object> createSubscriptionForUser(String planIdInput, String backUrl, String cardTokenId, String payerEmail) {
+        return createSubscriptionForUser(planIdInput, backUrl, cardTokenId, payerEmail, null);
+    }
+
+    /**
+     * Cria checkout de assinatura. Com Asaas gera link de pagamento (invoiceUrl).
+     */
+    public Map<String, Object> createSubscriptionForUser(String planIdInput, String backUrl, String cardTokenId, String payerEmail, String cpfCnpj) {
+        return createSubscriptionForUser(planIdInput, backUrl, cardTokenId, payerEmail, cpfCnpj, AsaasPaymentMode.RECURRING);
+    }
+
+    /**
+     * Cria checkout de assinatura. Com Asaas gera assinatura recorrente ou cobrança avulsa (Pix/boleto).
+     */
+    public Map<String, Object> createSubscriptionForUser(String planIdInput, String backUrl, String cardTokenId,
+            String payerEmail, String cpfCnpj, AsaasPaymentMode paymentMode) {
+        if (paymentProviderConfig.isAsaas()) {
+            return createAsaasCheckout(planIdInput, cpfCnpj, paymentMode != null ? paymentMode : AsaasPaymentMode.RECURRING);
+        }
+        return createMercadoPagoCheckout(planIdInput, backUrl, cardTokenId, payerEmail);
+    }
+
+    private Map<String, Object> createAsaasCheckout(String planIdInput, String cpfCnpj, AsaasPaymentMode paymentMode) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        log.info("Checkout Asaas: user={} plan={} mode={}", userId, planIdInput, paymentMode);
+
+        Optional<Subscription> active = getCurrentSubscription(userId);
+        if (active.isPresent() && active.get().getStatus() == SubscriptionStatus.ACTIVE) {
+            LocalDateTime periodEnd = active.get().getCurrentPeriodEnd();
+            if (periodEnd != null && LocalDateTime.now().isBefore(periodEnd)) {
+                throw new IllegalStateException("Você já possui uma assinatura ativa");
+            }
+        }
+
+        Usuario user = usuarioRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado: " + userId));
+
+        Plan plan = findPlanByIdOrMpId(planIdInput);
+        if (plan == null) {
+            throw new IllegalArgumentException("Plano não encontrado ou inativo: " + planIdInput);
+        }
+
+        Subscription subscription = subscriptionRepository.findByUserId(userId).orElseGet(Subscription::new);
+        if (subscription.getId() == null) {
+            subscription.setUser(user);
+            subscription.setPlan(plan);
+        } else {
+            subscription.setPlan(plan);
+        }
+
+        boolean keepTrialAccess = subscription.getStatus() == SubscriptionStatus.TRIAL
+                && subscription.getTrialEnd() != null
+                && LocalDateTime.now().isBefore(subscription.getTrialEnd());
+        if (!keepTrialAccess) {
+            subscription.setStatus(SubscriptionStatus.INCOMPLETE);
+        }
+        subscription.setPaymentProvider("ASAAS");
+        subscription.setPaymentMode(paymentMode.name());
+        Subscription saved = subscriptionRepository.save(subscription);
+
+        asaasService.ensureCustomer(user, cpfCnpj);
+        usuarioRepository.save(user);
+
+        Map<String, Object> paymentResponse;
+        if (paymentMode == AsaasPaymentMode.RECURRING) {
+            paymentResponse = asaasService.createRecurringSubscription(user, plan, saved, cpfCnpj);
+        } else {
+            paymentResponse = asaasService.createMonthlyCharge(user, plan, saved, cpfCnpj, paymentMode.getBillingType());
+            saved.setAsaasSubscriptionId(null);
+        }
+
+        String asaasSubscriptionId = paymentMode == AsaasPaymentMode.RECURRING
+                ? mapGetString(paymentResponse, "asaasSubscriptionId")
+                : null;
+        if (asaasSubscriptionId == null && paymentMode == AsaasPaymentMode.RECURRING) {
+            asaasSubscriptionId = mapGetString(paymentResponse, "id");
+        }
+        String paymentId = mapGetString(paymentResponse, "id");
+        String invoiceUrl = asaasService.resolveInvoiceUrl(paymentResponse);
+        if (invoiceUrl == null || invoiceUrl.isBlank()) {
+            invoiceUrl = mapGetString(paymentResponse, "invoiceUrl");
+        }
+        if (invoiceUrl == null || invoiceUrl.isBlank()) {
+            invoiceUrl = mapGetString(paymentResponse, "bankSlipUrl");
+        }
+
+        saved.setAsaasSubscriptionId(asaasSubscriptionId);
+        saved.setAsaasPaymentId(paymentId);
+        saved.setAsaasCustomerId(user.getAsaasCustomerId());
+        saved.setCheckoutUrl(invoiceUrl);
+        subscriptionRepository.save(saved);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("checkoutUrl", invoiceUrl);
+        response.put("paymentUrl", invoiceUrl);
+        response.put("sessionId", paymentId);
+        response.put("subscriptionId", saved.getId());
+        response.put("status", saved.getStatus().name());
+        response.put("testMode", asaasConfig.isSandbox());
+        response.put("paymentProvider", "ASAAS");
+        response.put("paymentMode", paymentMode.name());
+        response.put("billingType", paymentMode.getBillingType());
+        response.put("asaasPaymentId", paymentId);
+        response.put("asaasSubscriptionId", asaasSubscriptionId);
+        response.put("transparentCheckout", paymentMode != AsaasPaymentMode.RECURRING);
+        putIfPresent(response, "pixQrCodeImage", paymentResponse.get("pixQrCodeImage"));
+        putIfPresent(response, "pixCopyPaste", paymentResponse.get("pixCopyPaste"));
+        putIfPresent(response, "pixExpirationDate", paymentResponse.get("pixExpirationDate"));
+        putIfPresent(response, "bankSlipUrl", paymentResponse.get("bankSlipUrl"));
+        putIfPresent(response, "identificationField", paymentResponse.get("identificationField"));
+        putIfPresent(response, "dueDate", paymentResponse.get("dueDate"));
+        return response;
+    }
+
+    private static void putIfPresent(Map<String, Object> target, String key, Object value) {
+        if (value != null && !String.valueOf(value).isBlank()) {
+            target.put(key, value);
+        }
+    }
+
+    private Map<String, Object> createMercadoPagoCheckout(String planIdInput, String backUrl, String cardTokenId, String payerEmail) {
+        if (mercadoPagoService == null) {
+            throw new IllegalStateException("Mercado Pago não está habilitado. Configure app.payment.provider=mercadopago");
+        }
+        Long userId = SecurityUtils.getCurrentUserId();
+
+        log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        log.info("🎯 Criando assinatura");
+        log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        log.info("👤 User ID: {}", userId);
+        log.info("📋 Plan Input: {}", planIdInput);
+        log.info("💳 Card token presente: {}", (cardTokenId != null && !cardTokenId.isBlank()));
+
+        // ═══════════════════════════════════════════════════════════════
+        // 1. VALIDAÇÕES
+        // ═══════════════════════════════════════════════════════════════
+
+        Optional<Subscription> existingSubscription = getCurrentSubscription(userId);
+        if (existingSubscription.isPresent() &&
+                existingSubscription.get().getStatus() == SubscriptionStatus.ACTIVE) {
+            log.warn("⚠️ Usuário {} já tem assinatura ativa", userId);
+            throw new IllegalStateException("Você já possui uma assinatura ativa");
+        }
+
+        Usuario user = usuarioRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado: " + userId));
+
+        // ═══════════════════════════════════════════════════════════════
+        // 2. BUSCA PLANO (por ID do MP ou ID local)
+        // ═══════════════════════════════════════════════════════════════
+
+        Plan plan = findPlanByIdOrMpId(planIdInput);
+
+        if (plan == null) {
+            log.error("❌ Plano não encontrado: {}", planIdInput);
+            throw new IllegalArgumentException("Plano não encontrado ou inativo: " + planIdInput);
+        }
+
+        log.info("✅ Plano encontrado:");
+        log.info("  - ID Local: {}", plan.getId());
+        log.info("  - Nome: {}", plan.getName());
+        log.info("  - Preço: R$ {}", plan.getPrice());
+        log.info("  - MP Plan ID: {}", plan.getMercadoPagoPreapprovalPlanId());
+
+        // ═══════════════════════════════════════════════════════════════
+        // 3. CRIA SUBSCRIPTION LOCAL (status: INCOMPLETE)
+        // ═══════════════════════════════════════════════════════════════
+
         Subscription subscription = new Subscription();
         subscription.setUser(user);
         subscription.setPlan(plan);
-        subscription.setStatus(SubscriptionStatus.TRIAL);
-        subscription.setTrialStart(LocalDateTime.now());
-        subscription.setTrialEnd(LocalDateTime.now().plusDays(14));
-        subscription.setCurrentPeriodStart(LocalDateTime.now());
-        subscription.setCurrentPeriodEnd(LocalDateTime.now().plusDays(14));
-        
-        return subscriptionRepository.save(subscription);
+        subscription.setStatus(SubscriptionStatus.INCOMPLETE);
+        Subscription saved = subscriptionRepository.save(subscription);
+
+        log.info("✅ Subscription local criada: ID={}", saved.getId());
+
+        // ═══════════════════════════════════════════════════════════════
+        // 4. CHECKOUT: API (com card_token_id) OU link direto do plano
+        // ═══════════════════════════════════════════════════════════════
+
+        String checkoutUrl;
+        boolean hasCardToken = cardTokenId != null && !cardTokenId.isBlank();
+        String mpPlanId = plan.getMercadoPagoPreapprovalPlanId();
+
+        if (hasCardToken) {
+            // Checkout Transparente: com token de cartão, chama a API do Mercado Pago (não redireciona)
+            try {
+                String emailForPayer = (payerEmail != null && !payerEmail.isBlank()) ? payerEmail : user.getEmail();
+                Map<String, Object> preapprovalResponse = mercadoPagoService.createPreapproval(
+                        user, plan, saved.getId(), cardTokenId, emailForPayer);
+
+                String preapprovalId = mapGetString(preapprovalResponse, "id");
+                if (preapprovalId == null || preapprovalId.isBlank()) {
+                    throw new RuntimeException("Mercado Pago não retornou ID da assinatura");
+                }
+
+                checkoutUrl = null;
+                saved.setMercadoPagoSubscriptionId(preapprovalId);
+                String initPoint = mapGetString(preapprovalResponse, "init_point");
+                saved.setCheckoutUrl(initPoint != null ? initPoint : "");
+
+                try {
+                    subscriptionRepository.save(saved);
+                } catch (Exception persistEx) {
+                    log.error("❌ Assinatura criada no MP (id={}) mas falha ao salvar no banco: {}", preapprovalId, persistEx.getMessage(), persistEx);
+                    throw new SubscriptionPersistenceException(
+                            "Assinatura criada no Mercado Pago, mas houve falha ao registrar localmente. Não reenvie o pagamento; entre em contato com o suporte e informe o ID: " + preapprovalId,
+                            preapprovalId, persistEx);
+                }
+
+                log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                log.info("✅ SUCESSO! Checkout Transparente - assinatura criada via API");
+                log.info("🆔 Preapproval ID: {}", preapprovalId);
+                log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            } catch (SubscriptionPersistenceException e) {
+                throw e;
+            } catch (Exception e) {
+                log.error("❌ Erro ao criar preapproval no MP: {}", e.getMessage(), e);
+                throw new RuntimeException("Erro ao criar assinatura: " + e.getMessage(), e);
+            }
+        } else if (mpPlanId != null && !mpPlanId.isBlank()) {
+            // Sem token: cria assinatura via POST /preapproval (status=pending) e redireciona para init_point
+            try {
+                Map<String, Object> preapprovalResponse = mercadoPagoService.createPreapproval(
+                        user, plan, saved.getId(), null, null);
+
+                String preapprovalId = mapGetString(preapprovalResponse, "id");
+                if (preapprovalId == null || preapprovalId.isBlank()) {
+                    throw new RuntimeException("Mercado Pago não retornou ID da assinatura");
+                }
+
+                String initPoint = mapGetString(preapprovalResponse, "init_point");
+                String sandboxInit = mapGetString(preapprovalResponse, "sandbox_init_point");
+                checkoutUrl = (mercadoPagoConfig.isProduction() || sandboxInit == null || sandboxInit.isBlank())
+                        ? initPoint
+                        : sandboxInit;
+                if (checkoutUrl == null || checkoutUrl.isBlank()) {
+                    checkoutUrl = initPoint;
+                }
+
+                saved.setMercadoPagoSubscriptionId(preapprovalId);
+                saved.setCheckoutUrl(checkoutUrl != null ? checkoutUrl : "");
+                try {
+                    subscriptionRepository.save(saved);
+                } catch (Exception persistEx) {
+                    log.error("❌ Assinatura criada no MP (id={}) mas falha ao salvar no banco: {}", preapprovalId, persistEx.getMessage(), persistEx);
+                    throw new SubscriptionPersistenceException(
+                            "Assinatura criada no Mercado Pago, mas houve falha ao registrar localmente. Não repita o checkout; entre em contato com o suporte e informe o ID: " + preapprovalId,
+                            preapprovalId, persistEx);
+                }
+
+                log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                log.info("✅ Assinatura criada no MP (POST /preapproval); redirecionar para init_point");
+                log.info("🆔 Preapproval ID: {}", preapprovalId);
+                log.info("🔗 Checkout URL (init_point): {}", checkoutUrl);
+                log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            } catch (SubscriptionPersistenceException e) {
+                throw e;
+            } catch (Exception e) {
+                log.error("❌ Erro ao criar preapproval no MP: {}", e.getMessage(), e);
+                throw new RuntimeException("Erro ao criar assinatura: " + e.getMessage(), e);
+            }
+        } else {
+            throw new IllegalArgumentException(
+                    "Configure o ID do plano no painel do Mercado Pago (mercadoPagoPreapprovalPlanId) para este plano.");
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // 5. RETORNA RESPOSTA
+        // ═══════════════════════════════════════════════════════════════
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("checkoutUrl", checkoutUrl);
+        response.put("sessionId", checkoutUrl);
+        response.put("subscriptionId", saved.getId());
+        response.put("status", saved.getStatus().name());
+        response.put("testMode", !mercadoPagoConfig.isProduction());
+        if (saved.getMercadoPagoSubscriptionId() != null) {
+            response.put("preapprovalId", saved.getMercadoPagoSubscriptionId());
+        }
+        if (hasCardToken) {
+            response.put("transparentCheckout", true);
+        }
+
+        return response;
     }
-    
+
     /**
-     * Cria sessão de checkout do Stripe
+     * Ativa assinatura após confirmação de pagamento via webhook Asaas.
      */
-    public String createCheckoutSession(Long userId, Long planId, String successUrl, String cancelUrl) throws StripeException {
-        log.info("Criando sessão de checkout para usuário {} com plano {}", userId, planId);
-        
-        if (!stripeConfig.isStripeConfigured()) {
-            throw new IllegalStateException("Stripe não está configurado");
+    public void activateFromAsaasPayment(Subscription subscription, Map<String, Object> payment) {
+        LocalDateTime now = LocalDateTime.now();
+        String paymentId = mapGetString(payment, "id");
+        if (paymentId != null && !paymentId.isBlank()) {
+            subscription.setAsaasPaymentId(paymentId);
         }
-        
-        Usuario user = usuarioRepository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
-        
-        Plan plan = planRepository.findById(planId)
-            .orElseThrow(() -> new IllegalArgumentException("Plano não encontrado"));
-        
-        if (plan.getStripePriceId() == null || plan.getStripePriceId().isEmpty()) {
-            throw new IllegalStateException("Plano não possui preço configurado no Stripe");
+
+        if (subscription.getStatus() == SubscriptionStatus.TRIAL
+                || subscription.getStatus() == SubscriptionStatus.INCOMPLETE) {
+            subscription.setTrialEnd(now);
         }
-        
-        // Criar ou buscar cliente no Stripe
-        String customerId = getOrCreateStripeCustomer(user);
-        
-        // Criar sessão de checkout
-        SessionCreateParams.Builder paramsBuilder = SessionCreateParams.builder()
-            .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
-            .setCustomer(customerId)
-            .setSuccessUrl(successUrl != null ? successUrl : stripeConfig.getSuccessUrl())
-            .setCancelUrl(cancelUrl != null ? cancelUrl : stripeConfig.getCancelUrl())
-            .addLineItem(
-                SessionCreateParams.LineItem.builder()
-                    .setPrice(plan.getStripePriceId())
-                    .setQuantity(1L)
-                    .build()
-            )
-            .setSubscriptionData(
-                SessionCreateParams.SubscriptionData.builder()
-                    .setTrialPeriodDays(14L) // 14 dias de trial
-                    .putMetadata("user_id", userId.toString())
-                    .putMetadata("plan_id", planId.toString())
-                    .build()
-            );
-        
-        Session session = Session.create(paramsBuilder.build());
-        
-        log.info("Sessão de checkout criada: {}", session.getId());
-        return session.getUrl();
-    }
-    
-    /**
-     * Busca ou cria cliente no Stripe
-     */
-    private String getOrCreateStripeCustomer(Usuario user) throws StripeException {
-        // Buscar assinatura existente com customer ID
-        Optional<Subscription> existingSubscription = subscriptionRepository.findByUserId(user.getId());
-        if (existingSubscription.isPresent() && existingSubscription.get().getStripeCustomerId() != null) {
-            return existingSubscription.get().getStripeCustomerId();
+
+        LocalDateTime periodEndBase;
+        LocalDateTime periodStart;
+        if (subscription.getStatus() == SubscriptionStatus.ACTIVE
+                && subscription.getCurrentPeriodEnd() != null
+                && subscription.getCurrentPeriodEnd().isAfter(now)) {
+            periodStart = subscription.getCurrentPeriodStart() != null ? subscription.getCurrentPeriodStart() : now;
+            periodEndBase = subscription.getCurrentPeriodEnd();
+            log.info("Renovando assinatura {} — estendendo a partir de {}", subscription.getId(), periodEndBase);
+        } else {
+            periodStart = now;
+            periodEndBase = now;
+            log.info("Ativando assinatura {} via Asaas", subscription.getId());
         }
-        
-        // Criar novo cliente no Stripe
-        CustomerCreateParams params = CustomerCreateParams.builder()
-            .setEmail(user.getEmail())
-            .setName(user.getUsername())
-            .putMetadata("user_id", user.getId().toString())
-            .build();
-        
-        Customer customer = Customer.create(params);
-        log.info("Cliente Stripe criado: {} para usuário {}", customer.getId(), user.getId());
-        
-        return customer.getId();
-    }
-    
-    /**
-     * Atualiza status da assinatura baseado em evento do Stripe
-     */
-    public void updateSubscriptionFromStripe(String stripeSubscriptionId, SubscriptionStatus status, 
-                                            LocalDateTime currentPeriodStart, LocalDateTime currentPeriodEnd) {
-        log.info("Atualizando assinatura {} para status {}", stripeSubscriptionId, status);
-        
-        Optional<Subscription> subscriptionOpt = subscriptionRepository.findByStripeSubscriptionId(stripeSubscriptionId);
-        if (subscriptionOpt.isEmpty()) {
-            log.warn("Assinatura não encontrada para Stripe ID: {}", stripeSubscriptionId);
-            return;
-        }
-        
-        Subscription subscription = subscriptionOpt.get();
-        subscription.setStatus(status);
-        subscription.setCurrentPeriodStart(currentPeriodStart);
-        subscription.setCurrentPeriodEnd(currentPeriodEnd);
-        
-        if (status == SubscriptionStatus.CANCELED) {
-            subscription.setCanceledAt(LocalDateTime.now());
-        } else if (status == SubscriptionStatus.EXPIRED) {
-            subscription.setEndedAt(LocalDateTime.now());
-        }
-        
+
+        subscription.setStatus(SubscriptionStatus.ACTIVE);
+        subscription.setCurrentPeriodStart(periodStart);
+        subscription.setCurrentPeriodEnd(periodEndBase.plusDays(PAID_PERIOD_DAYS));
+        subscription.setAccessBlocked(false);
         subscriptionRepository.save(subscription);
-        log.info("Assinatura atualizada com sucesso");
+        log.info("Assinatura {} vigente até {}", subscription.getId(), subscription.getCurrentPeriodEnd());
     }
-    
+
+    /** Extrai String do Map (resposta do MP pode ter id como número no JSON). */
+    private static String mapGetString(Map<String, Object> map, String key) {
+        Object v = map == null ? null : map.get(key);
+        if (v == null) return null;
+        if (v instanceof String) return (String) v;
+        return String.valueOf(v);
+    }
+
     /**
-     * Cancela assinatura
+     * Busca plano por ID do Mercado Pago OU ID local
      */
-    public void cancelSubscription(Long userId) throws StripeException {
-        log.info("Cancelando assinatura do usuário {}", userId);
-        
+    private Plan findPlanByIdOrMpId(String planIdInput) {
+        // Tenta por ID do Mercado Pago primeiro
+        Optional<Plan> planOpt = planRepository.findByMercadoPagoPreapprovalPlanIdAndIsActiveTrue(planIdInput);
+
+        if (planOpt.isPresent()) {
+            log.info("📦 Plano encontrado por MP ID");
+            return planOpt.get();
+        }
+
+        // Fallback: Tenta por ID local
+        try {
+            Long planId = Long.parseLong(planIdInput);
+            Plan plan = planRepository.findById(planId)
+                    .filter(Plan::getIsActive)
+                    .orElse(null);
+
+            if (plan != null) {
+                log.info("📦 Plano encontrado por ID local");
+            }
+
+            return plan;
+        } catch (NumberFormatException e) {
+            log.warn("⚠️ Plan ID não é numérico: {}", planIdInput);
+            return null;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // CANCELAMENTO
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Cancela assinatura local E no Mercado Pago
+     */
+    public void cancelSubscription(Long userId) {
+        log.info("🚫 Cancelando assinatura do usuário {}", userId);
+
         Optional<Subscription> subscriptionOpt = getCurrentSubscription(userId);
         if (subscriptionOpt.isEmpty()) {
             throw new IllegalStateException("Usuário não possui assinatura ativa");
         }
-        
+
         Subscription subscription = subscriptionOpt.get();
-        
-        // Cancelar no Stripe se tiver ID
-        if (subscription.getStripeSubscriptionId() != null && stripeConfig.isStripeConfigured()) {
+
+        // Cancela no Asaas (assinatura recorrente)
+        if (subscription.getAsaasSubscriptionId() != null && !subscription.getAsaasSubscriptionId().isBlank()) {
             try {
-                com.stripe.model.Subscription stripeSubscription = 
-                    com.stripe.model.Subscription.retrieve(subscription.getStripeSubscriptionId());
-                stripeSubscription.cancel();
-                log.info("Assinatura cancelada no Stripe: {}", subscription.getStripeSubscriptionId());
-            } catch (StripeException e) {
-                log.error("Erro ao cancelar assinatura no Stripe: {}", e.getMessage());
-                throw e;
+                asaasService.cancelRecurringSubscription(subscription.getAsaasSubscriptionId());
+                log.info("✅ Assinatura recorrente cancelada no Asaas");
+            } catch (Exception e) {
+                log.warn("⚠️ Erro ao cancelar assinatura no Asaas: {}", e.getMessage());
             }
         }
-        
-        // Atualizar status local
+
+        // Cancela no Mercado Pago (se tiver ID)
+        if (subscription.getMercadoPagoSubscriptionId() != null && mercadoPagoService != null) {
+            try {
+                mercadoPagoService.cancelPreapproval(subscription.getMercadoPagoSubscriptionId());
+                log.info("✅ Cancelado no Mercado Pago");
+            } catch (Exception e) {
+                log.warn("⚠️ Erro ao cancelar no MP: {}", e.getMessage());
+            }
+        }
+
+        // Cancela localmente
         subscription.setStatus(SubscriptionStatus.CANCELED);
         subscription.setCanceledAt(LocalDateTime.now());
         subscriptionRepository.save(subscription);
-        
-        log.info("Assinatura cancelada com sucesso");
+
+        log.info("✅ Assinatura cancelada com sucesso");
     }
-    
+
     /**
-     * Verifica se usuário pode acessar funcionalidade baseado no plano
+     * Cancela pelo ID do Mercado Pago (preapproval_id)
      */
+    public void cancelSubscriptionByPreapprovalId(String preapprovalId) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        log.info("🚫 Cancelamento por preapproval_id: {} (user: {})", preapprovalId, userId);
+
+        Subscription subscription = subscriptionRepository.findByMercadoPagoSubscriptionId(preapprovalId)
+                .orElseThrow(() -> new IllegalArgumentException("Assinatura não encontrada"));
+
+        // Validação de segurança
+        if (!subscription.getUser().getId().equals(userId)) {
+            log.warn("⚠️ Tentativa de cancelar assinatura de outro usuário");
+            throw new SecurityException("Sem permissão para cancelar esta assinatura");
+        }
+
+        // Idempotência
+        if (subscription.getStatus() == SubscriptionStatus.CANCELED) {
+            log.info("ℹ️ Assinatura já cancelada (idempotente)");
+            return;
+        }
+
+        // Cancela no MP
+        if (mercadoPagoService != null) {
+            mercadoPagoService.cancelPreapproval(preapprovalId);
+        }
+
+        // Atualiza localmente
+        subscription.setStatus(SubscriptionStatus.CANCELED);
+        subscription.setCanceledAt(LocalDateTime.now());
+        subscriptionRepository.save(subscription);
+
+        log.info("✅ Assinatura {} cancelada", preapprovalId);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // ATIVAÇÃO E RENOVAÇÃO (Webhooks)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Aplica pagamento aprovado (chamado por webhook)
+     */
+    public void applyApprovedPayment(String externalReference, Long mercadoPagoPaymentId) {
+        log.info("💰 Aplicando pagamento aprovado");
+        log.info("  - external_reference: {}", externalReference);
+        log.info("  - payment_id: {}", mercadoPagoPaymentId);
+
+        if (externalReference == null || externalReference.isBlank()) {
+            log.warn("⚠️ external_reference vazio, ignorando");
+            return;
+        }
+
+        // external_reference = ID do usuário logado (formato: "123" ou legado "userId:planId")
+        String[] parts = externalReference.split(":");
+        Long userId;
+        Long planId;
+
+        try {
+            userId = Long.parseLong(parts[0]);
+            if (parts.length >= 2) {
+                planId = Long.parseLong(parts[1]);
+            } else {
+                // Só userId: busca plano da assinatura existente do usuário
+                planId = subscriptionRepository.findByUserId(userId)
+                        .map(s -> s.getPlan() != null ? s.getPlan().getId() : null)
+                        .orElse(null);
+                if (planId == null) {
+                    log.warn("⚠️ external_reference só tem userId e usuário não tem assinatura com plano: {}", externalReference);
+                    return;
+                }
+            }
+            activateOrRenewSubscription(userId, planId, mercadoPagoPaymentId);
+        } catch (NumberFormatException e) {
+            log.error("❌ IDs não numéricos em external_reference: {}", externalReference);
+        }
+    }
+
+    /**
+     * Ativa ou renova assinatura após pagamento
+     */
+    public void activateOrRenewSubscription(Long userId, Long planId, Long mercadoPagoPaymentId) {
+        log.info("✅ Ativando/renovando assinatura");
+        log.info("  - userId: {}", userId);
+        log.info("  - planId: {}", planId);
+        log.info("  - paymentId: {}", mercadoPagoPaymentId);
+
+        Usuario user = usuarioRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
+
+        Plan plan = planRepository.findById(planId)
+                .orElseThrow(() -> new IllegalArgumentException("Plano não encontrado"));
+
+        Optional<Subscription> existingOpt = subscriptionRepository.findByUserId(userId);
+        Subscription subscription = existingOpt.orElseGet(Subscription::new);
+
+        if (existingOpt.isEmpty()) {
+            subscription.setUser(user);
+        }
+
+        subscription.setPlan(plan);
+
+        // Encerra trial se existir
+        if (subscription.getStatus() == SubscriptionStatus.TRIAL) {
+            subscription.setTrialEnd(LocalDateTime.now());
+            log.info("  - Trial encerrado");
+        }
+
+        // Ativa assinatura
+        subscription.setStatus(SubscriptionStatus.ACTIVE);
+        LocalDateTime now = LocalDateTime.now();
+        subscription.setCurrentPeriodStart(now);
+        subscription.setCurrentPeriodEnd(now.plusDays(30));
+
+        subscriptionRepository.save(subscription);
+
+        log.info("✅ Assinatura ativada até {}", subscription.getCurrentPeriodEnd());
+    }
+
+    /**
+     * Atualiza status da assinatura
+     */
+    public void updateSubscriptionStatusByUserId(Long userId, SubscriptionStatus status) {
+        Optional<Subscription> subscriptionOpt = getCurrentSubscription(userId);
+
+        if (subscriptionOpt.isEmpty()) {
+            log.warn("⚠️ Usuário {} sem assinatura ativa", userId);
+            return;
+        }
+
+        Subscription subscription = subscriptionOpt.get();
+        subscription.setStatus(status);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        switch (status) {
+            case ACTIVE:
+                subscription.setCurrentPeriodStart(now);
+                subscription.setCurrentPeriodEnd(now.plusDays(30));
+                break;
+            case CANCELED:
+                subscription.setCanceledAt(now);
+                break;
+            case EXPIRED:
+                subscription.setEndedAt(now);
+                break;
+            default:
+                break;
+        }
+
+        subscriptionRepository.save(subscription);
+        log.info("✅ Status atualizado para {}", status);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // CONSULTAS E VALIDAÇÕES
+    // ═══════════════════════════════════════════════════════════════════════
+
+    public Subscription getCurrentSubscriptionForUser() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) {
+            return null;
+        }
+
+        Optional<Subscription> existing = getCurrentSubscription(userId);
+        if (existing.isPresent()) {
+            return normalizeTrialSubscription(existing.get());
+        }
+
+        if (hasSubscriptionBypass(userId)) {
+            return null;
+        }
+
+        return usuarioRepository.findById(userId)
+                .map(trialSubscriptionService::startTrialForUser)
+                .orElse(null);
+    }
+
+    private Subscription normalizeTrialSubscription(Subscription subscription) {
+        if (subscription.getStatus() != SubscriptionStatus.TRIAL) {
+            return subscription;
+        }
+
+        boolean updated = false;
+        if (subscription.getTrialStart() == null) {
+            LocalDateTime base = subscription.getCreatedAt() != null
+                    ? subscription.getCreatedAt()
+                    : LocalDateTime.now();
+            subscription.setTrialStart(base);
+            updated = true;
+        }
+        if (subscription.getTrialEnd() == null) {
+            subscription.setTrialEnd(subscription.getTrialStart().plusDays(trialSubscriptionService.getTrialDays()));
+            updated = true;
+        }
+        if (subscription.getCurrentPeriodStart() == null) {
+            subscription.setCurrentPeriodStart(subscription.getTrialStart());
+            updated = true;
+        }
+        if (subscription.getCurrentPeriodEnd() == null) {
+            subscription.setCurrentPeriodEnd(subscription.getTrialEnd());
+            updated = true;
+        }
+
+        return updated ? subscriptionRepository.save(subscription) : subscription;
+    }
+
+    /**
+     * Consulta status da cobrança no Asaas e ativa a assinatura se o pagamento foi confirmado
+     * (fallback quando o webhook ainda não chegou — comum em dev/sandbox).
+     */
+    public Subscription syncAsaasPaymentForCurrentUser() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) {
+            return null;
+        }
+        Optional<Subscription> subOpt = subscriptionRepository.findByUserId(userId);
+        if (subOpt.isEmpty()) {
+            return getCurrentSubscriptionForUser();
+        }
+        Subscription sub = subOpt.get();
+        if (sub.getAsaasPaymentId() == null || sub.getAsaasPaymentId().isBlank()) {
+            return getCurrentSubscriptionForUser();
+        }
+        if (sub.getStatus() == SubscriptionStatus.ACTIVE) {
+            return sub;
+        }
+        try {
+            Map<String, Object> payment = asaasService.getPayment(sub.getAsaasPaymentId());
+            if (!asaasService.isPaymentConfirmed(payment) && asaasConfig.isSandbox()) {
+                log.info("Tentando confirmar pagamento sandbox via API: payment={}", sub.getAsaasPaymentId());
+                payment = asaasService.confirmSandboxPayment(sub.getAsaasPaymentId());
+            }
+            if (asaasService.isPaymentConfirmed(payment)) {
+                activateFromAsaasPayment(sub, payment);
+                log.info("Assinatura {} ativada via sync Asaas payment={}", sub.getId(), sub.getAsaasPaymentId());
+            }
+        } catch (Exception e) {
+            log.warn("Falha ao sincronizar pagamento Asaas para user={}: {}", userId, e.getMessage());
+        }
+        return getCurrentSubscriptionForUser();
+    }
+
+    public List<Subscription> getSubscriptionHistoryForUser() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        return subscriptionRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    }
+
+    public Map<String, String> cancelSubscriptionForUser() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        cancelSubscription(userId);
+        return Map.of("message", "Assinatura cancelada com sucesso");
+    }
+
     public boolean canUserAccess(Long userId, String feature) {
         Optional<Subscription> subscriptionOpt = getCurrentSubscription(userId);
+
         if (subscriptionOpt.isEmpty()) {
-            return false; // Sem assinatura = sem acesso
+            return false;
         }
-        
-        Subscription subscription = subscriptionOpt.get();
-        Plan plan = subscription.getPlan();
-        
-        // Verificar recursos específicos do plano
+
+        Plan plan = subscriptionOpt.get().getPlan();
+
         return switch (feature.toLowerCase()) {
             case "reports" -> Boolean.TRUE.equals(plan.getHasReports());
             case "analytics" -> Boolean.TRUE.equals(plan.getHasAdvancedAnalytics());
             case "api_access" -> Boolean.TRUE.equals(plan.getHasApiAccess());
-            default -> true; // Funcionalidades básicas sempre disponíveis
-        };
-    }
-    
-    /**
-     * Verifica limites de uso baseado no plano
-     */
-    public boolean isWithinLimits(Long userId, String limitType, int currentCount) {
-        Optional<Subscription> subscriptionOpt = getCurrentSubscription(userId);
-        if (subscriptionOpt.isEmpty()) {
-            return false;
-        }
-        
-        Plan plan = subscriptionOpt.get().getPlan();
-        
-        return switch (limitType.toLowerCase()) {
-            case "users" -> plan.getMaxUsers() == null || currentCount < plan.getMaxUsers();
-            case "products" -> plan.getMaxProducts() == null || currentCount < plan.getMaxProducts();
-            case "organizations" -> plan.getMaxOrganizations() == null || currentCount < plan.getMaxOrganizations();
             default -> true;
         };
     }
-    
-    /**
-     * Lista todas as assinaturas de um usuário
-     */
-    public List<Subscription> getUserSubscriptions(Long userId) {
-        return subscriptionRepository.findByUserIdOrderByCreatedAtDesc(userId);
-    }
-    
-    /**
-     * Cria portal do cliente Stripe
-     */
-    public String createCustomerPortalSession(Long userId, String returnUrl) throws StripeException {
-        if (!stripeConfig.isStripeConfigured()) {
-            throw new IllegalStateException("Stripe não está configurado");
-        }
-        
-        Optional<Subscription> subscriptionOpt = getCurrentSubscription(userId);
-        if (subscriptionOpt.isEmpty()) {
-            throw new IllegalStateException("Usuário não possui assinatura ativa");
-        }
-        
-        String customerId = subscriptionOpt.get().getStripeCustomerId();
-        if (customerId == null) {
-            throw new IllegalStateException("Cliente não possui ID do Stripe");
-        }
-        
-        Map<String, Object> params = new HashMap<>();
-        params.put("customer", customerId);
-        params.put("return_url", returnUrl != null ? returnUrl : stripeConfig.getSuccessUrl());
-        
-        com.stripe.model.billingportal.Session portalSession = 
-            com.stripe.model.billingportal.Session.create(params);
-        
-        return portalSession.getUrl();
-    }
-    
-    /**
-     * Processa criação de assinatura via webhook
-     */
-    public void processSubscriptionCreated(String stripeSubscriptionId, String customerId, 
-                                         String priceId, LocalDateTime currentPeriodStart, 
-                                         LocalDateTime currentPeriodEnd, boolean isTrialing) {
-        log.info("Processando criação de assinatura: {}", stripeSubscriptionId);
-        
-        try {
-            // Buscar plano pelo price ID
-            Optional<Plan> planOpt = planRepository.findByStripePriceId(priceId);
-            if (planOpt.isEmpty()) {
-                log.error("Plano não encontrado para price ID: {}", priceId);
-                return;
-            }
-            
-            // Buscar usuário pelo customer ID
-        Optional<Subscription> existingSubscription = subscriptionRepository.findFirstByStripeCustomerId(customerId);
-        if (existingSubscription.isEmpty()) {
-            log.error("Usuário não encontrado para customer ID: {}", customerId);
-            return;
-        }
-            
-            Subscription subscription = existingSubscription.get();
-            subscription.setStripeSubscriptionId(stripeSubscriptionId);
-            subscription.setStatus(isTrialing ? SubscriptionStatus.TRIAL : SubscriptionStatus.ACTIVE);
-            subscription.setCurrentPeriodStart(currentPeriodStart);
-            subscription.setCurrentPeriodEnd(currentPeriodEnd);
-            subscription.setPlan(planOpt.get());
-            
-            subscriptionRepository.save(subscription);
-            log.info("Assinatura criada/atualizada com sucesso");
-            
-        } catch (Exception e) {
-            log.error("Erro ao processar criação de assinatura: {}", e.getMessage(), e);
-        }
-    }
 
-    // Métodos para encapsular lógica do controller
-    
-    public SubscriptionDto getCurrentSubscriptionForUser() {
-        Long userId = SecurityUtils.getCurrentUserId();
-        Optional<Subscription> subscription = getCurrentSubscription(userId);
-        return subscription.map(this::convertToDto).orElse(null);
-    }
-    
-    public Map<String, Object> createSubscriptionForUser(Long planId) throws StripeException {
-        Long userId = SecurityUtils.getCurrentUserId();
-        
-        // Verificar se já tem assinatura ativa
-        Optional<Subscription> existingSubscription = getCurrentSubscription(userId);
-        if (existingSubscription.isPresent() && 
-            existingSubscription.get().getStatus() == SubscriptionStatus.ACTIVE) {
-            throw new IllegalStateException("Usuário já possui uma assinatura ativa");
-        }
-        
-        String sessionId = createCheckoutSession(userId, planId, 
-            "http://localhost:8080/subscription/success", 
-            "http://localhost:8080/subscription/cancel");
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("sessionId", sessionId);
-        return response;
-    }
-    
-    public Map<String, String> cancelSubscriptionForUser() throws StripeException {
-        Long userId = SecurityUtils.getCurrentUserId();
-        cancelSubscription(userId);
-        
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Assinatura cancelada com sucesso");
-        return response;
-    }
-    
-    public Map<String, Object> getCustomerPortalForUser() throws StripeException {
-        Long userId = SecurityUtils.getCurrentUserId();
-        String portalUrl = createCustomerPortalSession(userId, "http://localhost:8080/subscription");
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("url", portalUrl);
-        return response;
-    }
-    
-    public List<SubscriptionDto> getSubscriptionHistoryForUser() {
-        Long userId = SecurityUtils.getCurrentUserId();
-        List<Subscription> subscriptions = getUserSubscriptions(userId);
-        return subscriptions.stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
-    }
-    
     public Map<String, Boolean> checkFeatureAccessForUser(String feature) {
         Long userId = SecurityUtils.getCurrentUserId();
         boolean hasAccess = canUserAccess(userId, feature);
-        
-        Map<String, Boolean> response = new HashMap<>();
-        response.put("hasAccess", hasAccess);
-        return response;
+        return Map.of("hasAccess", hasAccess);
     }
-    
+
+    public boolean isWithinLimits(Long userId, String limitType, int currentCount) {
+        if (hasSubscriptionBypass(userId)) {
+            return true;
+        }
+
+        Optional<Subscription> subscriptionOpt = getCurrentSubscription(userId);
+
+        if (subscriptionOpt.isEmpty()) {
+            return false;
+        }
+
+        Plan plan = subscriptionOpt.get().getPlan();
+
+        return switch (limitType.toLowerCase()) {
+            case "users" -> plan.getMaxUsers() == null || currentCount < plan.getMaxUsers();
+            case "products" -> true;
+            default -> true;
+        };
+    }
+
+    public boolean hasSubscriptionBypass(Long userId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof Usuario principal) {
+            if (userId == null || userId.equals(principal.getId())) {
+                return principal.hasSubscriptionBypass();
+            }
+        }
+
+        if (userId == null) {
+            return false;
+        }
+
+        return usuarioRepository.findById(userId)
+                .map(Usuario::hasSubscriptionBypass)
+                .orElse(false);
+    }
+
     public Map<String, Object> checkUsageLimitsForUser(String limitType, int currentCount) {
         Long userId = SecurityUtils.getCurrentUserId();
         boolean withinLimits = isWithinLimits(userId, limitType, currentCount);
-        
+
         Map<String, Object> response = new HashMap<>();
         response.put("withinLimits", withinLimits);
         response.put("currentCount", currentCount);
         return response;
     }
-    
-    public List<SubscriptionDto> getAllSubscriptionsForAdmin() {
-        // TODO: Implementar verificação de autorização de admin
-        // TODO: Filtrar assinaturas por organização quando necessário
-        List<Subscription> subscriptions = subscriptionRepository.findAll();
-        return subscriptions.stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+
+    public List<Subscription> getAllSubscriptionsForAdmin() {
+        return subscriptionRepository.findAll();
     }
-    
-    private SubscriptionDto convertToDto(Subscription subscription) {
-        SubscriptionDto dto = new SubscriptionDto();
-        dto.setId(subscription.getId());
-        dto.setUserId(subscription.getUser().getId());
-        dto.setStatus(subscription.getStatus());
-        dto.setCurrentPeriodStart(subscription.getCurrentPeriodStart());
-        dto.setCurrentPeriodEnd(subscription.getCurrentPeriodEnd());
-        dto.setCreatedAt(subscription.getCreatedAt());
-        dto.setUpdatedAt(subscription.getUpdatedAt());
-        
-        if (subscription.getPlan() != null) {
-            dto.setPlanName(subscription.getPlan().getName());
-            dto.setPlanPrice(subscription.getPlan().getPrice());
-        }
-        
-        return dto;
-    }
-    
-    /**
-     * Envia alertas para trials que estão próximos do fim
-     */
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // TAREFAS AGENDADAS (Cron Jobs)
+    // ═══════════════════════════════════════════════════════════════════════
+
     public void sendTrialEndingAlerts() {
-        log.info("Verificando trials próximos do fim para envio de alertas");
-        
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime threeDaysFromNow = now.plusDays(3);
-        
+        log.info("📧 Enviando alertas de fim de trial...");
+
+        LocalDateTime threeDaysFromNow = LocalDateTime.now().plusDays(3);
         List<Subscription> trialsEndingSoon = subscriptionRepository.findTrialsEndingSoon(threeDaysFromNow);
-        
+
         for (Subscription subscription : trialsEndingSoon) {
             try {
-                log.info("Enviando alerta de fim de trial para usuário: {}", subscription.getUser().getEmail());
-                
-                // Aqui você pode implementar o envio de email ou notificação
-                // Por exemplo: emailService.sendTrialEndingAlert(subscription);
-                
-                // Marcar como alerta enviado
+                log.info("  ✉️ Alerta para: {}", subscription.getUser().getEmail());
+                // TODO: emailService.sendTrialEndingAlert(subscription);
+
                 subscription.setTrialWarningSent(true);
                 subscriptionRepository.save(subscription);
-                
-                log.info("Alerta de fim de trial enviado para: {}", subscription.getUser().getEmail());
+
             } catch (Exception e) {
-                log.error("Erro ao enviar alerta de fim de trial para usuário {}: {}", 
-                    subscription.getUser().getEmail(), e.getMessage(), e);
+                log.error("❌ Erro ao enviar alerta: {}", e.getMessage());
             }
         }
-        
-        log.info("Processamento de alertas de fim de trial concluído. {} alertas enviados", trialsEndingSoon.size());
+
+        log.info("✅ {} alertas enviados", trialsEndingSoon.size());
     }
-    
-    /**
-     * Processa trials expirados, alterando status para EXPIRED
-     */
+
     public void processExpiredTrials() {
-        log.info("Processando trials expirados");
-        
+        log.info("🔄 Processando trials expirados...");
+
         LocalDateTime now = LocalDateTime.now();
-        
         List<Subscription> expiredTrials = subscriptionRepository.findExpiredTrials(now);
-        
+
         for (Subscription subscription : expiredTrials) {
             try {
-                log.info("Processando trial expirado para usuário: {}", subscription.getUser().getEmail());
-                
-                subscription.setStatus(SubscriptionStatus.EXPIRED);
+                subscription.setStatus(SubscriptionStatus.CANCELED);
                 subscription.setEndedAt(now);
                 subscriptionRepository.save(subscription);
-                
-                log.info("Trial expirado processado para usuário: {}", subscription.getUser().getEmail());
+
+                log.info("  ✅ Trial expirado: user={}", subscription.getUser().getId());
+
             } catch (Exception e) {
-                log.error("Erro ao processar trial expirado para usuário {}: {}", 
-                    subscription.getUser().getEmail(), e.getMessage(), e);
+                log.error("❌ Erro ao processar: {}", e.getMessage());
             }
         }
-        
-        log.info("Processamento de trials expirados concluído. {} trials processados", expiredTrials.size());
+
+        log.info("✅ {} trials processados", expiredTrials.size());
+    }
+
+    public int cleanupOldCancelledSubscriptions(LocalDateTime cutoffDate) {
+        log.info("🧹 Limpando assinaturas canceladas antes de {}", cutoffDate);
+
+        List<Subscription> old = subscriptionRepository
+                .findByStatusAndEndedAtBefore(SubscriptionStatus.CANCELED, cutoffDate);
+
+        int count = old.size();
+
+        if (count > 0) {
+            subscriptionRepository.deleteAll(old);
+            log.info("✅ {} assinaturas removidas", count);
+        }
+
+        return count;
+    }
+
+    public Map<String, Long> generateDailyReport() {
+        LocalDateTime startOfDay = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0);
+        LocalDateTime endOfDay = startOfDay.plusDays(1);
+
+        Map<String, Long> report = new HashMap<>();
+
+        report.put("active", (long) subscriptionRepository.findByStatus(SubscriptionStatus.ACTIVE).size());
+        report.put("trials", (long) subscriptionRepository.findByStatus(SubscriptionStatus.TRIAL).size());
+        report.put("cancelled_today", (long) subscriptionRepository
+                .findByStatusAndEndedAtBetween(SubscriptionStatus.CANCELED, startOfDay, endOfDay).size());
+        report.put("new_today", (long) subscriptionRepository
+                .findByCreatedAtBetween(startOfDay, endOfDay).size());
+
+        return report;
     }
 }

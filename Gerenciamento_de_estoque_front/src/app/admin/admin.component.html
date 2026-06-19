@@ -1,0 +1,241 @@
+<header class="header-page">
+  <h2><i class="fas fa-cog"></i> Administração</h2>
+</header>
+
+<div *ngIf="!isMasterAdmin" class="acesso-negado main-content">
+  <i class="fas fa-lock"></i>
+  <p>{{ errorMessage }}</p>
+</div>
+
+<ng-container *ngIf="isMasterAdmin">
+  <div *ngIf="mensagem" class="mensagem-feedback sucesso"><i class="fas fa-check-circle"></i> {{ mensagem }}</div>
+  <div *ngIf="mensagemErro" class="mensagem-feedback erro"><i class="fas fa-exclamation-circle"></i> {{ mensagemErro }}</div>
+  <div *ngIf="loading" class="spinner-overlay"><div class="spinner"></div></div>
+
+  <div class="main-content">
+    <div class="card-lista">
+      <div class="tabs">
+        <button class="tab-btn" [class.ativa]="abaAtiva === 'webhooks'" (click)="trocarAba('webhooks')">
+          <i class="fas fa-plug"></i> Webhooks
+        </button>
+        <button class="tab-btn" [class.ativa]="abaAtiva === 'cache'" (click)="trocarAba('cache')">
+          <i class="fas fa-database"></i> Cache
+        </button>
+        <button class="tab-btn" [class.ativa]="abaAtiva === 'acessos'" (click)="trocarAba('acessos')">
+          <i class="fas fa-sign-in-alt"></i> Acessos
+        </button>
+        <button class="tab-btn" [class.ativa]="abaAtiva === 'assinaturas'" (click)="trocarAba('assinaturas')">
+          <i class="fas fa-credit-card"></i> Planos e trial
+        </button>
+      </div>
+
+      <!-- Aba Webhooks -->
+      <div *ngIf="abaAtiva === 'webhooks'">
+        <div class="form-row" style="margin-bottom: 16px; align-items: flex-end;">
+          <div class="form-group">
+            <label for="eventType">Tipo de evento (lote)</label>
+            <input id="eventType" type="text" [(ngModel)]="eventTypeLote" placeholder="Opcional" />
+          </div>
+          <button class="btn btn-info" (click)="reprocessarLote()"><i class="fas fa-redo"></i> Reprocessar Lote</button>
+          <button class="botao-listar" (click)="carregarWebhooks()"><i class="fas fa-sync"></i> Atualizar</button>
+        </div>
+
+        <table class="data-table" *ngIf="webhooks.length > 0">
+          <thead>
+            <tr>
+              <th>Event ID</th>
+              <th>Tipo</th>
+              <th>Status</th>
+              <th>Data</th>
+              <th>Erro</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let w of webhooks">
+              <td data-label="Event ID">{{ w.eventId || w.id || '-' }}</td>
+              <td data-label="Tipo">{{ w.eventType || w.type || '-' }}</td>
+              <td data-label="Status">{{ w.status || 'FAILED' }}</td>
+              <td data-label="Data">{{ w.createdAt || w.criadoEm | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td data-label="Erro">{{ w.error || w.message || '-' }}</td>
+              <td class="acoes-tabela" data-label="Ações">
+                <button class="btn btn-success btn-sm" (click)="reprocessar(w.eventId || w.id)" title="Reprocessar">
+                  <i class="fas fa-redo"></i> Reprocessar
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p *ngIf="webhooks.length === 0 && !loading">Nenhum evento com falha encontrado.</p>
+      </div>
+
+      <!-- Aba Cache -->
+      <div *ngIf="abaAtiva === 'cache'">
+        <button class="botao-listar" (click)="carregarCache()" style="margin-bottom: 16px;"><i class="fas fa-sync"></i> Atualizar</button>
+
+        <div class="sub-card" *ngIf="cacheInfo">
+          <h4><i class="fas fa-info-circle"></i> Informações</h4>
+          <pre>{{ cacheInfo | json }}</pre>
+        </div>
+
+        <div class="sub-card" *ngIf="cacheStats">
+          <h4><i class="fas fa-chart-bar"></i> Estatísticas</h4>
+          <pre>{{ cacheStats | json }}</pre>
+        </div>
+
+        <div class="form-row" style="margin-top: 16px; align-items: flex-end;">
+          <div class="form-group">
+            <label for="cacheName">Nome do cache</label>
+            <input id="cacheName" type="text" [(ngModel)]="cacheName" placeholder="Ex: produtos" />
+          </div>
+          <button class="btn btn-danger" (click)="limparCache()"><i class="fas fa-trash"></i> Limpar Cache</button>
+          <button class="btn btn-danger" (click)="limparTodosCaches()"><i class="fas fa-trash-alt"></i> Limpar Todos</button>
+        </div>
+      </div>
+
+      <!-- Aba Acessos (login audit) -->
+      <div *ngIf="abaAtiva === 'acessos'">
+        <div class="form-row" style="margin-bottom: 16px; align-items: center;">
+          <button class="botao-listar" (click)="carregarLoginLogs(loginLogsPage)"><i class="fas fa-sync"></i> Atualizar</button>
+          <span class="paginacao-info" *ngIf="loginLogsTotal > 0">
+            {{ loginLogsTotal }} registro(s) — página {{ loginLogsPage + 1 }} de {{ loginLogsTotalPages || 1 }}
+          </span>
+        </div>
+
+        <table class="data-table" *ngIf="loginLogs.length > 0">
+          <thead>
+            <tr>
+              <th>Data/Hora</th>
+              <th>Usuário</th>
+              <th>Organização</th>
+              <th>IP</th>
+              <th>Sucesso</th>
+              <th>Detalhes</th>
+              <th>User-Agent</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let log of loginLogs" [class.linha-falha]="!log.sucesso">
+              <td data-label="Data/Hora">{{ log.dataHora | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+              <td data-label="Usuário">{{ log.username }}</td>
+              <td data-label="Organização">{{ log.orgNome || log.orgId || '-' }}</td>
+              <td data-label="IP">{{ log.ip || '-' }}</td>
+              <td data-label="Sucesso">
+                <span [class.badge-ok]="log.sucesso" [class.badge-erro]="!log.sucesso">
+                  {{ log.sucesso ? 'Sim' : 'Não' }}
+                </span>
+              </td>
+              <td data-label="Detalhes">{{ log.detalhes || '-' }}</td>
+              <td data-label="User-Agent" class="col-user-agent" [title]="log.userAgent || ''">
+                {{ log.userAgent || '-' }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p *ngIf="loginLogs.length === 0 && !loading">Nenhum acesso registrado ainda.</p>
+
+        <div class="paginacao" *ngIf="loginLogsTotalPages > 1">
+          <button class="btn btn-sm" [disabled]="loginLogsPage === 0" (click)="paginaAnteriorLoginLogs()">
+            <i class="fas fa-chevron-left"></i> Anterior
+          </button>
+          <button class="btn btn-sm" [disabled]="loginLogsPage + 1 >= loginLogsTotalPages" (click)="proximaPaginaLoginLogs()">
+            Próxima <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Aba Planos e trial -->
+      <div *ngIf="abaAtiva === 'assinaturas'">
+        <div class="form-row" style="margin-bottom: 16px; align-items: center;">
+          <button class="botao-listar" (click)="carregarAssinaturas()"><i class="fas fa-sync"></i> Atualizar</button>
+        </div>
+
+        <table class="data-table" *ngIf="orgsAssinatura.length > 0">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Organização</th>
+              <th>Usuários</th>
+              <th>Isentos</th>
+              <th>Status</th>
+              <th>Fim trial (mais recente)</th>
+              <th>Ações org</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let org of orgsAssinatura">
+              <tr>
+                <td>
+                  <button class="btn btn-sm" (click)="toggleOrg(org.orgId)" title="Expandir">
+                    <i class="fas" [class.fa-chevron-down]="orgExpandidaId === org.orgId" [class.fa-chevron-right]="orgExpandidaId !== org.orgId"></i>
+                  </button>
+                </td>
+                <td data-label="Organização">
+                  {{ org.orgNome }}
+                  <span *ngIf="!org.orgAtivo" class="badge-erro"> (inativa)</span>
+                </td>
+                <td data-label="Usuários">{{ org.totalUsuarios }}</td>
+                <td data-label="Isentos">{{ org.usuariosComBypass }}</td>
+                <td data-label="Status">{{ statusLabel(org.statusResumo) }}</td>
+                <td data-label="Fim trial">{{ org.trialEndMaisRecente | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td class="acoes-tabela" data-label="Ações org">
+                  <button class="btn btn-info btn-sm" (click)="estenderTrialOrg(org.orgId, 7)" title="+7 dias">+7d</button>
+                  <button class="btn btn-info btn-sm" (click)="estenderTrialOrg(org.orgId, 14)" title="+14 dias">+14d</button>
+                  <button class="btn btn-info btn-sm" (click)="estenderTrialOrg(org.orgId, 30)" title="+30 dias">+30d</button>
+                  <button class="btn btn-warning btn-sm" (click)="forcarCobrancaOrg(org.orgId)" title="Forçar cobrança">
+                    <i class="fas fa-dollar-sign"></i>
+                  </button>
+                  <button class="btn btn-sm" [class.btn-success]="!org.orgAtivo" [class.btn-danger]="org.orgAtivo" (click)="alternarOrgAtiva(org)">
+                    {{ org.orgAtivo ? 'Desativar' : 'Ativar' }}
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="orgExpandidaId === org.orgId">
+                <td colspan="8" class="sub-tabela-wrap">
+                  <table class="data-table sub-tabela">
+                    <thead>
+                      <tr>
+                        <th>Usuário</th>
+                        <th>E-mail</th>
+                        <th>Status</th>
+                        <th>Pagamento</th>
+                        <th>Fim trial</th>
+                        <th>Não cobrar</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let u of org.usuarios">
+                        <td data-label="Usuário">{{ u.username }}</td>
+                        <td data-label="E-mail">{{ u.email || '-' }}</td>
+                        <td data-label="Status">{{ u.status || '-' }}<span *ngIf="u.inTrial"> (trial)</span></td>
+                        <td data-label="Pagamento">{{ paymentModeLabel(u.paymentMode) }}</td>
+                        <td data-label="Fim trial">{{ u.trialEnd | date:'dd/MM/yyyy HH:mm' }}</td>
+                        <td data-label="Não cobrar">
+                          <button class="btn btn-sm" [class.btn-success]="u.bypassSubscription" [class.btn-secondary]="!u.bypassSubscription" (click)="toggleBypass(u)">
+                            {{ u.bypassSubscription ? 'Sim' : 'Não' }}
+                          </button>
+                        </td>
+                        <td class="acoes-tabela" data-label="Ações">
+                          <button class="btn btn-info btn-sm" (click)="estenderTrialUsuario(u.userId, 7)">+7d</button>
+                          <button class="btn btn-info btn-sm" (click)="estenderTrialUsuario(u.userId, 14)">+14d</button>
+                          <button class="btn btn-info btn-sm" (click)="estenderTrialUsuario(u.userId, 30)">+30d</button>
+                          <input type="date" [(ngModel)]="trialDataCustom[u.userId]" class="input-data-trial" />
+                          <button class="btn btn-sm btn-info" (click)="estenderTrialData(u.userId)">Data</button>
+                          <button class="btn btn-warning btn-sm" (click)="forcarCobrancaUsuario(u.userId)" title="Forçar cobrança">
+                            <i class="fas fa-dollar-sign"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+        <p *ngIf="orgsAssinatura.length === 0 && !loading">Nenhuma organização encontrada.</p>
+      </div>
+    </div>
+  </div>
+</ng-container>

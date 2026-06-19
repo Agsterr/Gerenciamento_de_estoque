@@ -1,35 +1,20 @@
 package br.softsistem.Gerenciamento_de_estoque.config;
 
-import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
-import java.util.Collection;
-
 /**
- * Token de autenticação personalizado que armazena um userId, orgId e authorities
- * além do UserDetails. Assim, qualquer parte do sistema pode saber quem é
- * o usuário logado e a qual organização ele pertence sem precisar enviar
- * esses dados no corpo da requisição.
+ * Token de autenticação personalizado para expor userId/orgId no SecurityContext.
  */
-public class CustomAuthenticationToken extends AbstractAuthenticationToken {
+public class CustomAuthenticationToken extends org.springframework.security.authentication.AbstractAuthenticationToken {
 
-    private final UserDetails principal;
-    private final Long userId;
-    private final Long orgId;
+    private final org.springframework.security.core.userdetails.UserDetails principal;
+    private final java.lang.Long userId;
+    private final java.lang.Long orgId;
 
-    /**
-     * Construtor que recebe UserDetails, userId, orgId e authorities.
-     *
-     * @param principal   o UserDetails do usuário autenticado
-     * @param userId      o ID numérico do usuário
-     * @param orgId       o ID da organização
-     * @param authorities as autoridades (roles) do usuário
-     */
-    public CustomAuthenticationToken(UserDetails principal,
-                                     Long userId,
-                                     Long orgId,
-                                     Collection<GrantedAuthority> authorities) {
+    public CustomAuthenticationToken(
+            org.springframework.security.core.userdetails.UserDetails principal,
+            java.lang.Long userId,
+            java.lang.Long orgId,
+            java.util.Collection<? extends org.springframework.security.core.GrantedAuthority> authorities
+    ) {
         super(authorities);
         this.principal = principal;
         this.userId = userId;
@@ -38,34 +23,25 @@ public class CustomAuthenticationToken extends AbstractAuthenticationToken {
     }
 
     @Override
-    public Object getCredentials() {
-        return null; // Credenciais não expostas após a autenticação
+    public java.lang.Object getCredentials() {
+        return null;
     }
 
     @Override
-    public Object getPrincipal() {
-        return principal; // Retorna o UserDetails (o usuário)
+    public java.lang.Object getPrincipal() {
+        return principal;
     }
 
-    /**
-     * Retorna as autoridades (roles) associadas ao usuário autenticado.
-     */
     @Override
-    public Collection<GrantedAuthority> getAuthorities() {
+    public java.util.Collection<org.springframework.security.core.GrantedAuthority> getAuthorities() {
         return super.getAuthorities();
     }
 
-    /**
-     * @return o ID numérico do usuário autenticado
-     */
-    public Long getUserId() {
+    public java.lang.Long getUserId() {
         return userId;
     }
 
-    /**
-     * @return o ID da organização associada ao usuário autenticado
-     */
-    public Long getOrgId() {
+    public java.lang.Long getOrgId() {
         return orgId;
     }
 }

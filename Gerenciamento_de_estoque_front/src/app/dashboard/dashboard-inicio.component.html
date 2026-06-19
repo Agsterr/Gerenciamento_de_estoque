@@ -1,0 +1,82 @@
+<div class="dashboard-inicio" *ngIf="!loading && resumo">
+  <section class="kpi-grid">
+    <div class="kpi-card destaque">
+      <span class="kpi-label">Faturamento do mês</span>
+      <span class="kpi-valor">{{ resumo.faturamentoMes | currency:'BRL' }}</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Valor em estoque (venda)</span>
+      <span class="kpi-valor">{{ resumo.valorEstoque | currency:'BRL' }}</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Valor em estoque (custo)</span>
+      <span class="kpi-valor">{{ resumo.valorEstoqueCusto | currency:'BRL' }}</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Pedidos confirmados (mês)</span>
+      <span class="kpi-valor">{{ resumo.pedidosConfirmadosMes }}</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Entradas / Saídas (mês)</span>
+      <span class="kpi-valor">{{ resumo.entradasMes }} / {{ resumo.saidasMes }}</span>
+    </div>
+    <div class="kpi-card alerta" *ngIf="resumo.produtosEstoqueBaixo > 0">
+      <span class="kpi-label">Estoque baixo</span>
+      <span class="kpi-valor">{{ resumo.produtosEstoqueBaixo }} produtos</span>
+      <a routerLink="/dashboard/produtos" class="kpi-link">Ver produtos</a>
+    </div>
+  </section>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h3><i class="fas fa-chart-line"></i> Faturamento (6 meses)</h3>
+      <div class="bar-chart" *ngIf="resumo.faturamentoPorMes?.length; else semDados">
+        <div class="bar-item" *ngFor="let m of resumo.faturamentoPorMes">
+          <div class="bar" [style.height.%]="barHeight(asNumber(m.valor), maxFaturamento)"></div>
+          <span class="bar-label">{{ formatMes(m.mes) }}</span>
+          <span class="bar-value">{{ m.valor | currency:'BRL':'symbol':'1.0-0' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h3><i class="fas fa-trophy"></i> Top produtos vendidos</h3>
+      <div class="rank-list" *ngIf="resumo.topProdutosVendidos?.length; else semDados">
+        <div class="rank-row" *ngFor="let p of resumo.topProdutosVendidos">
+          <span class="rank-nome">{{ p.nome }}</span>
+          <div class="rank-bar-wrap">
+            <div class="rank-bar" [style.width.%]="barHeight(p.quantidade, maxVendidos)"></div>
+          </div>
+          <span class="rank-qtd">{{ p.quantidade }} un.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h3><i class="fas fa-boxes"></i> Maior estoque (valor)</h3>
+      <div class="rank-list" *ngIf="resumo.topProdutosEstoque?.length; else semDados">
+        <div class="rank-row" *ngFor="let p of resumo.topProdutosEstoque">
+          <span class="rank-nome">{{ p.nome }}</span>
+          <div class="rank-bar-wrap">
+            <div class="rank-bar estoque" [style.width.%]="barHeight(p.quantidade, maxEstoque)"></div>
+          </div>
+          <span class="rank-qtd">{{ p.valor | currency:'BRL':'symbol':'1.0-0' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="acesso-rapido">
+    <h3>Acesso rápido</h3>
+    <div class="links">
+      <a routerLink="/dashboard/pedidos-venda"><i class="fas fa-file-invoice-dollar"></i> Novo pedido de venda</a>
+      <a routerLink="/dashboard/pedidos-compra"><i class="fas fa-shopping-cart"></i> Pedido de compra</a>
+      <a routerLink="/dashboard/movimentacoes"><i class="fas fa-exchange-alt"></i> Movimentações</a>
+      <a routerLink="/dashboard/produtos"><i class="fas fa-box"></i> Produtos</a>
+    </div>
+  </section>
+</div>
+
+<div *ngIf="loading" class="loading-dash"><i class="fas fa-spinner fa-spin"></i> Carregando indicadores...</div>
+
+<ng-template #semDados><p class="sem-dados">Sem dados no período.</p></ng-template>

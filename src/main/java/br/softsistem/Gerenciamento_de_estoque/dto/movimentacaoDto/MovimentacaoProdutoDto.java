@@ -19,6 +19,7 @@ public class MovimentacaoProdutoDto {
     private Long usuarioId;
     private String nomeUsuario;
     private Long entregaId;
+    private Long pedidoVendaId;
     // novo campo para relatório
     private String nomeEntregador;
 
@@ -42,12 +43,24 @@ public class MovimentacaoProdutoDto {
                 this.nomeEntregador = movimentacao.getEntrega().getEntregador().getUsername();
             }
         }
+        if (movimentacao.getPedidoVenda() != null) {
+            this.pedidoVendaId = movimentacao.getPedidoVenda().getId();
+            if (this.nomeConsumidor == null && movimentacao.getPedidoVenda().getConsumidor() != null) {
+                this.nomeConsumidor = movimentacao.getPedidoVenda().getConsumidor().getNome();
+                this.consumidorId = movimentacao.getPedidoVenda().getConsumidor().getId();
+            }
+            if (movimentacao.getPedidoVenda().getVendedor() != null) {
+                this.nomeEntregador = movimentacao.getPedidoVenda().getVendedor().getUsername();
+            }
+        }
         if (movimentacao.getConsumidor() != null) { // consumidor direto (sem entrega)
             this.nomeConsumidor = movimentacao.getConsumidor().getNome();
             this.consumidorId = movimentacao.getConsumidor().getId();
         }
-        // usuario opcional (se existir no model)
-        // if (movimentacao.getUsuario() != null) { ... }
+        if (movimentacao.getUsuario() != null) {
+            this.usuarioId = movimentacao.getUsuario().getId();
+            this.nomeUsuario = movimentacao.getUsuario().getUsername();
+        }
     }
 
     // Getters e setters
@@ -142,6 +155,9 @@ public class MovimentacaoProdutoDto {
     public void setEntregaId(Long entregaId) {
         this.entregaId = entregaId;
     }
+
+    public Long getPedidoVendaId() { return pedidoVendaId; }
+    public void setPedidoVendaId(Long pedidoVendaId) { this.pedidoVendaId = pedidoVendaId; }
 
     public String getNomeEntregador() { return nomeEntregador; }
     public void setNomeEntregador(String nomeEntregador) { this.nomeEntregador = nomeEntregador; }

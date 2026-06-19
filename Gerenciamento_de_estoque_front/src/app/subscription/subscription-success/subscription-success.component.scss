@@ -1,0 +1,53 @@
+.success-card {
+  max-width: 480px;
+  margin: 2rem auto;
+  padding: 2rem;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  text-align: center;
+
+  h2 {
+    margin: 0 0 0.75rem;
+    color: #1a1a2e;
+  }
+
+  p {
+    color: #555;
+    margin: 0.5rem 0;
+  }
+}
+
+.state.confirmed h2 {
+  color: #0f5132;
+}
+
+.btn-primary,
+.btn-secondary {
+  display: inline-block;
+  margin-top: 1.25rem;
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.btn-primary {
+  background: #0d6efd;
+  color: #fff;
+}
+
+.btn-secondary {
+  background: #eef6ff;
+  color: #084298;
+  border: 1px solid #b6d4fe;
+}
+
+.link-muted {
+  display: block;
+  margin-top: 1rem;
+  color: #6c757d;
+  font-size: 0.9rem;
+}

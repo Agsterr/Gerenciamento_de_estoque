@@ -1,0 +1,65 @@
+.blocked-card {
+  max-width: 420px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #dee2e6;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  .plan-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+
+    .price {
+      font-size: 1.25rem;
+      color: #0d6efd;
+      font-weight: 600;
+    }
+  }
+
+  .hint {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin: 0;
+  }
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.9rem;
+  }
+
+  input {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+  }
+
+  button {
+    margin-top: 0.5rem;
+    padding: 0.65rem 1rem;
+    border: none;
+    border-radius: 6px;
+    background: #0d6efd;
+    color: #fff;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.7;
+      cursor: wait;
+    }
+  }
+
+  .error {
+    color: #b02a37;
+    font-size: 0.9rem;
+  }
+}

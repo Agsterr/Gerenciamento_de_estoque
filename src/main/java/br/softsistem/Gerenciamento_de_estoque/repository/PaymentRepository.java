@@ -16,51 +16,49 @@ import java.util.Optional;
  */
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
-    
+
     /**
      * Busca pagamentos por assinatura
      */
     List<Payment> findBySubscriptionOrderByCreatedAtDesc(Subscription subscription);
-    
+
     /**
-     * Busca pagamento por ID do payment intent do Stripe
+     * Busca pagamento por ID do pagamento do Mercado Pago
      */
-    Optional<Payment> findByStripePaymentIntentId(String stripePaymentIntentId);
-    
-    /**
-     * Busca pagamento por ID da invoice do Stripe
-     */
-    Optional<Payment> findByStripeInvoiceId(String stripeInvoiceId);
-    
+    Optional<Payment> findByMercadoPagoPaymentId(Long mercadoPagoPaymentId);
+
+    Optional<Payment> findByAsaasPaymentId(String asaasPaymentId);
+
     /**
      * Busca pagamentos por status
      */
     List<Payment> findByStatus(Payment.PaymentStatus status);
-    
+
     /**
      * Busca pagamentos bem-sucedidos de uma assinatura
      */
     @Query("SELECT p FROM Payment p WHERE p.subscription = :subscription AND p.status = 'SUCCEEDED' ORDER BY p.paidAt DESC")
     List<Payment> findSuccessfulPaymentsBySubscription(@Param("subscription") Subscription subscription);
-    
+
     /**
      * Busca pagamentos falhados de uma assinatura
      */
     @Query("SELECT p FROM Payment p WHERE p.subscription = :subscription AND p.status = 'FAILED' ORDER BY p.failedAt DESC")
     List<Payment> findFailedPaymentsBySubscription(@Param("subscription") Subscription subscription);
-    
+
     /**
      * Busca último pagamento bem-sucedido de uma assinatura
      */
     @Query("SELECT p FROM Payment p WHERE p.subscription = :subscription AND p.status = 'SUCCEEDED' ORDER BY p.paidAt DESC LIMIT 1")
     Optional<Payment> findLastSuccessfulPayment(@Param("subscription") Subscription subscription);
-    
+
     /**
      * Busca pagamentos em um período
      */
     @Query("SELECT p FROM Payment p WHERE p.createdAt BETWEEN :startDate AND :endDate ORDER BY p.createdAt DESC")
-    List<Payment> findPaymentsBetweenDates(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
-    
+    List<Payment> findPaymentsBetweenDates(@Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
+
     /**
      * Conta pagamentos bem-sucedidos de uma assinatura
      */

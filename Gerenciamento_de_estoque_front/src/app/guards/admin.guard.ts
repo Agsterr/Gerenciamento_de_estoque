@@ -23,8 +23,12 @@ export class AdminGuard implements CanActivate {
     }
 
     const isAdmin = Array.isArray(user.roles) && user.roles.some((role: any) => {
-      if (typeof role === 'string') return role === 'ROLE_ADMIN';
-      if (role && typeof role === 'object' && 'nome' in role) return role.nome === 'ROLE_ADMIN';
+      if (typeof role === 'string') {
+        return role === 'ROLE_ADMIN' || role === 'ROLE_SUPER_ADMIN';
+      }
+      if (role && typeof role === 'object' && 'nome' in role) {
+        return role.nome === 'ROLE_ADMIN' || role.nome === 'ROLE_SUPER_ADMIN';
+      }
       return false;
     });
 

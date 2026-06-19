@@ -11,6 +11,8 @@ import { environment } from '../../environments/environment';
   providedIn: 'root',
 })
 export class AuthService {
+  private readonly visitedKey = 'hasVisitedBefore';
+
   constructor(private apiService: ApiService, private router: Router) {}
 
   /**
@@ -63,7 +65,7 @@ export class AuthService {
    * Realiza o registro de um novo usuário.
    */
   register(data: any): Observable<any> {
-    return this.apiService.postWithAuth('/auth/register', data);
+    return this.apiService.post('/auth/register', data);
   }
 
   /**
@@ -93,13 +95,72 @@ export class AuthService {
    * Verifica se o usuário está autenticado.
    */
   isLoggedIn(): boolean {
-    const loggedIn = !!localStorage.getItem('jwtToken');
-    
-    // Remover log verboso - só loggar em caso de debug específico
-    // if (!environment.production) {
-    //   console.log('Usuário Logado:', loggedIn);
-    // }
+    return this.isTokenValid();
+  }
 
-    return loggedIn;
+  hasSavedCredentials(): boolean {
+    return !!(localStorage.getItem('savedUsername') && localStorage.getItem('savedPassword'));
+  }
+
+  hasVisitedBefore(): boolean {
+    return localStorage.getItem(this.visitedKey) === 'true';
+  }
+
+  markVisited(): void {
+    localStorage.setItem(this.visitedKey, 'true');
+  }
+
+  isTokenValid(): boolean {
+    const token = localStorage.getItem('jwtToken');
+    if (!token) {
+      return false;
+    }
+    try {
+      const decoded: { exp?: number } = jwtDecode(token);
+      if (decoded.exp && decoded.exp * 1000 < Date.now()) {
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('loggedUser');
+        return false;
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Rota de entrada para visitantes não autenticados ou com sessão ativa. */
+  resolveEntryRoute(): string {
+    if (this.isTokenValid()) {
+      return '/dashboard';
+    }
+    if (this.hasSavedCredentials()) {
+      return '/login';
+    }
+    if (!this.hasVisitedBefore()) {
+      return '/register';
+    }
+    return '/login';
+  }
+
+  hasRole(roleName: string): boolean {
+    const user = this.getLoggedUser();
+    if (!user || !Array.isArray(user.roles)) return false;
+    return user.roles.some((role: any) => {
+      if (typeof role === 'string') return role === roleName;
+      return role?.nome === roleName
+        || role?.name === roleName
+        || role?.authority === roleName
+        || role?.role === roleName;
+    });
+  }
+
+  /** Admin da organização (gerencia usuários da própria org). */
+  isAdmin(): boolean {
+    return this.hasRole('ROLE_ADMIN') || this.isMasterAdmin();
+  }
+
+  /** Admin master da plataforma (organizações, painel SaaS). */
+  isMasterAdmin(): boolean {
+    return this.hasRole('ROLE_SUPER_ADMIN');
   }
 }

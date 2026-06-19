@@ -31,11 +31,15 @@ public class RateLimitingInterceptor implements HandlerInterceptor {
         String clientId = getClientIdentifier(request);
         String endpoint = request.getRequestURI();
         
-        // Aplicar rate limiting mais restritivo para endpoints de assinatura
-        int maxRequests = isSubscriptionEndpoint(endpoint) ? 
-            MAX_SUBSCRIPTION_REQUESTS_PER_MINUTE : MAX_REQUESTS_PER_MINUTE;
+        int maxRequests = MAX_REQUESTS_PER_MINUTE;
+        if (isSubscriptionWriteEndpoint(endpoint)) {
+            maxRequests = MAX_SUBSCRIPTION_REQUESTS_PER_MINUTE;
+        } else if (isSubscriptionEndpoint(endpoint)) {
+            maxRequests = MAX_REQUESTS_PER_MINUTE;
+        }
+        String bucket = clientId + ":" + (maxRequests == MAX_SUBSCRIPTION_REQUESTS_PER_MINUTE ? "sub-write" : "sub-read");
         
-        if (isRateLimited(clientId, maxRequests)) {
+        if (isRateLimited(bucket, maxRequests)) {
             log.warn("Rate limit excedido para cliente: {} no endpoint: {}", clientId, endpoint);
             response.setStatus(429); // HTTP 429 Too Many Requests
             response.setContentType("application/json");
@@ -61,13 +65,19 @@ public class RateLimitingInterceptor implements HandlerInterceptor {
     }
     
     /**
-     * Verifica se o endpoint é relacionado a assinaturas
+     * Verifica se o endpoint é de assinatura (qualquer um sob /api/subscription/ ou webhooks).
      */
     private boolean isSubscriptionEndpoint(String endpoint) {
-        return endpoint.startsWith("/api/subscriptions/") || 
-               endpoint.contains("/create") || 
-               endpoint.contains("/cancel") ||
-               endpoint.contains("/portal");
+        return endpoint.startsWith("/api/subscription/") || endpoint.startsWith("/api/webhooks/");
+    }
+
+    /**
+     * Endpoints de escrita (checkout, create, cancel) usam limite mais restritivo (10/min).
+     * Leituras (current-user-id, current, history, etc.) usam limite normal (60/min).
+     */
+    private boolean isSubscriptionWriteEndpoint(String endpoint) {
+        return endpoint.contains("/checkout") || endpoint.contains("/cancel") ||
+               (endpoint.contains("/create") && !endpoint.contains("current"));
     }
     
     /**

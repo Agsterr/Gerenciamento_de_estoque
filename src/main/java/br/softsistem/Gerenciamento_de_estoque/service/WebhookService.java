@@ -1,620 +1,1824 @@
 package br.softsistem.Gerenciamento_de_estoque.service;
 
+import br.softsistem.Gerenciamento_de_estoque.dto.webhook.WebhookResponseDto;
 import br.softsistem.Gerenciamento_de_estoque.enumeracao.SubscriptionStatus;
-import com.stripe.exception.StripeException;
-import com.stripe.model.Event;
-import com.stripe.model.EventDataObjectDeserializer;
-import com.stripe.model.StripeObject;
-import com.stripe.model.Subscription;
+import br.softsistem.Gerenciamento_de_estoque.config.MercadoPagoConfig;
+import br.softsistem.Gerenciamento_de_estoque.exception.InvalidSignatureException;
+import br.softsistem.Gerenciamento_de_estoque.exception.WebhookProcessingException;
+import br.softsistem.Gerenciamento_de_estoque.enumeracao.MercadoPagoWebhookEventType;
+import br.softsistem.Gerenciamento_de_estoque.model.Payment;
+import br.softsistem.Gerenciamento_de_estoque.model.Plan;
+import br.softsistem.Gerenciamento_de_estoque.model.Subscription;
+import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
+import br.softsistem.Gerenciamento_de_estoque.model.WebhookEvent;
+import br.softsistem.Gerenciamento_de_estoque.repository.PaymentRepository;
+import br.softsistem.Gerenciamento_de_estoque.repository.PlanRepository;
+import br.softsistem.Gerenciamento_de_estoque.repository.SubscriptionRepository;
+import br.softsistem.Gerenciamento_de_estoque.repository.UsuarioRepository;
+import br.softsistem.Gerenciamento_de_estoque.repository.WebhookEventRepository;
+import br.softsistem.Gerenciamento_de_estoque.service.webhook.WebhookEventHandler;
+import com.mercadopago.exceptions.MPApiException;
+import com.mercadopago.exceptions.MPException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
-import java.time.Instant;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 /**
- * Service para processar eventos de webhook do Stripe
+ * Service para processar eventos de webhook do Mercado Pago
  */
 @Service
 public class WebhookService {
-    
+
     private static final Logger log = LoggerFactory.getLogger(WebhookService.class);
-    
+
     private final SubscriptionService subscriptionService;
-    
+    private final MercadoPagoConfig mercadoPagoConfig;
+    private final MercadoPagoService mercadoPagoService;
+    private final PaymentRepository paymentRepository;
+    private final SubscriptionRepository subscriptionRepository;
+    private final WebhookEventRepository webhookEventRepository;
+    private final WebhookSignatureValidator signatureValidator;
+    private final java.util.List<WebhookEventHandler> eventHandlers;
+    private final FailedWebhookEventService failedWebhookEventService;
+    private final UsuarioRepository usuarioRepository;
+    private final PlanRepository planRepository;
+    private final br.softsistem.Gerenciamento_de_estoque.config.WebhookConfig webhookConfig;
+    private final WebhookMonitoringService monitoringService;
+    private final WebhookAlertService alertService;
+
     @Autowired
-    public WebhookService(SubscriptionService subscriptionService) {
+    public WebhookService(SubscriptionService subscriptionService,
+            MercadoPagoConfig mercadoPagoConfig,
+            @Autowired(required = false) MercadoPagoService mercadoPagoService,
+            PaymentRepository paymentRepository,
+            SubscriptionRepository subscriptionRepository,
+            WebhookEventRepository webhookEventRepository,
+            WebhookSignatureValidator signatureValidator,
+            @Lazy java.util.List<WebhookEventHandler> eventHandlers,
+            FailedWebhookEventService failedWebhookEventService,
+            UsuarioRepository usuarioRepository,
+            PlanRepository planRepository,
+            br.softsistem.Gerenciamento_de_estoque.config.WebhookConfig webhookConfig,
+            WebhookMonitoringService monitoringService,
+            WebhookAlertService alertService) {
         this.subscriptionService = subscriptionService;
+        this.mercadoPagoConfig = mercadoPagoConfig;
+        this.mercadoPagoService = mercadoPagoService;
+        this.paymentRepository = paymentRepository;
+        this.subscriptionRepository = subscriptionRepository;
+        this.webhookEventRepository = webhookEventRepository;
+        this.signatureValidator = signatureValidator;
+        this.eventHandlers = eventHandlers;
+        this.failedWebhookEventService = failedWebhookEventService;
+        this.usuarioRepository = usuarioRepository;
+        this.planRepository = planRepository;
+        this.webhookConfig = webhookConfig;
+        this.monitoringService = monitoringService;
+        this.alertService = alertService;
     }
-    
+
     /**
-     * Processa eventos do Stripe baseado no tipo
+     * Retorna o webhook secret para validação
      */
-    public void processStripeEvent(Event event) {
-        log.info("Processando evento: {} (ID: {})", event.getType(), event.getId());
-        
-        switch (event.getType()) {
-            // Eventos de assinatura
-            case "customer.subscription.created" -> handleSubscriptionCreated(event);
-            case "customer.subscription.updated" -> handleSubscriptionUpdated(event);
-            case "customer.subscription.deleted" -> handleSubscriptionDeleted(event);
-            case "customer.subscription.paused" -> handleSubscriptionPaused(event);
-            case "customer.subscription.resumed" -> handleSubscriptionResumed(event);
-            case "customer.subscription.trial_will_end" -> handleTrialWillEnd(event);
-            case "customer.subscription.pending_update_applied" -> handleSubscriptionPendingUpdateApplied(event);
-            case "customer.subscription.pending_update_expired" -> handleSubscriptionPendingUpdateExpired(event);
-                
-            // Eventos de fatura
-            case "invoice.created" -> handleInvoiceCreated(event);
-            case "invoice.finalized" -> handleInvoiceFinalized(event);
-            case "invoice.paid" -> handleInvoicePaid(event);
-            case "invoice.payment_succeeded" -> handlePaymentSucceeded(event);
-            case "invoice.payment_failed" -> handlePaymentFailed(event);
-            case "invoice.payment_action_required" -> handleInvoicePaymentActionRequired(event);
-            case "invoice.overdue" -> handleInvoiceOverdue(event);
-            case "invoice.marked_uncollectible" -> handleInvoiceMarkedUncollectible(event);
-            case "invoice.voided" -> handleInvoiceVoided(event);
-            case "invoice.upcoming" -> handleInvoiceUpcoming(event);
-            case "invoice.will_be_due" -> handleInvoiceWillBeDue(event);
-            case "invoice.sent" -> handleInvoiceSent(event);
-            case "invoice.deleted" -> handleInvoiceDeleted(event);
-            case "invoice.finalization_failed" -> handleInvoiceFinalizationFailed(event);
-            case "invoice.overpaid" -> handleInvoiceOverpaid(event);
-            case "invoice.updated" -> handleInvoiceUpdated(event);
-                
-            // Eventos de cobrança
-            case "charge.succeeded" -> handleChargeSucceeded(event);
-            case "charge.failed" -> handleChargeFailed(event);
-            case "charge.captured" -> handleChargeCaptured(event);
-            case "charge.refunded" -> handleChargeRefunded(event);
-            case "charge.updated" -> handleChargeUpdated(event);
-            case "charge.pending" -> handleChargePending(event);
-            case "charge.expired" -> handleChargeExpired(event);
-                
-            // Eventos de disputa
-            case "charge.dispute.created" -> handleChargeDisputeCreated(event);
-            case "charge.dispute.updated" -> handleChargeDisputeUpdated(event);
-            case "charge.dispute.closed" -> handleChargeDisputeClosed(event);
-            case "charge.dispute.funds_withdrawn" -> handleChargeDisputeFundsWithdrawn(event);
-            case "charge.dispute.funds_reinstated" -> handleChargeDisputeFundsReinstated(event);
-                
-            // Eventos de reembolso
-            case "refund.created" -> handleRefundCreated(event);
-            case "refund.updated" -> handleRefundUpdated(event);
-            case "refund.failed" -> handleRefundFailed(event);
-            case "charge.refund.updated" -> handleChargeRefundUpdated(event);
-                
-            // Eventos de checkout
-            case "checkout.session.completed" -> handleCheckoutCompleted(event);
-            case "checkout.session.expired" -> handleCheckoutExpired(event);
-            case "checkout.session.async_payment_succeeded" -> handleCheckoutAsyncPaymentSucceeded(event);
-            case "checkout.session.async_payment_failed" -> handleCheckoutAsyncPaymentFailed(event);
-                
-            // Eventos de cliente
-            case "customer.created" -> handleCustomerCreated(event);
-            case "customer.updated" -> handleCustomerUpdated(event);
-            case "customer.deleted" -> handleCustomerDeleted(event);
-                
-            // Eventos de desconto
-            case "customer.discount.created" -> handleCustomerDiscountCreated(event);
-            case "customer.discount.updated" -> handleCustomerDiscountUpdated(event);
-            case "customer.discount.deleted" -> handleCustomerDiscountDeleted(event);
-                
-            // Eventos de métodos de pagamento
-            case "customer.source.created" -> handleCustomerSourceCreated(event);
-            case "customer.source.updated" -> handleCustomerSourceUpdated(event);
-            case "customer.source.deleted" -> handleCustomerSourceDeleted(event);
-            case "customer.source.expiring" -> handleCustomerSourceExpiring(event);
-            case "customer.card.created" -> handleCustomerCardCreated(event);
-            case "customer.card.updated" -> handleCustomerCardUpdated(event);
-            case "customer.card.deleted" -> handleCustomerCardDeleted(event);
-            case "customer.bank_account.created" -> handleCustomerBankAccountCreated(event);
-            case "customer.bank_account.updated" -> handleCustomerBankAccountUpdated(event);
-            case "customer.bank_account.deleted" -> handleCustomerBankAccountDeleted(event);
-                
-            // Eventos de tax ID
-            case "customer.tax_id.created" -> handleCustomerTaxIdCreated(event);
-            case "customer.tax_id.updated" -> handleCustomerTaxIdUpdated(event);
-            case "customer.tax_id.deleted" -> handleCustomerTaxIdDeleted(event);
-                
-            // Eventos de payment intent
-            case "payment_intent.created" -> handlePaymentIntentCreated(event);
-            case "payment_intent.succeeded" -> handlePaymentIntentSucceeded(event);
-            case "payment_intent.payment_failed" -> handlePaymentIntentPaymentFailed(event);
-            case "payment_intent.canceled" -> handlePaymentIntentCanceled(event);
-            case "payment_intent.processing" -> handlePaymentIntentProcessing(event);
-            case "payment_intent.requires_action" -> handlePaymentIntentRequiresAction(event);
-            case "payment_intent.amount_capturable_updated" -> handlePaymentIntentAmountCapturableUpdated(event);
-            case "payment_intent.partially_funded" -> handlePaymentIntentPartiallyFunded(event);
-                
-            // Eventos de payout
-            case "payout.created" -> handlePayoutCreated(event);
-            case "payout.paid" -> handlePayoutPaid(event);
-            case "payout.failed" -> handlePayoutFailed(event);
-            case "payout.canceled" -> handlePayoutCanceled(event);
-            case "payout.updated" -> handlePayoutUpdated(event);
-            case "payout.reconciliation_completed" -> handlePayoutReconciliationCompleted(event);
-                
-            // Eventos de plano e preço
-            case "plan.created" -> handlePlanCreated(event);
-            case "plan.updated" -> handlePlanUpdated(event);
-            case "plan.deleted" -> handlePlanDeleted(event);
-            case "price.created" -> handlePriceCreated(event);
-            case "price.updated" -> handlePriceUpdated(event);
-            case "price.deleted" -> handlePriceDeleted(event);
-                
-            // Eventos de subscription schedule
-            case "subscription_schedule.created" -> handleSubscriptionScheduleCreated(event);
-            case "subscription_schedule.updated" -> handleSubscriptionScheduleUpdated(event);
-            case "subscription_schedule.canceled" -> handleSubscriptionScheduleCanceled(event);
-            case "subscription_schedule.completed" -> handleSubscriptionScheduleCompleted(event);
-            case "subscription_schedule.aborted" -> handleSubscriptionScheduleAborted(event);
-            case "subscription_schedule.expiring" -> handleSubscriptionScheduleExpiring(event);
-            case "subscription_schedule.released" -> handleSubscriptionScheduleReleased(event);
-                
-            // Eventos de verificação de identidade
-            case "identity.verification_session.created" -> handleIdentityVerificationSessionCreated(event);
-            case "identity.verification_session.processing" -> handleIdentityVerificationSessionProcessing(event);
-            case "identity.verification_session.verified" -> handleIdentityVerificationSessionVerified(event);
-            case "identity.verification_session.requires_input" -> handleIdentityVerificationSessionRequiresInput(event);
-            case "identity.verification_session.canceled" -> handleIdentityVerificationSessionCanceled(event);
-            case "identity.verification_session.redacted" -> handleIdentityVerificationSessionRedacted(event);
-                
-            // Eventos de pagamento de fatura
-            case "invoice_payment.paid" -> handleInvoicePaymentPaid(event);
-                
-            default -> log.info("Evento não tratado: {}", event.getType());
-        }
+    public String getWebhookSecret() {
+        return mercadoPagoConfig.getWebhookSecret();
     }
-    
+
     // ========== MÉTODOS DE PROCESSAMENTO DE EVENTOS ==========
-    
-    // Eventos de Assinatura
-    private void handleSubscriptionCreated(Event event) {
-        log.info("Processando criação de assinatura");
+
+    /**
+     * Valida assinatura do webhook (método público para uso no controller)
+     * 
+     * Utiliza a classe WebhookSignatureValidator para validação conforme
+     * documentação oficial
+     */
+    public boolean validateWebhookSignature(String signature, String requestBody, String secret) {
+        return signatureValidator.validate(signature, requestBody, secret);
+    }
+
+    /**
+     * Processa webhook de forma assíncrona (não bloqueia a resposta HTTP)
+     * 
+     * Este método é executado em background após o controller retornar HTTP 200
+     * 
+     * Mecanismos de segurança implementados:
+     * - Timeout controlado
+     * - Logs estruturados
+     * - Tratamento de falhas sem quebrar endpoint
+     * - Salvamento garantido de event_id
+     */
+    @Async("webhookTaskExecutor")
+    public void processWebhookAsync(
+            Map<String, Object> payload,
+            String signature,
+            String requestId,
+            String requestBody) {
+
+        long startTime = System.currentTimeMillis();
+        String eventId = extractEventIdSafely(payload, requestId);
+        String eventType = extractEventTypeSafely(payload);
+
+        // Log estruturado inicial
+        logStructured("webhook.processing.started", Map.of(
+                "requestId", requestId != null ? requestId : "unknown",
+                "eventId", eventId,
+                "eventType", eventType != null ? eventType : "unknown",
+                "timestamp", LocalDateTime.now().toString()));
+
         try {
-            EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
-            StripeObject stripeObject = dataObjectDeserializer.getObject().orElse(null);
-            
-            if (stripeObject instanceof com.stripe.model.Subscription subscription) {
-                
-                String subscriptionId = subscription.getId();
-                String customerId = subscription.getCustomer();
-                String priceId = subscription.getItems().getData().get(0).getPrice().getId();
-                
-                LocalDateTime currentPeriodStart = LocalDateTime.ofInstant(
-                    Instant.ofEpochSecond(subscription.getCurrentPeriodStart()), ZoneId.systemDefault());
-                LocalDateTime currentPeriodEnd = LocalDateTime.ofInstant(
-                    Instant.ofEpochSecond(subscription.getCurrentPeriodEnd()), ZoneId.systemDefault());
-                
-                boolean isTrialing = subscription.getTrialEnd() != null && 
-                    subscription.getTrialEnd() > Instant.now().getEpochSecond();
-                
-                subscriptionService.processSubscriptionCreated(
-                    subscriptionId, customerId, priceId, 
-                    currentPeriodStart, currentPeriodEnd, isTrialing
-                );
-                
-                log.info("Assinatura criada processada: {}", subscriptionId);
-            }
+            // Processar com timeout controlado
+            handleMercadoPagoWebhookWithTimeout(payload, signature, requestId, requestBody, eventId);
+
+            long duration = System.currentTimeMillis() - startTime;
+
+            // Log estruturado de sucesso
+            logStructured("webhook.processing.success", Map.of(
+                    "requestId", requestId != null ? requestId : "unknown",
+                    "eventId", eventId,
+                    "eventType", eventType != null ? eventType : "unknown",
+                    "durationMs", String.valueOf(duration),
+                    "timestamp", LocalDateTime.now().toString()));
+
         } catch (Exception e) {
-            log.error("Erro ao processar criação de assinatura: {}", e.getMessage(), e);
-            throw e;
+            long duration = System.currentTimeMillis() - startTime;
+
+            // Log estruturado de erro
+            logStructured("webhook.processing.error", Map.of(
+                    "requestId", requestId != null ? requestId : "unknown",
+                    "eventId", eventId,
+                    "eventType", eventType != null ? eventType : "unknown",
+                    "error", e.getClass().getSimpleName(),
+                    "errorMessage", e.getMessage() != null ? e.getMessage() : "unknown",
+                    "durationMs", String.valueOf(duration),
+                    "timestamp", LocalDateTime.now().toString()));
+
+            // Salvar evento falhado SEM lançar exceção (não quebra endpoint)
+            saveFailedEventSafely(eventId, eventType, payload, e);
         }
     }
-    
-    private void handleSubscriptionUpdated(Event event) {
-        log.info("Processando atualização de assinatura");
+
+    /**
+     * Processa webhook com timeout controlado
+     */
+    private void handleMercadoPagoWebhookWithTimeout(
+            Map<String, Object> payload,
+            String signature,
+            String requestId,
+            String requestBody,
+            String eventId) throws Exception {
+
+        // Garantir que event_id seja salvo ANTES de processar
+        ensureEventIdSaved(eventId);
+
+        // Processar com timeout controlado usando CompletableFuture
         try {
-            EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
-            StripeObject stripeObject = dataObjectDeserializer.getObject().orElse(null);
-            
-            if (stripeObject instanceof com.stripe.model.Subscription subscription) {
-                
-                String subscriptionId = subscription.getId();
-                SubscriptionStatus status = mapStripeStatusToLocal(subscription.getStatus());
-                
-                LocalDateTime currentPeriodStart = LocalDateTime.ofInstant(
-                    Instant.ofEpochSecond(subscription.getCurrentPeriodStart()), ZoneId.systemDefault());
-                LocalDateTime currentPeriodEnd = LocalDateTime.ofInstant(
-                    Instant.ofEpochSecond(subscription.getCurrentPeriodEnd()), ZoneId.systemDefault());
-                
-                subscriptionService.updateSubscriptionFromStripe(
-                    subscriptionId, status, currentPeriodStart, currentPeriodEnd
-                );
-                
-                log.info("Assinatura atualizada processada: {} -> {}", subscriptionId, status);
+            CompletableFuture<WebhookResponseDto> future = CompletableFuture.supplyAsync(() -> {
+                try {
+                    return handleMercadoPagoWebhook(payload, signature, requestId, requestBody);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+            // Aguardar com timeout
+            long timeoutMillis = webhookConfig.getProcessingTimeoutMillis();
+            future.get(timeoutMillis, TimeUnit.MILLISECONDS);
+
+        } catch (TimeoutException e) {
+            log.error("Timeout ao processar webhook - Request ID: {}, Event ID: {}, Timeout: {}ms",
+                    requestId, eventId, webhookConfig.getProcessingTimeoutMillis());
+            throw new WebhookProcessingException(
+                    "Timeout ao processar webhook após " + webhookConfig.getProcessingTimeoutSeconds() + " segundos",
+                    requestId,
+                    extractEventTypeSafely(payload),
+                    e);
+        } catch (java.util.concurrent.ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException && cause.getCause() != null) {
+                throw (Exception) cause.getCause();
             }
-        } catch (Exception e) {
-            log.error("Erro ao processar atualização de assinatura: {}", e.getMessage(), e);
-            throw e;
+            throw new WebhookProcessingException(
+                    "Erro ao processar webhook: " + e.getMessage(),
+                    requestId,
+                    extractEventTypeSafely(payload),
+                    e);
         }
     }
-    
-    private void handleSubscriptionDeleted(Event event) {
-        log.info("Processando cancelamento de assinatura");
-        try {
-            EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
-            StripeObject stripeObject = dataObjectDeserializer.getObject().orElse(null);
-            
-            if (stripeObject instanceof com.stripe.model.Subscription subscription) {
-                
-                String subscriptionId = subscription.getId();
-                
-                LocalDateTime currentPeriodStart = LocalDateTime.ofInstant(
-                    Instant.ofEpochSecond(subscription.getCurrentPeriodStart()), ZoneId.systemDefault());
-                LocalDateTime currentPeriodEnd = LocalDateTime.ofInstant(
-                    Instant.ofEpochSecond(subscription.getCurrentPeriodEnd()), ZoneId.systemDefault());
-                
-                subscriptionService.updateSubscriptionFromStripe(
-                    subscriptionId, SubscriptionStatus.CANCELED, 
-                    currentPeriodStart, currentPeriodEnd
-                );
-                
-                log.info("Assinatura cancelada processada: {}", subscriptionId);
-            }
-        } catch (Exception e) {
-            log.error("Erro ao processar cancelamento de assinatura: {}", e.getMessage(), e);
-            throw e;
+
+    /**
+     * Garante que event_id seja salvo no banco de dados
+     * Isso garante idempotência mesmo se o processamento falhar
+     */
+    private void ensureEventIdSaved(String eventId) {
+        if (eventId == null || eventId.isEmpty()) {
+            log.warn("Event ID vazio - não é possível garantir idempotência");
+            return;
         }
-    }
-    
-    private void handleSubscriptionPaused(Event event) {
-        log.info("Processando pausa de assinatura - Event ID: {}", event.getId());
+
         try {
-            EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
-            StripeObject stripeObject = dataObjectDeserializer.getObject().orElse(null);
-            
-            if (stripeObject instanceof com.stripe.model.Subscription subscription) {
-                String subscriptionId = subscription.getId();
-                String customerId = subscription.getCustomer();
-                
-                // Mapeia o status atual da assinatura do Stripe
-                SubscriptionStatus pausedStatus = mapStripeStatusToLocal(subscription.getStatus());
-                
-                LocalDateTime currentPeriodStart = LocalDateTime.ofInstant(
-                    Instant.ofEpochSecond(subscription.getCurrentPeriodStart()), ZoneId.systemDefault());
-                LocalDateTime currentPeriodEnd = LocalDateTime.ofInstant(
-                    Instant.ofEpochSecond(subscription.getCurrentPeriodEnd()), ZoneId.systemDefault());
-                
-                // Atualiza a assinatura no sistema local
-                subscriptionService.updateSubscriptionFromStripe(
-                    subscriptionId, pausedStatus, currentPeriodStart, currentPeriodEnd
-                );
-                
-                log.info("Assinatura pausada com sucesso: {} (Cliente: {}) - Status: {}", 
-                    subscriptionId, customerId, pausedStatus);
-                
-                // Log adicional para auditoria
-                log.warn("ATENÇÃO: Assinatura {} foi pausada. Acesso aos recursos pode ser limitado.", subscriptionId);
-                
+            // Verificar se já existe
+            Optional<WebhookEvent> existingOpt = webhookEventRepository.findByEventId(eventId);
+            if (existingOpt.isEmpty()) {
+                // Salvar event_id ANTES de processar com processed = false
+                WebhookEvent webhookEvent = new WebhookEvent(eventId);
+                webhookEvent.setProcessed(false);
+                webhookEventRepository.save(webhookEvent);
+
+                logStructured("webhook.event.saved", Map.of(
+                        "eventId", eventId,
+                        "processed", "false",
+                        "timestamp", LocalDateTime.now().toString()));
             } else {
-                log.error("Objeto do evento não é uma Subscription válida para pausa");
+                logStructured("webhook.event.duplicate", Map.of(
+                        "eventId", eventId,
+                        "timestamp", LocalDateTime.now().toString()));
             }
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // Race condition: outro thread já salvou
+            log.debug("Event ID {} já foi salvo por outro thread", eventId);
         } catch (Exception e) {
-            log.error("Erro ao processar pausa de assinatura - Event ID: {}: {}", event.getId(), e.getMessage(), e);
-            throw e;
+            log.error("Erro ao salvar event_id {}: {}", eventId, e.getMessage(), e);
+            // Não lançar exceção - apenas logar
         }
     }
-    
-    private void handleSubscriptionResumed(Event event) {
-        log.info("Processando retomada de assinatura - Event ID: {}", event.getId());
+
+    /**
+     * Extrai event_id de forma segura
+     */
+    private String extractEventIdSafely(Map<String, Object> payload, String fallback) {
         try {
-            EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
-            StripeObject stripeObject = dataObjectDeserializer.getObject().orElse(null);
-            
-            if (stripeObject instanceof com.stripe.model.Subscription subscription) {
-                String subscriptionId = subscription.getId();
-                String customerId = subscription.getCustomer();
-                
-                // Mapeia o status atual da assinatura do Stripe
-                SubscriptionStatus resumedStatus = mapStripeStatusToLocal(subscription.getStatus());
-                
-                LocalDateTime currentPeriodStart = LocalDateTime.ofInstant(
-                    Instant.ofEpochSecond(subscription.getCurrentPeriodStart()), ZoneId.systemDefault());
-                LocalDateTime currentPeriodEnd = LocalDateTime.ofInstant(
-                    Instant.ofEpochSecond(subscription.getCurrentPeriodEnd()), ZoneId.systemDefault());
-                
-                // Atualiza a assinatura no sistema local
-                subscriptionService.updateSubscriptionFromStripe(
-                    subscriptionId, resumedStatus, currentPeriodStart, currentPeriodEnd
-                );
-                
-                log.info("Assinatura retomada com sucesso: {} (Cliente: {}) - Status: {}", 
-                    subscriptionId, customerId, resumedStatus);
-                
-                // Log adicional para auditoria
-                log.info("SUCESSO: Assinatura {} foi retomada. Acesso completo aos recursos restaurado.", subscriptionId);
-                
+            Map<String, Object> data = (Map<String, Object>) payload.get("data");
+            if (data != null) {
+                Object idObj = data.get("id");
+                if (idObj != null) {
+                    return idObj.toString();
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Erro ao extrair eventId: {}", e.getMessage());
+        }
+        return fallback != null ? fallback : "unknown";
+    }
+
+    /**
+     * Extrai event_type de forma segura
+     */
+    private String extractEventTypeSafely(Map<String, Object> payload) {
+        try {
+            Object typeObj = payload.get("type");
+            if (typeObj != null) {
+                return typeObj.toString();
+            }
+        } catch (Exception e) {
+            log.debug("Erro ao extrair eventType: {}", e.getMessage());
+        }
+        return "unknown";
+    }
+
+    /**
+     * Salva evento falhado de forma segura (não lança exceção)
+     */
+    private void saveFailedEventSafely(String eventId, String eventType, Map<String, Object> payload, Exception error) {
+        try {
+            saveFailedEvent(eventId, eventType, payload, error);
+        } catch (Exception e) {
+            // Logar mas não lançar exceção - endpoint não deve quebrar
+            log.error("Erro crítico ao salvar evento falhado (eventId={}): {}", eventId, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Log estruturado para melhor rastreabilidade
+     * Formato: [WEBHOOK] key=value key=value ...
+     */
+    private void logStructured(String event, Map<String, String> fields) {
+        StringBuilder logMessage = new StringBuilder();
+        logMessage.append("[WEBHOOK] ");
+        logMessage.append("event=").append(event);
+
+        for (Map.Entry<String, String> entry : fields.entrySet()) {
+            logMessage.append(" ").append(entry.getKey()).append("=").append(entry.getValue());
+        }
+
+        switch (event) {
+            case "webhook.processing.started":
+            case "webhook.processing.success":
+                log.info(logMessage.toString());
+                break;
+            case "webhook.event.saved":
+                log.debug(logMessage.toString());
+                break;
+            case "webhook.event.duplicate":
+            case "webhook.event.duplicate.detected":
+            case "webhook.event.duplicate.race":
+                log.warn(logMessage.toString());
+                break;
+            case "webhook.validation.failed":
+            case "webhook.processing.exception":
+            case "webhook.processing.error":
+                log.error(logMessage.toString());
+                break;
+            default:
+                log.info(logMessage.toString());
+        }
+    }
+
+    /**
+     * Processa webhooks do Mercado Pago (método síncrono para uso interno)
+     * O Mercado Pago envia notificações no formato: { "type": "...", "data": {
+     * "id": "..." } }
+     * 
+     * Conforme documentação oficial (2025):
+     * - Header X-Signature: ts=<timestamp>,v1=<hash>
+     * - Header X-Request-Id: ID único da requisição (para idempotência)
+     * - Payload: { "type": "payment", "data": { "id": "123456789" } }
+     * 
+     * @param payload     Payload do webhook
+     * @param signature   Header x-signature para validação
+     * @param requestId   Header x-request-id para idempotência
+     * @param requestBody Body raw da requisição (necessário para validação de
+     *                    assinatura)
+     * @return WebhookResponseDto com resultado do processamento
+     */
+    @Transactional
+    public WebhookResponseDto handleMercadoPagoWebhook(
+            Map<String, Object> payload,
+            String signature,
+            String requestId,
+            String requestBody) {
+        log.info("Recebido webhook do Mercado Pago - Request ID: {}", requestId);
+
+        try {
+            boolean isReprocess = requestId != null && requestId.startsWith("reprocess-");
+            if (!isReprocess) {
+                String webhookSecret = mercadoPagoConfig.getWebhookSecret();
+                if (!signatureValidator.validate(signature, requestBody, webhookSecret)) {
+                    log.error("Webhook rejeitado - assinatura inválida");
+                    throw new InvalidSignatureException("Assinatura inválida - webhook rejeitado", signature, null);
+                }
+            }
+
+            // Extrair tipo e data_id do payload
+            String type = (String) payload.get("type");
+            Map<String, Object> data = (Map<String, Object>) payload.get("data");
+
+            if (type == null || data == null) {
+                log.error("Payload do webhook inválido: tipo ou data ausente");
+                throw new WebhookProcessingException("Payload do webhook inválido", null, null, null);
+            }
+
+            // IMPORTANTE: eventId vem do campo "id" do webhook (não do payment_id)
+            // Exemplo: payload { "type": "payment", "data": { "id": "123456789" } }
+            // eventId será "123456789"
+            String eventId = (String) data.get("id");
+            if (eventId == null || eventId.isEmpty()) {
+                log.error("Event ID ausente no webhook - campo 'id' não encontrado em data");
+                throw new WebhookProcessingException("Event ID ausente no webhook", null, null, null);
+            }
+
+            // Verificar idempotência persistente usando banco de dados
+            // IMPORTANTE: Verificação dupla para garantir idempotência mesmo em race
+            // conditions
+            if (webhookEventRepository.existsByEventId(eventId)) {
+                logStructured("webhook.event.duplicate.detected", Map.of(
+                        "eventId", eventId,
+                        "eventType", type,
+                        "requestId", requestId != null ? requestId : "unknown",
+                        "timestamp", LocalDateTime.now().toString()));
+                return WebhookResponseDto.alreadyProcessed(eventId, type);
+            }
+
+            // Persistir evento ANTES de processar (garante idempotência mesmo em caso de
+            // erro)
+            // IMPORTANTE: Salvar com processed = false - será marcado como true após
+            // processamento bem-sucedido
+            WebhookEvent webhookEvent;
+            try {
+                Optional<WebhookEvent> existingEventOpt = webhookEventRepository.findByEventId(eventId);
+                if (existingEventOpt.isPresent()) {
+                    webhookEvent = existingEventOpt.get();
+                    // Se já existe e está processado, retornar
+                    if (Boolean.TRUE.equals(webhookEvent.getProcessed())) {
+                        logStructured("webhook.event.duplicate.detected", Map.of(
+                                "eventId", eventId,
+                                "eventType", type,
+                                "requestId", requestId != null ? requestId : "unknown",
+                                "timestamp", LocalDateTime.now().toString()));
+                        return WebhookResponseDto.alreadyProcessed(eventId, type);
+                    }
+                    // Se existe mas não está processado, usar o existente (pode ser retry)
+                    log.info("Evento {} encontrado mas não processado, tentando reprocessar", eventId);
+                } else {
+                    // Criar novo evento com processed = false
+                    webhookEvent = new WebhookEvent(eventId);
+                    webhookEvent.setProcessed(false);
+                    webhookEventRepository.save(webhookEvent);
+                }
+
+                logStructured("webhook.event.registered", Map.of(
+                        "eventId", eventId,
+                        "eventType", type,
+                        "requestId", requestId != null ? requestId : "unknown",
+                        "processed", "false",
+                        "timestamp", LocalDateTime.now().toString()));
+            } catch (org.springframework.dao.DataIntegrityViolationException e) {
+                // Caso raro: evento foi inserido entre a verificação e o save (race condition)
+                // Isso é normal em ambientes com múltiplas instâncias ou processamento
+                // concorrente
+                logStructured("webhook.event.duplicate.race", Map.of(
+                        "eventId", eventId,
+                        "eventType", type,
+                        "requestId", requestId != null ? requestId : "unknown",
+                        "timestamp", LocalDateTime.now().toString()));
+                return WebhookResponseDto.alreadyProcessed(eventId, type);
+            }
+
+            // Registrar recebimento no monitoramento
+            monitoringService.recordWebhookReceived(type);
+
+            // Processar evento baseado no tipo
+            // dataId é usado para buscar detalhes do pagamento via API
+            String dataId = eventId; // Para compatibilidade com métodos existentes
+
+            logStructured("webhook.processing.event", Map.of(
+                    "eventId", eventId,
+                    "eventType", type,
+                    "dataId", dataId,
+                    "requestId", requestId != null ? requestId : "unknown",
+                    "timestamp", LocalDateTime.now().toString()));
+
+            processMercadoPagoEvent(type, dataId, payload);
+
+            // Marcar evento como processado com sucesso
+            webhookEvent.setProcessed(true);
+            webhookEvent.setProcessedAt(LocalDateTime.now());
+            webhookEvent.setErrorMessage(null); // Limpar erro anterior se houver
+            webhookEventRepository.save(webhookEvent);
+
+            // Registrar processamento bem-sucedido no monitoramento
+            monitoringService.recordWebhookProcessed(type);
+
+            logStructured("webhook.processing.completed", Map.of(
+                    "eventId", eventId,
+                    "eventType", type,
+                    "requestId", requestId != null ? requestId : "unknown",
+                    "processed", "true",
+                    "timestamp", LocalDateTime.now().toString()));
+
+            return WebhookResponseDto.success(eventId, type);
+
+        } catch (InvalidSignatureException e) {
+            // Re-lançar exceção de assinatura inválida (não deve ser processada)
+            logStructured("webhook.validation.failed", Map.of(
+                    "requestId", requestId != null ? requestId : "unknown",
+                    "error", "InvalidSignatureException",
+                    "errorMessage", e.getMessage() != null ? e.getMessage() : "unknown",
+                    "timestamp", LocalDateTime.now().toString()));
+            throw e;
+        } catch (Exception e) {
+            String extractedEventId = extractEventIdSafely(payload, requestId);
+            String extractedEventType = extractEventTypeSafely(payload);
+
+            // Log estruturado do erro
+            logStructured("webhook.processing.exception", Map.of(
+                    "requestId", requestId != null ? requestId : "unknown",
+                    "eventId", extractedEventId,
+                    "eventType", extractedEventType,
+                    "error", e.getClass().getSimpleName(),
+                    "errorMessage", e.getMessage() != null ? e.getMessage() : "unknown",
+                    "timestamp", LocalDateTime.now().toString()));
+
+            // Atualizar webhookEvent com erro (mantém processed = false para permitir
+            // retry)
+            try {
+                Optional<WebhookEvent> eventOpt = webhookEventRepository.findByEventId(extractedEventId);
+                if (eventOpt.isPresent()) {
+                    WebhookEvent failedEvent = eventOpt.get();
+                    failedEvent.setErrorMessage(e.getMessage() != null ? e.getMessage() : "Erro desconhecido");
+                    webhookEventRepository.save(failedEvent);
+                    log.debug("Evento {} marcado com erro para retry futuro", extractedEventId);
+                }
+            } catch (Exception saveError) {
+                log.error("Erro ao salvar mensagem de erro no webhookEvent: {}", saveError.getMessage());
+            }
+
+            // Salvar evento falhado SEM lançar exceção adicional
+            saveFailedEventSafely(
+                    extractedEventId,
+                    extractedEventType,
+                    payload,
+                    e);
+
+            throw new WebhookProcessingException(
+                    "Erro ao processar webhook: " + e.getMessage(),
+                    requestId,
+                    extractedEventType,
+                    e);
+        }
+    }
+
+    /**
+     * Processa eventos do Mercado Pago baseado no tipo usando Strategy Pattern
+     * 
+     * Cada tipo de evento é redirecionado para seu handler específico,
+     * garantindo separação de responsabilidades e não misturar regras de negócio.
+     */
+    private void processMercadoPagoEvent(String type, String dataId, Map<String, Object> payload) {
+        log.info("Processando evento Mercado Pago: {} (ID: {})", type, dataId);
+
+        // Verificar se o tipo de evento é suportado
+        MercadoPagoWebhookEventType eventType = MercadoPagoWebhookEventType.fromString(type);
+        if (eventType == null) {
+            log.warn("Tipo de evento não suportado: {}", type);
+            return;
+        }
+
+        try {
+            // Buscar dados da notificação via API do Mercado Pago
+            Map<String, Object> notificationData = mercadoPagoService.processWebhookNotification(dataId, type);
+
+            // Encontrar handler apropriado para o tipo de evento
+            WebhookEventHandler handler = findHandlerForEventType(type);
+            if (handler != null) {
+                log.info("Usando handler {} para evento {}", handler.getClass().getSimpleName(), type);
+                handler.handle(dataId, payload, notificationData);
             } else {
-                log.error("Objeto do evento não é uma Subscription válida para retomada");
+                log.error("Handler não encontrado para tipo de evento: {}", type);
+                throw new WebhookProcessingException("Handler não encontrado para tipo: " + type, dataId, type, null);
             }
+        } catch (MPException | MPApiException e) {
+            log.error("Erro ao processar evento do Mercado Pago: {}", e.getMessage(), e);
+            // Salvar evento falhado antes de lançar exceção
+            saveFailedEvent(dataId, type, payload, e);
+            throw new WebhookProcessingException("Erro ao processar evento: " + e.getMessage(), dataId, type, e);
         } catch (Exception e) {
-            log.error("Erro ao processar retomada de assinatura - Event ID: {}: {}", event.getId(), e.getMessage(), e);
-            throw e;
+            log.error("Erro inesperado ao processar evento: {}", e.getMessage(), e);
+            // Salvar evento falhado antes de lançar exceção
+            saveFailedEvent(dataId, type, payload, e);
+            throw new WebhookProcessingException("Erro inesperado: " + e.getMessage(), dataId, type, e);
         }
     }
-    
-    private void handleTrialWillEnd(Event event) {
-        log.info("Processando aviso de fim de trial");
+
+    /**
+     * Salva evento que falhou no processamento
+     */
+    private void saveFailedEvent(String eventId, String eventType, Map<String, Object> payload, Exception error) {
         try {
-            EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
-            StripeObject stripeObject = dataObjectDeserializer.getObject().orElse(null);
-            
-            if (stripeObject instanceof com.stripe.model.Subscription subscription) {
-                String subscriptionId = subscription.getId();
-                log.info("Trial terminando em breve para assinatura: {}", subscriptionId);
-                // Implementar notificação para o usuário
-            }
+            // Converter payload para JSON string
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            String payloadJson = mapper.writeValueAsString(payload);
+            failedWebhookEventService.saveFailedEvent(eventId, eventType, payloadJson, error);
         } catch (Exception e) {
-            log.error("Erro ao processar aviso de fim de trial: {}", e.getMessage(), e);
-            throw e;
+            log.error("Erro ao salvar evento falhado: {}", e.getMessage(), e);
+            // Tentar salvar com payload vazio
+            try {
+                failedWebhookEventService.saveFailedEvent(eventId, eventType, "{}", error);
+            } catch (Exception e2) {
+                log.error("Erro crítico ao salvar evento falhado mesmo com payload vazio: {}", e2.getMessage());
+            }
         }
     }
-    
-    private void handleSubscriptionPendingUpdateApplied(Event event) {
-        log.info("Processando aplicação de atualização pendente de assinatura - Event ID: {}", event.getId());
+
+    /**
+     * Encontra o handler apropriado para o tipo de evento
+     */
+    private WebhookEventHandler findHandlerForEventType(String eventType) {
+        return eventHandlers.stream()
+                .filter(handler -> handler.canHandle(eventType))
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Método interno para processamento de pagamento (chamado pelo
+     * PaymentWebhookHandler)
+     * 
+     * @param paymentData Dados do pagamento
+     */
+    public void handleMercadoPagoPaymentInternal(Map<String, Object> paymentData) {
+        handleMercadoPagoPayment(paymentData);
+    }
+
+    /**
+     * Método interno para processamento de assinatura (chamado pelo
+     * SubscriptionWebhookHandler)
+     * 
+     * @param preapprovalData Dados da assinatura
+     */
+    public void handleMercadoPagoPreApprovalInternal(Map<String, Object> preapprovalData) {
+        String action = null;
         try {
-            EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
-            StripeObject stripeObject = dataObjectDeserializer.getObject().orElse(null);
-            
-            if (stripeObject instanceof com.stripe.model.Subscription subscription) {
-                String subscriptionId = subscription.getId();
-                SubscriptionStatus status = mapStripeStatusToLocal(subscription.getStatus());
-                
-                LocalDateTime currentPeriodStart = LocalDateTime.ofInstant(
-                    Instant.ofEpochSecond(subscription.getCurrentPeriodStart()), ZoneId.systemDefault());
-                LocalDateTime currentPeriodEnd = LocalDateTime.ofInstant(
-                    Instant.ofEpochSecond(subscription.getCurrentPeriodEnd()), ZoneId.systemDefault());
-                
-                subscriptionService.updateSubscriptionFromStripe(
-                    subscriptionId, status, currentPeriodStart, currentPeriodEnd
-                );
-                
-                log.info("Atualização pendente aplicada para assinatura: {} -> {}", subscriptionId, status);
+            Object actionObj = preapprovalData.get("action");
+            if (actionObj != null) {
+                action = actionObj.toString();
             }
+        } catch (Exception ignored) {
+        }
+        if (action == null || action.isBlank()) {
+            action = "updated";
+        }
+        handleSubscriptionPreapproval(preapprovalData, action);
+    }
+
+    /**
+     * Processa pagamento do Mercado Pago seguindo fluxo obrigatório:
+     * 
+     * 1. Receber webhook ✓
+     * 2. Validar assinatura ✓ (já validado antes de chegar aqui)
+     * 3. Buscar pagamento na API Mercado Pago (GET /v1/payments/{id})
+     * 4. Persistir Payment
+     * 5. Atualizar assinatura vinculada (apenas se status = APPROVED)
+     * 
+     * Regras de negócio:
+     * - NÃO ativar assinatura se status != APPROVED
+     * - NÃO confiar apenas em metadata
+     * - Se metadata ausente → buscar assinatura pelo payment_id
+     * 
+     * @param paymentData Dados do pagamento do webhook (não confiar apenas nisso)
+     */
+    @Transactional
+    private void handleMercadoPagoPayment(Map<String, Object> paymentData) {
+        log.info("=== Iniciando processamento de PAYMENT ===");
+
+        try {
+            // 1. Extrair ID do pagamento do webhook
+            String paymentIdStr = String.valueOf(paymentData.get("id"));
+            Long paymentId;
+
+            try {
+                paymentId = Long.parseLong(paymentIdStr);
+            } catch (NumberFormatException e) {
+                log.error("ID de pagamento inválido: {}", paymentIdStr);
+                return;
+            }
+
+            log.info("Payment ID do webhook: {}", paymentId);
+
+            // 2. Buscar pagamento na API Mercado Pago
+            // GET https://api.mercadopago.com/v1/payments/{id}
+            // Authorization: Bearer ACCESS_TOKEN
+            com.mercadopago.resources.payment.Payment mpPayment;
+            try {
+                mpPayment = mercadoPagoService.getPayment(paymentId);
+                log.info("✓ Detalhes do pagamento {} obtidos via API do Mercado Pago", paymentId);
+            } catch (MPException | MPApiException e) {
+                log.error("✗ Erro ao buscar detalhes do pagamento {} via API: {}", paymentId, e.getMessage(), e);
+                return;
+            }
+
+            // 3. Verificar idempotência e ordem temporal usando mercado_pago_payment_id
+            // Garantir que não processamos o mesmo evento duas vezes E não regredimos
+            // status
+            Optional<Payment> existingPaymentOpt = paymentRepository.findByMercadoPagoPaymentId(paymentId);
+
+            // Extrair timestamp do evento (fonte da verdade: API do Mercado Pago)
+            LocalDateTime eventTimestamp = extractPaymentTimestamp(mpPayment);
+
+            if (existingPaymentOpt.isPresent()) {
+                Payment existingPayment = existingPaymentOpt.get();
+                log.info("Pagamento {} já foi processado anteriormente (ID local: {}), verificando ordem temporal...",
+                        paymentId, existingPayment.getId());
+
+                // VALIDAÇÃO DE ORDEM TEMPORAL: Prevenir regressão de status
+                // Se o evento recebido é mais antigo que o último status processado, ignorar
+                if (existingPayment.getLastStatusUpdateAt() != null &&
+                        eventTimestamp.isBefore(existingPayment.getLastStatusUpdateAt())) {
+
+                    String currentStatus = existingPayment.getStatus().toString();
+                    String receivedStatus = mpPayment.getStatus() != null ? mpPayment.getStatus().toString()
+                            : "unknown";
+
+                    log.warn("⚠ Evento fora de ordem ignorado - paymentId={}, statusAtual={}, statusRecebido={}, " +
+                            "timestampAtual={}, timestampRecebido={}",
+                            paymentId, currentStatus, receivedStatus,
+                            existingPayment.getLastStatusUpdateAt(), eventTimestamp);
+
+                    log.warn(
+                            "⚠ REGRA: Não permitir regressão de status. Status atual ({}) é mais recente que o recebido ({}).",
+                            currentStatus, receivedStatus);
+
+                    return; // IGNORA evento mais antigo - previne regressão de status
+                }
+
+                // Se já foi processado e está aprovado com mesmo status, não processar
+                // novamente (idempotência)
+                if (existingPayment.getStatus() == Payment.PaymentStatus.APPROVED &&
+                        "approved".equalsIgnoreCase(
+                                mpPayment.getStatus() != null ? mpPayment.getStatus().toString() : null)) {
+                    log.info("Pagamento {} já está aprovado e processado, ignorando reprocessamento", paymentId);
+                    return;
+                }
+            }
+
+            // 4. Validar status real do pagamento na API
+            // NÃO confiar apenas no webhook, sempre buscar status atualizado
+            String status = mpPayment.getStatus() != null ? mpPayment.getStatus().toString() : null;
+            String statusDetail = null;
+            try {
+                statusDetail = mpPayment.getStatusDetail();
+            } catch (Exception e) {
+                log.debug("StatusDetail não disponível: {}", e.getMessage());
+            }
+
+            // Validar status: approved, pending, cancelled são os únicos válidos para
+            // processamento
+            if (status == null || status.isEmpty()) {
+                log.error("Status do pagamento não pode ser nulo ou vazio para payment_id: {}", paymentId);
+                throw new WebhookProcessingException(
+                        "Status do pagamento inválido: nulo ou vazio",
+                        String.valueOf(paymentId),
+                        "payment",
+                        null);
+            }
+
+            log.info("Status do pagamento validado via API: {} ({})", status, statusDetail);
+
+            // Mapear status conforme obrigatório
+            Payment.PaymentStatus paymentStatus = mapMercadoPagoStatusToPaymentStatus(status);
+            log.info("Status mapeado para PaymentStatus: {}", paymentStatus);
+
+            // Validação adicional: garantir que status é válido
+            if (paymentStatus == null) {
+                log.error("Status mapeado é nulo para status: {}", status);
+                throw new WebhookProcessingException(
+                        "Status do pagamento não pôde ser mapeado: " + status,
+                        String.valueOf(paymentId),
+                        "payment",
+                        null);
+            }
+
+            // Extrair valores e informações do pagamento
+            BigDecimal transactionAmount = extractTransactionAmount(mpPayment);
+            String currencyId = extractCurrencyId(mpPayment);
+            String paymentMethodId = extractPaymentMethodId(mpPayment);
+
+            // 5. Buscar assinatura vinculada
+            // Lógica: Primeiro tentar via metadata.subscription_id, depois API, registrar
+            // erro se não encontrar
+            Subscription subscription = findSubscriptionForPayment(mpPayment, paymentId);
+
+            if (subscription == null) {
+                log.error("✗ ERRO CRÍTICO: Assinatura não encontrada para o pagamento {}. " +
+                        "Payment NÃO será criado sem assinatura (subscription é obrigatória).", paymentId);
+                // Payment tem constraint NOT NULL em subscription_id, então não podemos criar
+                // sem assinatura
+                throw new WebhookProcessingException(
+                        "Assinatura não encontrada para o pagamento " + paymentId + ". " +
+                                "Payment requer uma assinatura vinculada.",
+                        String.valueOf(paymentId),
+                        "payment",
+                        null);
+            }
+
+            // 6. Persistir Payment (com validação de ordem temporal já feita acima)
+            Payment payment = createOrUpdatePayment(
+                    existingPaymentOpt,
+                    subscription,
+                    paymentId,
+                    paymentStatus,
+                    transactionAmount,
+                    currencyId,
+                    paymentMethodId,
+                    status,
+                    statusDetail,
+                    mpPayment,
+                    eventTimestamp);
+
+            paymentRepository.save(payment);
+            log.info("✓ Payment persistido: ID={}, MercadoPagoPaymentId={}, Status={}",
+                    payment.getId(), payment.getMercadoPagoPaymentId(), payment.getStatus());
+
+            // 7. Atualizar assinatura vinculada e liberar produto (apenas se status =
+            // APPROVED)
+            // Regra de negócio: NÃO liberar produto se status != APPROVED
+            if ("approved".equalsIgnoreCase(status) && subscription != null) {
+                log.info("✓ Pagamento aprovado - ativando assinatura e liberando acesso ao produto");
+                updateSubscriptionForApprovedPayment(subscription, payment);
+                // Produto é liberado automaticamente quando assinatura é ativada
+                try {
+                    BigDecimal amountForAlert = transactionAmount != null ? transactionAmount : BigDecimal.ZERO;
+                    alertService.sendPaymentApprovedAlert(
+                            String.valueOf(payment.getMercadoPagoPaymentId()),
+                            String.valueOf(subscription.getUser().getId()),
+                            amountForAlert);
+                } catch (Exception ignored) {
+                }
+            } else if (!"approved".equalsIgnoreCase(status) && subscription != null) {
+                log.warn("✗ Pagamento com status {} - assinatura NÃO será ativada e produto NÃO será liberado " +
+                        "(regra: apenas APPROVED libera acesso)", status);
+
+                // Processar outros status (rejected, cancelled, etc.)
+                processPaymentStatusActions(payment, subscription, status, statusDetail);
+            } else if (subscription == null) {
+                log.warn("Assinatura não encontrada - não é possível ativar mesmo com status APPROVED");
+            }
+
+            log.info("=== Processamento de PAYMENT concluído ===");
         } catch (Exception e) {
-            log.error("Erro ao processar aplicação de atualização pendente: {}", e.getMessage(), e);
-            throw e;
+            log.error("Erro ao processar pagamento do Mercado Pago: {}", e.getMessage(), e);
         }
     }
-    
-    private void handleSubscriptionPendingUpdateExpired(Event event) {
-        log.info("Processando expiração de atualização pendente de assinatura - Event ID: {}", event.getId());
+
+    /**
+     * Busca assinatura vinculada ao pagamento
+     * 
+     * Lógica de busca (em ordem de prioridade):
+     * 1. Primeiro tentar via metadata.subscription_id
+     * 2. Se não existir, buscar assinatura via API Mercado Pago
+     * 3. Registrar erro se não encontrar vínculo
+     * 
+     * @param mpPayment Pagamento do Mercado Pago
+     * @param paymentId ID do pagamento
+     * @return Subscription encontrada ou null (com erro registrado)
+     */
+    private Subscription findSubscriptionForPayment(
+            com.mercadopago.resources.payment.Payment mpPayment,
+            Long paymentId) {
+
+        log.info("Buscando assinatura vinculada ao pagamento {}", paymentId);
+
+        // 1. Primeiro tentar via metadata.subscription_id
+        Map<String, Object> metadata = null;
         try {
-            EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
-            StripeObject stripeObject = dataObjectDeserializer.getObject().orElse(null);
-            
-            if (stripeObject instanceof com.stripe.model.Subscription subscription) {
-                String subscriptionId = subscription.getId();
-                
-                // Quando uma atualização pendente expira, a assinatura mantém seu estado atual
-                // Apenas logamos o evento para auditoria
-                log.warn("Atualização pendente expirou para assinatura: {} - mantendo estado atual", subscriptionId);
-                
-                // Opcionalmente, podemos notificar o usuário sobre a expiração da atualização
-                // ou implementar lógica específica de negócio aqui
+            metadata = mpPayment.getMetadata();
+        } catch (Exception e) {
+            log.debug("Metadata não disponível: {}", e.getMessage());
+        }
+
+        String subscriptionId = null;
+        String preferenceId = null;
+        String userId = null;
+
+        if (metadata != null) {
+            // Prioridade 1: metadata.subscription_id
+            subscriptionId = (String) metadata.get("subscription_id");
+            preferenceId = (String) metadata.get("preference_id");
+            userId = (String) metadata.get("user_id");
+
+            log.debug("Metadata encontrado - subscription_id: {}, preference_id: {}, user_id: {}",
+                    subscriptionId, preferenceId, userId);
+        }
+
+        // Buscar por subscription_id (prioridade mais alta)
+        if (subscriptionId != null && !subscriptionId.isEmpty()) {
+            try {
+                Long subscriptionIdLong = Long.parseLong(subscriptionId);
+                Optional<Subscription> subscriptionOpt = subscriptionRepository.findById(subscriptionIdLong);
+                if (subscriptionOpt.isPresent()) {
+                    log.info("✓ Assinatura encontrada via metadata.subscription_id: {}", subscriptionId);
+                    return subscriptionOpt.get();
+                } else {
+                    log.warn("Assinatura não encontrada no banco para subscription_id: {}", subscriptionId);
+                }
+            } catch (NumberFormatException e) {
+                log.warn("subscription_id inválido no metadata: {}", subscriptionId);
+            }
+        }
+
+        // Buscar por preference_id (se disponível)
+        if (preferenceId != null && !preferenceId.isEmpty()) {
+            Optional<Subscription> subscriptionOpt = subscriptionRepository
+                    .findByMercadoPagoSubscriptionId(preferenceId);
+            if (subscriptionOpt.isPresent()) {
+                log.info("✓ Assinatura encontrada por preference_id (mp_sub_id): {}", preferenceId);
+                return subscriptionOpt.get();
+            } else {
+                log.warn("Assinatura não encontrada para preference_id: {}", preferenceId);
+            }
+        }
+
+        // Buscar por user_id (se disponível)
+        if (userId != null && !userId.isEmpty()) {
+            try {
+                Long userIdLong = Long.parseLong(userId);
+                Optional<Subscription> subscriptionOpt = subscriptionRepository.findByUserId(userIdLong);
+                if (subscriptionOpt.isPresent()) {
+                    log.info("✓ Assinatura encontrada por user_id: {}", userId);
+                    return subscriptionOpt.get();
+                }
+            } catch (NumberFormatException e) {
+                log.warn("user_id inválido: {}", userId);
+            }
+        }
+
+        // 2. Se não encontrou via metadata, buscar assinatura via API Mercado Pago
+        try {
+            log.info("Tentando buscar assinatura via API Mercado Pago para pagamento {}", paymentId);
+            // Buscar informações adicionais do pagamento via API
+            // O pagamento pode ter referência a uma preference/preapproval
+            String orderId = null;
+            try {
+                Object orderIdObj = mpPayment.getOrder();
+                if (orderIdObj != null) {
+                    orderId = orderIdObj.toString();
+                }
+            } catch (Exception e) {
+                log.debug("Order ID não disponível: {}", e.getMessage());
+            }
+
+            // Se tiver order_id, pode buscar merchant_order e encontrar a assinatura
+            if (orderId != null) {
+                log.debug("Order ID encontrado: {}, mas busca de merchant_order não implementada ainda", orderId);
+                // TODO: Implementar busca de merchant_order via API se necessário
             }
         } catch (Exception e) {
-            log.error("Erro ao processar expiração de atualização pendente: {}", e.getMessage(), e);
-            throw e;
+            log.debug("Erro ao buscar assinatura via API: {}", e.getMessage());
+        }
+
+        // 3. Última tentativa: buscar Payment existente e pegar a assinatura dele
+        Optional<Payment> existingPayment = paymentRepository.findByMercadoPagoPaymentId(paymentId);
+        if (existingPayment.isPresent() && existingPayment.get().getSubscription() != null) {
+            log.info("✓ Assinatura encontrada via payment_id existente: {}", paymentId);
+            return existingPayment.get().getSubscription();
+        }
+
+        // 4. Registrar erro se não encontrar vínculo
+        log.error("✗ ERRO: Nenhuma assinatura encontrada para o pagamento {}. " +
+                "Tentativas: metadata.subscription_id={}, preference_id={}, user_id={}, payment_id existente",
+                paymentId, subscriptionId, preferenceId, userId);
+
+        return null;
+    }
+
+    /**
+     * Extrai valor da transação do pagamento
+     */
+    private BigDecimal extractTransactionAmount(com.mercadopago.resources.payment.Payment mpPayment) {
+        try {
+            Object amountObj = mpPayment.getTransactionAmount();
+            if (amountObj != null) {
+                if (amountObj instanceof Double) {
+                    return BigDecimal.valueOf((Double) amountObj);
+                } else if (amountObj instanceof BigDecimal) {
+                    return (BigDecimal) amountObj;
+                } else if (amountObj instanceof Number) {
+                    return BigDecimal.valueOf(((Number) amountObj).doubleValue());
+                }
+            }
+        } catch (Exception e) {
+            log.debug("TransactionAmount não disponível: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Extrai moeda do pagamento
+     */
+    private String extractCurrencyId(com.mercadopago.resources.payment.Payment mpPayment) {
+        try {
+            String currencyId = mpPayment.getCurrencyId();
+            return currencyId != null ? currencyId : "BRL";
+        } catch (Exception e) {
+            log.debug("CurrencyId não disponível, usando BRL: {}", e.getMessage());
+            return "BRL";
         }
     }
-    
-    // Eventos de Pagamento
-    private void handlePaymentSucceeded(Event event) {
-        log.info("Processando pagamento bem-sucedido");
+
+    /**
+     * Extrai método de pagamento
+     */
+    private String extractPaymentMethodId(com.mercadopago.resources.payment.Payment mpPayment) {
         try {
-            EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
-            StripeObject stripeObject = dataObjectDeserializer.getObject().orElse(null);
-            
-            if (stripeObject instanceof com.stripe.model.Invoice invoice) {
-                
-                if (invoice.getSubscription() != null) {
-                    String subscriptionId = invoice.getSubscription();
-                    
-                    try {
-                        Subscription subscription = Subscription.retrieve(subscriptionId);
-                        
-                        LocalDateTime currentPeriodStart = LocalDateTime.ofInstant(
-                            Instant.ofEpochSecond(subscription.getCurrentPeriodStart()), ZoneId.systemDefault());
-                        LocalDateTime currentPeriodEnd = LocalDateTime.ofInstant(
-                            Instant.ofEpochSecond(subscription.getCurrentPeriodEnd()), ZoneId.systemDefault());
-                        
-                        subscriptionService.updateSubscriptionFromStripe(
-                            subscriptionId, SubscriptionStatus.ACTIVE, 
-                            currentPeriodStart, currentPeriodEnd
-                        );
-                        
-                        log.info("Pagamento processado para assinatura: {} - Período: {} até {}", 
-                            subscriptionId, currentPeriodStart, currentPeriodEnd);
-                            
-                    } catch (StripeException e) {
-                        log.error("Erro ao buscar subscription {} via API do Stripe: {}", subscriptionId, e.getMessage());
-                        
-                        LocalDateTime now = LocalDateTime.now();
-                        subscriptionService.updateSubscriptionFromStripe(
-                            subscriptionId, SubscriptionStatus.ACTIVE, now, now.plusMonths(1)
-                        );
-                        
-                        log.warn("Usando fallback para subscription {}: período estimado", subscriptionId);
+            return mpPayment.getPaymentMethodId();
+        } catch (Exception e) {
+            log.debug("PaymentMethodId não disponível: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Extrai timestamp confiável do pagamento usando a API do Mercado Pago
+     * 
+     * Fonte da verdade: date_last_updated da API (não confiar apenas no webhook)
+     * Usado para validar ordem temporal e prevenir regressão de status
+     * 
+     * @param mpPayment Pagamento obtido da API do Mercado Pago
+     * @return LocalDateTime com timestamp do evento, ou LocalDateTime.now() se não
+     *         disponível
+     */
+    private LocalDateTime extractPaymentTimestamp(com.mercadopago.resources.payment.Payment mpPayment) {
+        try {
+            // Prioridade 1: date_last_updated (mais confiável - indica última mudança de
+            // status)
+            Object dateLastUpdatedObj = mpPayment.getDateLastUpdated();
+            if (dateLastUpdatedObj != null) {
+                LocalDateTime timestamp = convertToLocalDateTime(dateLastUpdatedObj);
+                if (timestamp != null) {
+                    log.debug("Timestamp extraído de date_last_updated: {}", timestamp);
+                    return timestamp;
+                }
+            }
+
+            // Prioridade 2: date_approved (se status é approved)
+            if ("approved".equalsIgnoreCase(mpPayment.getStatus() != null ? mpPayment.getStatus().toString() : null)) {
+                Object dateApprovedObj = mpPayment.getDateApproved();
+                if (dateApprovedObj != null) {
+                    LocalDateTime timestamp = convertToLocalDateTime(dateApprovedObj);
+                    if (timestamp != null) {
+                        log.debug("Timestamp extraído de date_approved: {}", timestamp);
+                        return timestamp;
                     }
                 }
             }
+
+            // Fallback: usar data de criação
+            Object dateCreatedObj = mpPayment.getDateCreated();
+            if (dateCreatedObj != null) {
+                LocalDateTime timestamp = convertToLocalDateTime(dateCreatedObj);
+                if (timestamp != null) {
+                    log.debug("Timestamp extraído de date_created: {}", timestamp);
+                    return timestamp;
+                }
+            }
+
+            // Último fallback: usar agora (não ideal, mas melhor que null)
+            log.warn("Não foi possível extrair timestamp do pagamento, usando LocalDateTime.now()");
+            return LocalDateTime.now();
+
         } catch (Exception e) {
-            log.error("Erro ao processar pagamento bem-sucedido: {}", e.getMessage(), e);
-            throw e;
+            log.warn("Erro ao extrair timestamp do pagamento: {}, usando LocalDateTime.now()", e.getMessage());
+            return LocalDateTime.now();
         }
     }
-    
-    private void handlePaymentFailed(Event event) {
-        log.info("Processando falha de pagamento");
+
+    /**
+     * Cria ou atualiza Payment com os dados do Mercado Pago
+     * 
+     * IMPORTANTE: Validação de ordem temporal já foi feita antes de chamar este
+     * método
+     * Este método apenas atualiza o payment com o status mais recente
+     * 
+     * @param eventTimestamp Timestamp do evento (fonte da verdade: API do Mercado
+     *                       Pago)
+     */
+    private Payment createOrUpdatePayment(
+            Optional<Payment> existingPaymentOpt,
+            Subscription subscription,
+            Long paymentId,
+            Payment.PaymentStatus paymentStatus,
+            BigDecimal transactionAmount,
+            String currencyId,
+            String paymentMethodId,
+            String status,
+            String statusDetail,
+            com.mercadopago.resources.payment.Payment mpPayment,
+            LocalDateTime eventTimestamp) {
+
+        // Criar ou atualizar Payment
+        final Subscription finalSubscription = subscription;
+        Payment payment = existingPaymentOpt.orElseGet(() -> {
+            Payment newPayment = new Payment();
+            if (finalSubscription != null) {
+                newPayment.setSubscription(finalSubscription);
+            }
+            return newPayment;
+        });
+
+        // Atualizar campos do Payment
+        payment.setMercadoPagoPaymentId(paymentId);
+        payment.setStatus(paymentStatus);
+
+        // IMPORTANTE: Atualizar timestamp da última mudança de status
+        // Isso garante que eventos futuros possam validar ordem temporal
+        payment.setLastStatusUpdateAt(eventTimestamp);
+        log.debug("Atualizado lastStatusUpdateAt para payment {}: {}", paymentId, eventTimestamp);
+
+        if (transactionAmount != null) {
+            payment.setAmount(transactionAmount);
+        }
+
+        payment.setCurrency(currencyId);
+
+        if (paymentMethodId != null) {
+            payment.setPaymentMethod(paymentMethodId);
+        }
+
+        // Datas baseadas no status
+        LocalDateTime now = LocalDateTime.now();
+        if ("approved".equalsIgnoreCase(status)) {
+            try {
+                Object dateApprovedObj = mpPayment.getDateApproved();
+                if (dateApprovedObj != null) {
+                    LocalDateTime dateApproved = convertToLocalDateTime(dateApprovedObj);
+                    payment.setPaidAt(dateApproved != null ? dateApproved : now);
+                } else {
+                    payment.setPaidAt(now);
+                }
+            } catch (Exception e) {
+                log.debug("DateApproved não disponível, usando agora: {}", e.getMessage());
+                payment.setPaidAt(now);
+            }
+        } else if ("rejected".equalsIgnoreCase(status) || "cancelled".equalsIgnoreCase(status)
+                || "canceled".equalsIgnoreCase(status)) {
+            try {
+                Object dateLastUpdatedObj = mpPayment.getDateLastUpdated();
+                if (dateLastUpdatedObj != null) {
+                    LocalDateTime dateLastUpdated = convertToLocalDateTime(dateLastUpdatedObj);
+                    payment.setFailedAt(dateLastUpdated != null ? dateLastUpdated : now);
+                } else {
+                    payment.setFailedAt(now);
+                }
+            } catch (Exception e) {
+                log.debug("DateLastUpdated não disponível, usando agora: {}", e.getMessage());
+                payment.setFailedAt(now);
+            }
+            payment.setFailureReason(statusDetail);
+        }
+
+        return payment;
+    }
+
+    /**
+     * Atualiza assinatura vinculada quando pagamento é aprovado
+     * 
+     * Regra: NÃO ativar assinatura se status != APPROVED
+     * Este método só é chamado quando status = APPROVED
+     */
+    private void updateSubscriptionForApprovedPayment(Subscription subscription, Payment payment) {
         try {
-            EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
-            StripeObject stripeObject = dataObjectDeserializer.getObject().orElse(null);
-            
-            if (stripeObject instanceof com.stripe.model.Invoice invoice) {
-                
-                if (invoice.getSubscription() != null) {
-                    String subscriptionId = invoice.getSubscription();
-                    
-                    LocalDateTime now = LocalDateTime.now();
-                    subscriptionService.updateSubscriptionFromStripe(
-                        subscriptionId, SubscriptionStatus.PAST_DUE, now, now
-                    );
-                    
-                    log.warn("Falha de pagamento para assinatura: {}", subscriptionId);
+            subscriptionService.activateOrRenewSubscription(
+                    subscription.getUser().getId(),
+                    subscription.getPlan() != null ? subscription.getPlan().getId() : null,
+                    payment.getMercadoPagoPaymentId());
+            log.info("✓ Assinatura ativada/renovada via pagamento aprovado: {}", payment.getMercadoPagoPaymentId());
+        } catch (Exception e) {
+            log.error("Erro ao ativar assinatura via pagamento aprovado: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Processa lógica de negócio baseada no status do pagamento
+     * 
+     * @deprecated Este método não deve mais ser usado diretamente.
+     *             A lógica de atualização de assinatura agora é feita em
+     *             updateSubscriptionForApprovedPayment
+     */
+    @Deprecated
+    private void processPaymentBusinessLogic(Long paymentId, String status, String preferenceId,
+            String userId, String planId, Map<String, Object> paymentData,
+            String statusDetail) {
+        switch (status != null ? status.toLowerCase() : "") {
+            case "approved" -> {
+                log.info("✓ Pagamento aprovado: {}", paymentId);
+                handlePaymentApproved(String.valueOf(paymentId), preferenceId, userId, planId, paymentData);
+            }
+            case "rejected" -> {
+                log.warn("✗ Pagamento rejeitado: {} - {}", paymentId, statusDetail);
+                handlePaymentRejected(String.valueOf(paymentId), preferenceId, userId, statusDetail);
+            }
+            case "pending", "in_process" -> {
+                log.info("⏳ Pagamento pendente: {} - {}", paymentId, statusDetail);
+                handlePaymentPending(String.valueOf(paymentId), preferenceId, userId, statusDetail);
+            }
+            case "cancelled", "canceled" -> {
+                log.warn("✗ Pagamento cancelado: {}", paymentId);
+                handlePaymentCancelled(String.valueOf(paymentId), preferenceId, userId);
+            }
+            case "refunded" -> {
+                log.warn("↩ Pagamento reembolsado: {}", paymentId);
+                handlePaymentRefunded(String.valueOf(paymentId), preferenceId, userId);
+            }
+            case "charged_back" -> {
+                log.warn("⚠ Pagamento estornado: {}", paymentId);
+                // Buscar subscription para passar ao handler
+                Optional<Payment> paymentOpt = paymentRepository.findByMercadoPagoPaymentId(paymentId);
+                Subscription subscription = paymentOpt.map(Payment::getSubscription).orElse(null);
+                handlePaymentChargedBack(String.valueOf(paymentId), preferenceId, userId, subscription);
+            }
+            default -> {
+                log.warn("? Status de pagamento desconhecido: {} - {}", status, paymentId);
+            }
+        }
+    }
+
+    /**
+     * Processa pagamento aprovado
+     * 
+     * @deprecated A lógica de ativação de assinatura agora é feita em
+     *             updateSubscriptionForApprovedPayment
+     *             Este método é mantido apenas para compatibilidade com outros
+     *             fluxos
+     */
+    @Deprecated
+    private void handlePaymentApproved(String paymentId, String preferenceId, String userId,
+            String planId, Map<String, Object> paymentData) {
+        try {
+            if (userId != null && planId != null) {
+                // Criar nova assinatura se não existir
+                try {
+                    Long userIdLong = Long.parseLong(userId);
+                    Long planIdLong = Long.parseLong(planId);
+
+                    subscriptionService.activateOrRenewSubscription(
+                            userIdLong, planIdLong, Long.parseLong(paymentId));
+                    log.info("Assinatura ativada/renovada via pagamento aprovado para usuário {}", userIdLong);
+                } catch (NumberFormatException e) {
+                    log.error("Erro ao converter IDs: userId={}, planId={}", userId, planId);
                 }
             }
         } catch (Exception e) {
-            log.error("Erro ao processar falha de pagamento: {}", e.getMessage(), e);
-            throw e;
+            log.error("Erro ao processar pagamento aprovado: {}", e.getMessage(), e);
         }
     }
-    
-    // Eventos de Checkout
-    private void handleCheckoutCompleted(Event event) {
-        log.info("Processando checkout completado");
+
+    /**
+     * Processa pagamento rejeitado
+     */
+    private void handlePaymentRejected(String paymentId, String preferenceId, String userId, String statusDetail) {
         try {
-            EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
-            StripeObject stripeObject = dataObjectDeserializer.getObject().orElse(null);
-            
-            if (stripeObject instanceof com.stripe.model.checkout.Session session) {
-                
-                String customerId = session.getCustomer();
-                String subscriptionId = session.getSubscription();
-                
-                log.info("Checkout completado - Customer: {}, Subscription: {}", customerId, subscriptionId);
+            if (userId != null) {
+                subscriptionService.updateSubscriptionStatusByUserId(
+                        Long.parseLong(userId), SubscriptionStatus.PAST_DUE);
+                log.warn("Assinatura marcada como past_due devido a pagamento rejeitado para usuário {} - {}",
+                        userId, statusDetail);
             }
         } catch (Exception e) {
-            log.error("Erro ao processar checkout completado: {}", e.getMessage(), e);
-            throw e;
+            log.error("Erro ao processar pagamento rejeitado: {}", e.getMessage(), e);
         }
     }
-    
-    // Métodos stub para todos os outros eventos
-    private void handleInvoiceCreated(Event event) { log.info("Evento invoice.created processado - ID: {}", event.getId()); }
-    private void handleInvoiceFinalized(Event event) { log.info("Evento invoice.finalized processado - ID: {}", event.getId()); }
-    private void handleInvoicePaid(Event event) { log.info("Evento invoice.paid processado - ID: {}", event.getId()); }
-    private void handleInvoicePaymentActionRequired(Event event) { log.info("Evento invoice.payment_action_required processado - ID: {}", event.getId()); }
-    private void handleInvoiceOverdue(Event event) { log.info("Evento invoice.overdue processado - ID: {}", event.getId()); }
-    private void handleInvoiceMarkedUncollectible(Event event) { log.info("Evento invoice.marked_uncollectible processado - ID: {}", event.getId()); }
-    private void handleInvoiceVoided(Event event) { log.info("Evento invoice.voided processado - ID: {}", event.getId()); }
-    private void handleInvoiceUpcoming(Event event) { log.info("Evento invoice.upcoming processado - ID: {}", event.getId()); }
-    private void handleInvoiceWillBeDue(Event event) { log.info("Evento invoice.will_be_due processado - ID: {}", event.getId()); }
-    private void handleInvoiceSent(Event event) { log.info("Evento invoice.sent processado - ID: {}", event.getId()); }
-    private void handleInvoiceDeleted(Event event) { log.info("Evento invoice.deleted processado - ID: {}", event.getId()); }
-    private void handleInvoiceFinalizationFailed(Event event) { log.info("Evento invoice.finalization_failed processado - ID: {}", event.getId()); }
-    private void handleInvoiceOverpaid(Event event) { log.info("Evento invoice.overpaid processado - ID: {}", event.getId()); }
-    private void handleInvoiceUpdated(Event event) { log.info("Evento invoice.updated processado - ID: {}", event.getId()); }
-    
-    private void handleChargeSucceeded(Event event) { log.info("Evento charge.succeeded processado - ID: {}", event.getId()); }
-    private void handleChargeFailed(Event event) { log.info("Evento charge.failed processado - ID: {}", event.getId()); }
-    private void handleChargeCaptured(Event event) { log.info("Evento charge.captured processado - ID: {}", event.getId()); }
-    private void handleChargeRefunded(Event event) { log.info("Evento charge.refunded processado - ID: {}", event.getId()); }
-    private void handleChargeUpdated(Event event) { log.info("Evento charge.updated processado - ID: {}", event.getId()); }
-    private void handleChargePending(Event event) { log.info("Evento charge.pending processado - ID: {}", event.getId()); }
-    private void handleChargeExpired(Event event) { log.info("Evento charge.expired processado - ID: {}", event.getId()); }
-    
-    private void handleChargeDisputeCreated(Event event) { log.info("Evento charge.dispute.created processado - ID: {}", event.getId()); }
-    private void handleChargeDisputeUpdated(Event event) { log.info("Evento charge.dispute.updated processado - ID: {}", event.getId()); }
-    private void handleChargeDisputeClosed(Event event) { log.info("Evento charge.dispute.closed processado - ID: {}", event.getId()); }
-    private void handleChargeDisputeFundsWithdrawn(Event event) { log.info("Evento charge.dispute.funds_withdrawn processado - ID: {}", event.getId()); }
-    private void handleChargeDisputeFundsReinstated(Event event) { log.info("Evento charge.dispute.funds_reinstated processado - ID: {}", event.getId()); }
-    
-    private void handleRefundCreated(Event event) { log.info("Evento refund.created processado - ID: {}", event.getId()); }
-    private void handleRefundUpdated(Event event) { log.info("Evento refund.updated processado - ID: {}", event.getId()); }
-    private void handleRefundFailed(Event event) { log.info("Evento refund.failed processado - ID: {}", event.getId()); }
-    private void handleChargeRefundUpdated(Event event) { log.info("Evento charge.refund.updated processado - ID: {}", event.getId()); }
-    
-    private void handleCheckoutExpired(Event event) { log.info("Evento checkout.session.expired processado - ID: {}", event.getId()); }
-    private void handleCheckoutAsyncPaymentSucceeded(Event event) { log.info("Evento checkout.session.async_payment_succeeded processado - ID: {}", event.getId()); }
-    private void handleCheckoutAsyncPaymentFailed(Event event) { log.info("Evento checkout.session.async_payment_failed processado - ID: {}", event.getId()); }
-    
-    private void handleCustomerCreated(Event event) { log.info("Evento customer.created processado - ID: {}", event.getId()); }
-    private void handleCustomerUpdated(Event event) { log.info("Evento customer.updated processado - ID: {}", event.getId()); }
-    private void handleCustomerDeleted(Event event) { log.info("Evento customer.deleted processado - ID: {}", event.getId()); }
-    
-    private void handleCustomerDiscountCreated(Event event) { log.info("Evento customer.discount.created processado - ID: {}", event.getId()); }
-    private void handleCustomerDiscountUpdated(Event event) { log.info("Evento customer.discount.updated processado - ID: {}", event.getId()); }
-    private void handleCustomerDiscountDeleted(Event event) { log.info("Evento customer.discount.deleted processado - ID: {}", event.getId()); }
-    
-    private void handleCustomerSourceCreated(Event event) { log.info("Evento customer.source.created processado - ID: {}", event.getId()); }
-    private void handleCustomerSourceUpdated(Event event) { log.info("Evento customer.source.updated processado - ID: {}", event.getId()); }
-    private void handleCustomerSourceDeleted(Event event) { log.info("Evento customer.source.deleted processado - ID: {}", event.getId()); }
-    private void handleCustomerSourceExpiring(Event event) { log.info("Evento customer.source.expiring processado - ID: {}", event.getId()); }
-    
-    private void handleCustomerCardCreated(Event event) { log.info("Evento customer.card.created processado - ID: {}", event.getId()); }
-    private void handleCustomerCardUpdated(Event event) { log.info("Evento customer.card.updated processado - ID: {}", event.getId()); }
-    private void handleCustomerCardDeleted(Event event) { log.info("Evento customer.card.deleted processado - ID: {}", event.getId()); }
-    
-    private void handleCustomerBankAccountCreated(Event event) { log.info("Evento customer.bank_account.created processado - ID: {}", event.getId()); }
-    private void handleCustomerBankAccountUpdated(Event event) { log.info("Evento customer.bank_account.updated processado - ID: {}", event.getId()); }
-    private void handleCustomerBankAccountDeleted(Event event) { log.info("Evento customer.bank_account.deleted processado - ID: {}", event.getId()); }
-    
-    private void handleCustomerTaxIdCreated(Event event) { log.info("Evento customer.tax_id.created processado - ID: {}", event.getId()); }
-    private void handleCustomerTaxIdUpdated(Event event) { log.info("Evento customer.tax_id.updated processado - ID: {}", event.getId()); }
-    private void handleCustomerTaxIdDeleted(Event event) { log.info("Evento customer.tax_id.deleted processado - ID: {}", event.getId()); }
-    
-    private void handlePaymentIntentCreated(Event event) { log.info("Evento payment_intent.created processado - ID: {}", event.getId()); }
-    private void handlePaymentIntentSucceeded(Event event) { log.info("Evento payment_intent.succeeded processado - ID: {}", event.getId()); }
-    private void handlePaymentIntentPaymentFailed(Event event) { log.info("Evento payment_intent.payment_failed processado - ID: {}", event.getId()); }
-    private void handlePaymentIntentCanceled(Event event) { log.info("Evento payment_intent.canceled processado - ID: {}", event.getId()); }
-    private void handlePaymentIntentProcessing(Event event) { log.info("Evento payment_intent.processing processado - ID: {}", event.getId()); }
-    private void handlePaymentIntentRequiresAction(Event event) { log.info("Evento payment_intent.requires_action processado - ID: {}", event.getId()); }
-    private void handlePaymentIntentAmountCapturableUpdated(Event event) { log.info("Evento payment_intent.amount_capturable_updated processado - ID: {}", event.getId()); }
-    private void handlePaymentIntentPartiallyFunded(Event event) { log.info("Evento payment_intent.partially_funded processado - ID: {}", event.getId()); }
-    
-    private void handlePayoutCreated(Event event) { log.info("Evento payout.created processado - ID: {}", event.getId()); }
-    private void handlePayoutPaid(Event event) { log.info("Evento payout.paid processado - ID: {}", event.getId()); }
-    private void handlePayoutFailed(Event event) { log.info("Evento payout.failed processado - ID: {}", event.getId()); }
-    private void handlePayoutCanceled(Event event) { log.info("Evento payout.canceled processado - ID: {}", event.getId()); }
-    private void handlePayoutUpdated(Event event) { log.info("Evento payout.updated processado - ID: {}", event.getId()); }
-    private void handlePayoutReconciliationCompleted(Event event) { log.info("Evento payout.reconciliation_completed processado - ID: {}", event.getId()); }
-    
-    private void handlePlanCreated(Event event) { log.info("Evento plan.created processado - ID: {}", event.getId()); }
-    private void handlePlanUpdated(Event event) { log.info("Evento plan.updated processado - ID: {}", event.getId()); }
-    private void handlePlanDeleted(Event event) { log.info("Evento plan.deleted processado - ID: {}", event.getId()); }
-    
-    private void handlePriceCreated(Event event) { log.info("Evento price.created processado - ID: {}", event.getId()); }
-    private void handlePriceUpdated(Event event) { log.info("Evento price.updated processado - ID: {}", event.getId()); }
-    private void handlePriceDeleted(Event event) { log.info("Evento price.deleted processado - ID: {}", event.getId()); }
-    
-    private void handleSubscriptionScheduleCreated(Event event) { log.info("Evento subscription_schedule.created processado - ID: {}", event.getId()); }
-    private void handleSubscriptionScheduleUpdated(Event event) { log.info("Evento subscription_schedule.updated processado - ID: {}", event.getId()); }
-    private void handleSubscriptionScheduleCanceled(Event event) { log.info("Evento subscription_schedule.canceled processado - ID: {}", event.getId()); }
-    private void handleSubscriptionScheduleCompleted(Event event) { log.info("Evento subscription_schedule.completed processado - ID: {}", event.getId()); }
-    private void handleSubscriptionScheduleAborted(Event event) { log.info("Evento subscription_schedule.aborted processado - ID: {}", event.getId()); }
-    private void handleSubscriptionScheduleExpiring(Event event) { log.info("Evento subscription_schedule.expiring processado - ID: {}", event.getId()); }
-    private void handleSubscriptionScheduleReleased(Event event) { log.info("Evento subscription_schedule.released processado - ID: {}", event.getId()); }
-    
-    private void handleIdentityVerificationSessionCreated(Event event) { log.info("Evento identity.verification_session.created processado - ID: {}", event.getId()); }
-    private void handleIdentityVerificationSessionProcessing(Event event) { log.info("Evento identity.verification_session.processing processado - ID: {}", event.getId()); }
-    private void handleIdentityVerificationSessionVerified(Event event) { log.info("Evento identity.verification_session.verified processado - ID: {}", event.getId()); }
-    private void handleIdentityVerificationSessionRequiresInput(Event event) { log.info("Evento identity.verification_session.requires_input processado - ID: {}", event.getId()); }
-    private void handleIdentityVerificationSessionCanceled(Event event) { log.info("Evento identity.verification_session.canceled processado - ID: {}", event.getId()); }
-    private void handleIdentityVerificationSessionRedacted(Event event) { log.info("Evento identity.verification_session.redacted processado - ID: {}", event.getId()); }
-    
-    private void handleInvoicePaymentPaid(Event event) { log.info("Evento invoice_payment.paid processado - ID: {}", event.getId()); }
-    
+
     /**
-     * Mapeia status do Stripe para status local
+     * Processa pagamento pendente
      */
-    private SubscriptionStatus mapStripeStatusToLocal(String stripeStatus) {
-        return switch (stripeStatus.toLowerCase()) {
-            case "active" -> SubscriptionStatus.ACTIVE;
-            case "trialing" -> SubscriptionStatus.TRIAL;
-            case "canceled" -> SubscriptionStatus.CANCELED;
-            case "past_due" -> SubscriptionStatus.PAST_DUE;
-            case "incomplete" -> SubscriptionStatus.INCOMPLETE;
-            case "incomplete_expired" -> SubscriptionStatus.INCOMPLETE_EXPIRED;
+    private void handlePaymentPending(String paymentId, String preferenceId, String userId, String statusDetail) {
+        try {
+            if (userId != null) {
+                subscriptionService.updateSubscriptionStatusByUserId(
+                        Long.parseLong(userId), SubscriptionStatus.INCOMPLETE);
+                log.info("Assinatura mantida como incomplete - aguardando confirmação de pagamento: {}",
+                        statusDetail);
+            }
+        } catch (Exception e) {
+            log.error("Erro ao processar pagamento pendente: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Processa pagamento cancelado
+     */
+    private void handlePaymentCancelled(String paymentId, String preferenceId, String userId) {
+        try {
+            if (userId != null) {
+                subscriptionService.updateSubscriptionStatusByUserId(
+                        Long.parseLong(userId), SubscriptionStatus.CANCELED);
+                log.warn("Assinatura cancelada devido a pagamento cancelado para usuário {}", userId);
+            }
+        } catch (Exception e) {
+            log.error("Erro ao processar pagamento cancelado: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Processa pagamento reembolsado
+     */
+    private void handlePaymentRefunded(String paymentId, String preferenceId, String userId) {
+        try {
+            if (userId != null) {
+                subscriptionService.updateSubscriptionStatusByUserId(
+                        Long.parseLong(userId), SubscriptionStatus.CANCELED);
+                log.warn("Assinatura cancelada devido a reembolso para usuário {}", userId);
+            }
+        } catch (Exception e) {
+            log.error("Erro ao processar pagamento reembolsado: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Processa ações baseadas no status do pagamento
+     */
+    private void processPaymentStatusActions(Payment payment, Subscription subscription,
+            String status, String statusDetail) {
+        switch (status != null ? status.toLowerCase() : "") {
+            case "rejected" -> {
+                log.warn("Pagamento rejeitado: {} - {}", payment.getMercadoPagoPaymentId(), statusDetail);
+                handlePaymentRejected(
+                        String.valueOf(payment.getMercadoPagoPaymentId()),
+                        null,
+                        String.valueOf(subscription.getUser().getId()),
+                        statusDetail);
+                try {
+                    alertService.sendPaymentRejectedAlert(
+                            String.valueOf(payment.getMercadoPagoPaymentId()),
+                            String.valueOf(subscription.getUser().getId()),
+                            statusDetail != null ? statusDetail : "unknown");
+                } catch (Exception ignored) {
+                }
+            }
+            case "pending", "in_process" -> {
+                log.info("Pagamento pendente: {} - {}", payment.getMercadoPagoPaymentId(), statusDetail);
+                handlePaymentPending(
+                        String.valueOf(payment.getMercadoPagoPaymentId()),
+                        null,
+                        String.valueOf(subscription.getUser().getId()),
+                        statusDetail);
+            }
+            case "cancelled", "canceled" -> {
+                log.warn("Pagamento cancelado: {}", payment.getMercadoPagoPaymentId());
+                handlePaymentCancelled(
+                        String.valueOf(payment.getMercadoPagoPaymentId()),
+                        null,
+                        String.valueOf(subscription.getUser().getId()));
+                try {
+                    alertService.sendPaymentRejectedAlert(
+                            String.valueOf(payment.getMercadoPagoPaymentId()),
+                            String.valueOf(subscription.getUser().getId()),
+                            "cancelled");
+                } catch (Exception ignored) {
+                }
+            }
+            case "refunded" -> {
+                log.warn("Pagamento reembolsado: {}", payment.getMercadoPagoPaymentId());
+                handlePaymentRefunded(
+                        String.valueOf(payment.getMercadoPagoPaymentId()),
+                        null,
+                        String.valueOf(subscription.getUser().getId()));
+            }
+            case "charged_back" -> {
+                log.error("⚠ CHARGEBACK detectado: {}", payment.getMercadoPagoPaymentId());
+                handlePaymentChargedBack(
+                        String.valueOf(payment.getMercadoPagoPaymentId()),
+                        null,
+                        String.valueOf(subscription.getUser().getId()),
+                        subscription);
+                try {
+                    alertService.sendChargebackAlert(
+                            String.valueOf(payment.getMercadoPagoPaymentId()),
+                            String.valueOf(subscription.getUser().getId()));
+                    monitoringService.recordChargebackDetected(
+                            String.valueOf(payment.getMercadoPagoPaymentId()),
+                            String.valueOf(subscription.getUser().getId()));
+                } catch (Exception ignored) {
+                }
+            }
             default -> {
-                log.warn("Status desconhecido do Stripe: {}", stripeStatus);
+                log.warn("Status de pagamento desconhecido: {} - {}", status, payment.getMercadoPagoPaymentId());
+            }
+        }
+    }
+
+    /**
+     * Processa pagamento estornado (chargeback)
+     * 
+     * Ações obrigatórias:
+     * - Atualizar Payment.status = CHARGED_BACK
+     * - Suspender Subscription (PAST_DUE)
+     * - Registrar histórico
+     * - NÃO permitir reativação automática
+     */
+    private void handlePaymentChargedBack(String paymentId, String preferenceId, String userId,
+            Subscription subscription) {
+        try {
+            log.error("=== PROCESSANDO CHARGEBACK ===");
+            log.error("Payment ID: {}", paymentId);
+            log.error("Subscription ID: {}", subscription != null ? subscription.getId() : "null");
+
+            // 1. Atualizar Payment.status = CHARGED_BACK
+            Optional<Payment> paymentOpt = paymentRepository.findByMercadoPagoPaymentId(Long.parseLong(paymentId));
+            if (paymentOpt.isPresent()) {
+                Payment payment = paymentOpt.get();
+                payment.setStatus(Payment.PaymentStatus.CHARGED_BACK);
+                payment.setFailedAt(LocalDateTime.now());
+                payment.setFailureReason("Chargeback detectado - acesso bloqueado");
+                paymentRepository.save(payment);
+                log.error("✓ Payment atualizado para CHARGED_BACK: {}", payment.getId());
+            } else {
+                log.error("✗ Payment não encontrado para chargeback: {}", paymentId);
+            }
+
+            // 2. Suspender Subscription
+            if (subscription != null) {
+                subscription.setStatus(SubscriptionStatus.PAST_DUE);
+                subscription.setEndedAt(LocalDateTime.now());
+                subscriptionRepository.save(subscription);
+                log.error("✓ Subscription suspensa (PAST_DUE) devido a chargeback: {}", subscription.getId());
+
+                // 3. Registrar histórico (log detalhado)
+                log.error("=== HISTÓRICO DE CHARGEBACK ===");
+                log.error("Data/Hora: {}", LocalDateTime.now());
+                log.error("Payment ID: {}", paymentId);
+                log.error("Subscription ID: {}", subscription.getId());
+                log.error("User ID: {}", subscription.getUser() != null ? subscription.getUser().getId() : "null");
+                log.error("Status anterior: {}", subscription.getStatus());
+                log.error("Ação: Subscription suspensa - acesso bloqueado");
+                log.error("Reativação automática: NÃO PERMITIDA");
+                log.error("=================================");
+            } else {
+                log.error("✗ Subscription não encontrada para chargeback: preference_id={}", preferenceId);
+            }
+
+            // 4. Garantir que não há reativação automática
+            // A assinatura está em PAST_DUE e só pode ser reativada manualmente
+            log.error("⚠ IMPORTANTE: Reativação automática está DESABILITADA para esta assinatura");
+            log.error("A assinatura requer intervenção manual para reativação após chargeback");
+
+        } catch (Exception e) {
+            log.error("✗ ERRO CRÍTICO ao processar chargeback: {}", e.getMessage(), e);
+            throw new RuntimeException("Erro ao processar chargeback: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Processa evento subscription_preapproval (webhook do Mercado Pago).
+     * <ul>
+     *   <li>Identifica o usuário pelo <b>external_reference</b> (ID do usuário na aplicação).</li>
+     *   <li><b>authorized / approved</b> → libera o usuário (assinatura ACTIVE, acesso liberado).</li>
+     *   <li><b>cancelled</b> → bloqueia o usuário (assinatura CANCELED, API deve negar acesso).</li>
+     * </ul>
+     * Atualiza status da assinatura e vincula ao usuário/plano.
+     *
+     * @param preapprovalData Dados da assinatura do Mercado Pago (inclui external_reference, status, etc.)
+     * @param action         Ação do evento (created, updated, cancelled, etc.)
+     */
+    @Transactional
+    public void handleSubscriptionPreapproval(Map<String, Object> preapprovalData, String action) {
+        log.info("=== Processando subscription_preapproval (PreapprovalPlan) ===");
+        log.info("Action: {}", action);
+
+        try {
+            // CORRETO: Agora é preapproval_id (não preference_id)
+            String preapprovalId = (String) preapprovalData.get("id");
+            if (preapprovalId == null || preapprovalId.isEmpty()) {
+                log.error("Preapproval ID não encontrado no payload");
+                throw new WebhookProcessingException("Preapproval ID não encontrado", null, "subscription_preapproval",
+                        null);
+            }
+
+            log.info("Preapproval ID: {}", preapprovalId);
+
+            // Buscar assinatura existente ou criar nova
+            Optional<Subscription> subscriptionOpt = subscriptionRepository
+                    .findByMercadoPagoSubscriptionId(preapprovalId);
+            Subscription subscription;
+
+            if (subscriptionOpt.isPresent()) {
+                subscription = subscriptionOpt.get();
+                log.info("✓ Assinatura existente encontrada: ID={}, PreapprovalId={}", subscription.getId(),
+                        preapprovalId);
+            } else {
+                log.info("Criando nova assinatura para preapproval_id: {}", preapprovalId);
+                subscription = createSubscriptionFromPreapproval(preapprovalData, preapprovalId);
+            }
+
+            // Atualizar status baseado na ação e dados do preapproval
+            updateSubscriptionStatusFromPreapproval(subscription, preapprovalData, action);
+
+            // Garantir renovação mensal correta
+            updateSubscriptionRenewalPeriod(subscription);
+
+            subscriptionRepository.save(subscription);
+            log.info("✓ Assinatura atualizada: ID={}, Status={}, PreapprovalId={}",
+                    subscription.getId(), subscription.getStatus(), preapprovalId);
+
+            log.info("=== Processamento de subscription_preapproval concluído ===");
+
+        } catch (Exception e) {
+            log.error("Erro ao processar subscription_preapproval: {}", e.getMessage(), e);
+            throw new RuntimeException("Erro ao processar subscription_preapproval: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Processa evento subscription_authorized_payment (renovação mensal)
+     * 
+     * Trata pagamentos autorizados para renovação:
+     * - Vincula pagamento à assinatura
+     * - Atualiza período de renovação
+     * - Garante continuidade da assinatura
+     * 
+     * @param subscriptionId ID da assinatura
+     * @param paymentData    Dados do pagamento autorizado
+     */
+    @Transactional
+    public void handleSubscriptionAuthorizedPayment(String subscriptionId, Map<String, Object> paymentData) {
+        log.info("=== Processando subscription_authorized_payment (renovação mensal) ===");
+        log.info("Subscription ID: {}", subscriptionId);
+
+        try {
+            // Buscar assinatura
+            Optional<Subscription> subscriptionOpt = subscriptionRepository
+                    .findByMercadoPagoSubscriptionId(subscriptionId);
+
+            if (subscriptionOpt.isEmpty()) {
+                log.error("Assinatura não encontrada para subscription_id: {}", subscriptionId);
+                throw new WebhookProcessingException("Assinatura não encontrada: " + subscriptionId,
+                        subscriptionId, "subscription_authorized_payment", null);
+            }
+
+            Subscription subscription = subscriptionOpt.get();
+
+            // Extrair payment_id do pagamento autorizado
+            String paymentIdStr = String.valueOf(paymentData.get("id"));
+            Long paymentId;
+            try {
+                paymentId = Long.parseLong(paymentIdStr);
+            } catch (NumberFormatException e) {
+                log.error("Payment ID inválido: {}", paymentIdStr);
+                throw new WebhookProcessingException("Payment ID inválido: " + paymentIdStr,
+                        subscriptionId, "subscription_authorized_payment", null);
+            }
+
+            // Buscar pagamento completo via API
+            com.mercadopago.resources.payment.Payment mpPayment;
+            try {
+                mpPayment = mercadoPagoService.getPayment(paymentId);
+                log.info("✓ Pagamento de renovação {} obtido via API", paymentId);
+            } catch (MPException | MPApiException e) {
+                log.error("Erro ao buscar pagamento de renovação {} via API: {}", paymentId, e.getMessage(), e);
+                throw new WebhookProcessingException("Erro ao buscar pagamento: " + e.getMessage(),
+                        subscriptionId, "subscription_authorized_payment", e);
+            }
+
+            // Verificar se payment já existe
+            Optional<Payment> existingPaymentOpt = paymentRepository.findByMercadoPagoPaymentId(paymentId);
+            Payment payment;
+
+            if (existingPaymentOpt.isPresent()) {
+                payment = existingPaymentOpt.get();
+                log.info("Payment de renovação já existe: {}", payment.getId());
+            } else {
+                // Criar novo payment vinculado à assinatura
+                payment = new Payment();
+                payment.setSubscription(subscription);
+                payment.setMercadoPagoPaymentId(paymentId);
+
+                // Extrair dados do pagamento
+                String status = mpPayment.getStatus() != null ? mpPayment.getStatus().toString() : null;
+                payment.setStatus(mapMercadoPagoStatusToPaymentStatus(status));
+
+                BigDecimal transactionAmount = extractTransactionAmount(mpPayment);
+                if (transactionAmount != null) {
+                    payment.setAmount(transactionAmount);
+                }
+
+                payment.setCurrency(extractCurrencyId(mpPayment));
+                payment.setPaymentMethod(extractPaymentMethodId(mpPayment));
+
+                if ("approved".equalsIgnoreCase(status)) {
+                    payment.setPaidAt(LocalDateTime.now());
+                }
+
+                paymentRepository.save(payment);
+                log.info("✓ Payment de renovação criado: {}", payment.getId());
+            }
+
+            // Atualizar assinatura para renovação mensal
+            if ("approved".equalsIgnoreCase(mpPayment.getStatus() != null ? mpPayment.getStatus().toString() : null)) {
+                LocalDateTime now = LocalDateTime.now();
+                subscription.setStatus(SubscriptionStatus.ACTIVE);
+                subscription.setCurrentPeriodStart(now);
+                subscription.setCurrentPeriodEnd(now.plusMonths(1)); // Renovação mensal
+                subscriptionRepository.save(subscription);
+                log.info("✓ Assinatura renovada mensalmente: novo período até {}", subscription.getCurrentPeriodEnd());
+            } else {
+                log.warn("Pagamento de renovação não está aprovado - assinatura não será renovada");
+            }
+
+            log.info("=== Processamento de subscription_authorized_payment concluído ===");
+
+        } catch (Exception e) {
+            log.error("Erro ao processar subscription_authorized_payment: {}", e.getMessage(), e);
+            throw new RuntimeException("Erro ao processar subscription_authorized_payment: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Cria assinatura a partir de dados de preapproval (PreapprovalPlan).
+     * Identifica o usuário pelo external_reference (ID do usuário logado enviado na criação da assinatura).
+     * Plano: metadata.plan_id (ID interno) ou preapproval_plan_id (ID do plano no Mercado Pago).
+     */
+    private Subscription createSubscriptionFromPreapproval(Map<String, Object> preapprovalData, String preapprovalId) {
+        // 1) Usuário: external_reference = ID do usuário na aplicação (obrigatório para comparar com usuário logado)
+        String externalRef = preapprovalData.get("external_reference") != null
+                ? String.valueOf(preapprovalData.get("external_reference"))
+                : null;
+        Map<String, Object> metadata = null;
+        try {
+            Object metadataObj = preapprovalData.get("metadata");
+            if (metadataObj instanceof Map) {
+                metadata = (Map<String, Object>) metadataObj;
+            }
+        } catch (Exception e) {
+            log.debug("Metadata não disponível: {}", e.getMessage());
+        }
+
+        String userIdStr = null;
+        if (metadata != null && metadata.get("user_id") != null) {
+            userIdStr = String.valueOf(metadata.get("user_id"));
+        }
+        if (userIdStr == null || userIdStr.isBlank()) {
+            userIdStr = externalRef;
+        }
+        if (userIdStr == null || userIdStr.isBlank()) {
+            log.error("external_reference (ID do usuário) não encontrado no preapproval");
+            throw new WebhookProcessingException("external_reference (ID do usuário) não encontrado",
+                    preapprovalId, "subscription_preapproval", null);
+        }
+
+        Long userId = Long.parseLong(userIdStr.trim());
+
+        // 2) Plano: preapproval_plan_id = ID do plano no Mercado Pago (plano já criado no painel)
+        String mpPlanId = preapprovalData.get("preapproval_plan_id") != null
+                ? String.valueOf(preapprovalData.get("preapproval_plan_id")).trim()
+                : null;
+        if (mpPlanId != null && mpPlanId.isEmpty()) {
+            mpPlanId = null;
+        }
+        final String mpPlanIdFinal = mpPlanId;
+
+        Usuario user = usuarioRepository.findById(userId)
+                .orElseThrow(() -> new WebhookProcessingException("Usuário não encontrado: " + userId,
+                        preapprovalId, "subscription_preapproval", null));
+
+        Plan plan;
+        if (mpPlanIdFinal != null && !mpPlanIdFinal.isBlank()) {
+            plan = planRepository.findByMercadoPagoPreapprovalPlanId(mpPlanIdFinal)
+                    .orElseThrow(() -> new WebhookProcessingException("Plano não encontrado para preapproval_plan_id: " + mpPlanIdFinal,
+                            preapprovalId, "subscription_preapproval", null));
+        } else if (metadata != null && metadata.get("plan_id") != null) {
+            Long planId = Long.parseLong(String.valueOf(metadata.get("plan_id")));
+            plan = planRepository.findById(planId)
+                    .orElseThrow(() -> new WebhookProcessingException("Plano não encontrado: " + planId,
+                            preapprovalId, "subscription_preapproval", null));
+        } else {
+            log.error("preapproval_plan_id ou metadata.plan_id não encontrados");
+            throw new WebhookProcessingException("Plano não identificado (preapproval_plan_id ou metadata.plan_id)",
+                    preapprovalId, "subscription_preapproval", null);
+        }
+
+        Subscription subscription = new Subscription();
+        subscription.setUser(user);
+        subscription.setPlan(plan);
+        subscription.setMercadoPagoSubscriptionId(preapprovalId);
+        subscription.setStatus(SubscriptionStatus.INCOMPLETE); // Será atualizado pelo status (authorized/approved = ACTIVE)
+
+        log.info("✓ Nova assinatura criada: UserId={} (external_reference), PlanId={}, PreapprovalId={}",
+                userId, plan.getId(), preapprovalId);
+        return subscription;
+    }
+
+    /**
+     * Atualiza status da assinatura baseado em preapproval e action.
+     * Regra: cancelled/canceled → bloquear usuário (CANCELED); authorized/approved → liberar (ACTIVE).
+     */
+    private void updateSubscriptionStatusFromPreapproval(Subscription subscription,
+            Map<String, Object> preapprovalData,
+            String action) {
+        String status = (String) preapprovalData.get("status");
+
+        if ("cancelled".equalsIgnoreCase(action) || "canceled".equalsIgnoreCase(action)) {
+            subscription.setStatus(SubscriptionStatus.CANCELED);
+            subscription.setCanceledAt(LocalDateTime.now());
+            log.info("Assinatura cancelada via webhook (action={}) → usuário bloqueado: userId={}", action, subscription.getUser() != null ? subscription.getUser().getId() : null);
+        } else if ("paused".equalsIgnoreCase(action)) {
+            subscription.setStatus(SubscriptionStatus.PAUSED);
+            log.info("Assinatura pausada via action: {}", action);
+        } else if ("payment_failed".equalsIgnoreCase(action) || "payment_failed".equalsIgnoreCase(status)) {
+            subscription.setStatus(SubscriptionStatus.PAST_DUE);
+            log.warn("Falha de pagamento na assinatura (action={}, status={}) → PAST_DUE: subscriptionId={}", action, status, subscription.getId());
+        } else {
+            // Mapear status do preapproval
+            SubscriptionStatus localStatus = mapMercadoPagoStatusToLocal(status);
+            subscription.setStatus(localStatus);
+
+            if (localStatus == SubscriptionStatus.ACTIVE) {
+                subscription.setCurrentPeriodStart(LocalDateTime.now());
+                subscription.setCurrentPeriodEnd(LocalDateTime.now().plusMonths(1));
+            }
+
+            log.info("Status da assinatura atualizado: {} -> {}", status, localStatus);
+        }
+    }
+
+    /**
+     * Atualiza período de renovação mensal da assinatura
+     */
+    private void updateSubscriptionRenewalPeriod(Subscription subscription) {
+        if (subscription.getStatus() == SubscriptionStatus.ACTIVE) {
+            LocalDateTime now = LocalDateTime.now();
+
+            // Se current_period_end está no passado ou não definido, atualizar
+            if (subscription.getCurrentPeriodEnd() == null ||
+                    subscription.getCurrentPeriodEnd().isBefore(now)) {
+                subscription.setCurrentPeriodStart(now);
+                subscription.setCurrentPeriodEnd(now.plusMonths(1)); // Renovação mensal
+                log.info("Período de renovação atualizado: {} até {}",
+                        subscription.getCurrentPeriodStart(), subscription.getCurrentPeriodEnd());
+            }
+        }
+    }
+
+    /**
+     * Mapeia status do Mercado Pago para PaymentStatus
+     * Conforme documentação oficial do Mercado Pago Payments API:
+     * - approved: Pagamento aprovado
+     * - rejected: Pagamento rejeitado
+     * - pending/in_process: Pagamento pendente
+     * - cancelled/canceled: Pagamento cancelado
+     * - refunded: Pagamento reembolsado
+     * - charged_back: Estorno (chargeback)
+     */
+    private Payment.PaymentStatus mapMercadoPagoStatusToPaymentStatus(String mercadoPagoStatus) {
+        if (mercadoPagoStatus == null) {
+            return Payment.PaymentStatus.PENDING;
+        }
+
+        return switch (mercadoPagoStatus.toLowerCase()) {
+            case "approved" -> Payment.PaymentStatus.APPROVED;
+            case "pending", "in_process" -> Payment.PaymentStatus.PENDING;
+            case "rejected" -> Payment.PaymentStatus.REJECTED;
+            case "cancelled", "canceled" -> Payment.PaymentStatus.CANCELLED;
+            case "refunded" -> Payment.PaymentStatus.REFUNDED;
+            case "charged_back" -> Payment.PaymentStatus.CHARGED_BACK;
+            default -> {
+                log.warn("Status desconhecido do Mercado Pago: {}, usando PENDING", mercadoPagoStatus);
+                yield Payment.PaymentStatus.PENDING;
+            }
+        };
+    }
+
+    /**
+     * Mapeia status do Mercado Pago para status local (SubscriptionStatus)
+     * Conforme documentação oficial (2025):
+     * - approved: Pagamento aprovado
+     * - rejected: Pagamento rejeitado
+     * - pending/in_process: Pagamento pendente
+     * - cancelled: Pagamento cancelado
+     * - refunded: Pagamento reembolsado
+     * - charged_back: Estorno (chargeback)
+     */
+    private SubscriptionStatus mapMercadoPagoStatusToLocal(String mercadoPagoStatus) {
+        return switch (mercadoPagoStatus != null ? mercadoPagoStatus.toLowerCase() : "") {
+            case "approved", "authorized", "active" -> SubscriptionStatus.ACTIVE;
+            case "pending", "in_process" -> SubscriptionStatus.INCOMPLETE;
+            case "cancelled", "canceled" -> SubscriptionStatus.CANCELED;
+            case "paused", "rejected", "payment_failed" -> SubscriptionStatus.PAST_DUE;
+            case "refunded", "charged_back" -> SubscriptionStatus.CANCELED;
+            default -> {
+                log.warn("Status desconhecido do Mercado Pago: {}", mercadoPagoStatus);
                 yield SubscriptionStatus.EXPIRED;
             }
         };
+    }
+
+    /**
+     * Converte Date do Mercado Pago para LocalDateTime
+     */
+    private LocalDateTime convertDateToLocalDateTime(Date date) {
+        if (date == null) {
+            return LocalDateTime.now();
+        }
+        return date.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+    }
+
+    /**
+     * Converte objeto de data (Date, OffsetDateTime, etc) para LocalDateTime
+     */
+    private LocalDateTime convertToLocalDateTime(Object dateObj) {
+        if (dateObj == null) {
+            return null;
+        }
+
+        if (dateObj instanceof Date) {
+            return convertDateToLocalDateTime((Date) dateObj);
+        } else if (dateObj instanceof OffsetDateTime) {
+            return ((OffsetDateTime) dateObj).toLocalDateTime();
+        } else if (dateObj instanceof LocalDateTime) {
+            return (LocalDateTime) dateObj;
+        } else {
+            log.warn("Tipo de data não suportado: {}", dateObj.getClass().getName());
+            return LocalDateTime.now();
+        }
+    }
+
+    /**
+     * Converte payload Map para JSON string para validação de assinatura
+     */
+    private String convertPayloadToString(Map<String, Object> payload) {
+        try {
+            // Usar Jackson ObjectMapper se disponível, senão usar toString simples
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            return mapper.writeValueAsString(payload);
+        } catch (Exception e) {
+            log.warn("Erro ao converter payload para JSON: {}", e.getMessage());
+            return payload.toString();
+        }
     }
 }

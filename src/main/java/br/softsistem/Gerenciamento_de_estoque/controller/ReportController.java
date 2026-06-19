@@ -8,6 +8,8 @@ import br.softsistem.Gerenciamento_de_estoque.model.Produto;
 import br.softsistem.Gerenciamento_de_estoque.service.ReportService;
 import br.softsistem.Gerenciamento_de_estoque.service.ProdutoService;
 import br.softsistem.Gerenciamento_de_estoque.service.EntregaPeriodoService; // novo service de normalização
+import br.softsistem.Gerenciamento_de_estoque.dto.relatorio.VendaItemReportDto;
+import br.softsistem.Gerenciamento_de_estoque.service.PedidoVendaReportService;
 import br.softsistem.Gerenciamento_de_estoque.service.MovimentacaoProdutoService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
@@ -32,17 +34,20 @@ public class ReportController {
     private final ProdutoService produtoService;
     private final EntregaPeriodoService entregaPeriodoService; // use este ao invés de converter no controller
     private final MovimentacaoProdutoService movimentacaoService;
+    private final PedidoVendaReportService pedidoVendaReportService;
 
     public ReportController(
             ReportService reportService,
             ProdutoService produtoService,
             EntregaPeriodoService entregaPeriodoService,
-            MovimentacaoProdutoService movimentacaoService
+            MovimentacaoProdutoService movimentacaoService,
+            PedidoVendaReportService pedidoVendaReportService
     ) {
         this.reportService = reportService;
         this.produtoService = produtoService;
         this.entregaPeriodoService = entregaPeriodoService;
         this.movimentacaoService = movimentacaoService;
+        this.pedidoVendaReportService = pedidoVendaReportService;
     }
 
     // ===================== RELATÓRIOS DE PRODUTOS COM ESTOQUE BAIXO =====================
@@ -442,6 +447,114 @@ public class ReportController {
         byte[] xlsx = reportService.gerarXlsx("/reports/entregas-ano.jrxml", params, dados);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio-entregas-ano.xlsx")
+                .body(xlsx);
+    }
+
+    // ===================== RELATÓRIOS DE VENDAS (PEDIDOS) =====================
+
+    @GetMapping(value="/vendas-periodo.pdf", produces="application/pdf")
+    public ResponseEntity<byte[]> vendasPeriodoPdf(
+            @RequestParam("inicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime inicio,
+            @RequestParam("fim") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime fim
+    ) throws Exception {
+        Long orgId = SecurityUtils.getCurrentOrgId();
+        if (orgId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        List<VendaItemReportDto> dados = pedidoVendaReportService.linhasPorPeriodo(inicio, fim);
+        if (dados.isEmpty()) {
+            byte[] vazio = reportService.gerarPdfEmBranco(
+                    "Relatório de Vendas por Período",
+                    "Nenhuma venda confirmada entre " + inicio + " e " + fim
+            );
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=relatorio-vendas-periodo.pdf")
+                    .body(vazio);
+        }
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        Map<String, Object> params = new HashMap<>();
+        params.put("TITULO", "Relatório de Vendas por Período");
+        params.put("DATA_INICIO", inicio.atZoneSameInstant(inicio.getOffset()).toLocalDateTime().format(fmt));
+        params.put("DATA_FIM", fim.atZoneSameInstant(fim.getOffset()).toLocalDateTime().format(fmt));
+        params.put("ORGANIZACAO_ID", orgId);
+        byte[] pdf = reportService.gerarPdfComBeans("/reports/entregas-periodo.jrxml", params, dados);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=relatorio-vendas-periodo.pdf")
+                .body(pdf);
+    }
+
+    @GetMapping(value="/vendas-periodo.xlsx", produces="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    public ResponseEntity<byte[]> vendasPeriodoXlsx(
+            @RequestParam("inicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime inicio,
+            @RequestParam("fim") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime fim
+    ) throws Exception {
+        Long orgId = SecurityUtils.getCurrentOrgId();
+        if (orgId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        List<VendaItemReportDto> dados = pedidoVendaReportService.linhasPorPeriodo(inicio, fim);
+        if (dados.isEmpty()) {
+            byte[] vazio = reportService.gerarXlsxEmBranco(
+                    "Relatório de Vendas por Período",
+                    "Nenhuma venda confirmada no período"
+            );
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio-vendas-periodo.xlsx")
+                    .body(vazio);
+        }
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        Map<String, Object> params = new HashMap<>();
+        params.put("TITULO", "Relatório de Vendas por Período");
+        params.put("DATA_INICIO", inicio.atZoneSameInstant(inicio.getOffset()).toLocalDateTime().format(fmt));
+        params.put("DATA_FIM", fim.atZoneSameInstant(fim.getOffset()).toLocalDateTime().format(fmt));
+        byte[] xlsx = reportService.gerarXlsx("/reports/entregas-periodo.jrxml", params, dados);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio-vendas-periodo.xlsx")
+                .body(xlsx);
+    }
+
+    @GetMapping(value="/vendas-mes.pdf", produces="application/pdf")
+    public ResponseEntity<byte[]> vendasMesPdf(@RequestParam("ano") int ano, @RequestParam("mes") int mes) throws Exception {
+        Long orgId = SecurityUtils.getCurrentOrgId();
+        if (orgId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        List<VendaItemReportDto> dados = pedidoVendaReportService.linhasPorMes(mes, ano);
+        if (dados.isEmpty()) {
+            byte[] vazio = reportService.gerarPdfEmBranco(
+                    "Relatório de Vendas do Mês",
+                    "Nenhuma venda confirmada para " + String.format("%02d/%d", mes, ano)
+            );
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=relatorio-vendas-mes.pdf")
+                    .body(vazio);
+        }
+        Map<String, Object> params = new HashMap<>();
+        params.put("TITULO", "Relatório de Vendas do Mês");
+        params.put("MES", mes);
+        params.put("ANO", ano);
+        params.put("ORGANIZACAO_ID", orgId);
+        byte[] pdf = reportService.gerarPdfComBeans("/reports/entregas-mes.jrxml", params, dados);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=relatorio-vendas-mes.pdf")
+                .body(pdf);
+    }
+
+    @GetMapping(value="/vendas-mes.xlsx", produces="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    public ResponseEntity<byte[]> vendasMesXlsx(@RequestParam("ano") int ano, @RequestParam("mes") int mes) throws Exception {
+        List<VendaItemReportDto> dados = pedidoVendaReportService.linhasPorMes(mes, ano);
+        if (dados.isEmpty()) {
+            byte[] vazio = reportService.gerarXlsxEmBranco(
+                    "Relatório de Vendas do Mês",
+                    "Nenhuma venda confirmada para " + String.format("%02d/%d", mes, ano)
+            );
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio-vendas-mes.xlsx")
+                    .body(vazio);
+        }
+        Map<String, Object> params = new HashMap<>();
+        params.put("TITULO", "Relatório de Vendas do Mês");
+        params.put("MES", mes);
+        params.put("ANO", ano);
+        byte[] xlsx = reportService.gerarXlsx("/reports/entregas-mes.jrxml", params, dados);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio-vendas-mes.xlsx")
                 .body(xlsx);
     }
 }

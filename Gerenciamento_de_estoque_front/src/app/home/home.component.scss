@@ -35,6 +35,10 @@
   align-items: center;
   justify-content: center;
   gap: 18px;
+  flex-wrap: wrap;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 .home-title i {
   color: #0ea5e9;
@@ -131,17 +135,21 @@
 @media (max-width: 600px) {
   .home-container {
     padding: 16px 10px;
+    min-height: calc(100vh - 56px);
   }
   
   .home-wrapper {
     padding: 24px 16px;
+    overflow-x: hidden;
   }
   
   .home-title { 
-    font-size: 1.5em; 
+    font-size: 1.35em;
+    gap: 10px;
   }
   .home-description { 
-    font-size: 1em; 
+    font-size: 1em;
+    overflow-wrap: anywhere;
   }
   .home-actions {
     flex-direction: column;

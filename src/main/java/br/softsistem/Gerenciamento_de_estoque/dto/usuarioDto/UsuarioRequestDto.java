@@ -9,7 +9,8 @@ public record UsuarioRequestDto(
         @NotBlank(message = "A senha não pode ser vazia.") String senha,
         @Email(message = "Email inválido.") String email,
         List<String> roles,
-         Long orgId
+        Long orgId,  // Opcional: se fornecido, usa organização existente
+        String orgNome  // Opcional: se fornecido, cria nova organização
 ) {
 }
 

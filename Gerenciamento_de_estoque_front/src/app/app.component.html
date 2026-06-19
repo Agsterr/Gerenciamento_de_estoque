@@ -17,15 +17,19 @@
             <mat-icon>login</mat-icon>
             Login
           </a>
+          <a routerLink="/register" routerLinkActive="active" class="nav-link">
+            <mat-icon>person_add</mat-icon>
+            Cadastro
+          </a>
         </ng-container>
-        <a routerLink="/register" routerLinkActive="active" class="nav-link">
-          <mat-icon>person_add</mat-icon>
-          Register
-        </a>
-        <ng-container *ngIf="isAdmin">
+        <ng-container *ngIf="isMasterAdmin">
           <a routerLink="/orgs" routerLinkActive="active" class="nav-link">
             <mat-icon>business</mat-icon>
             Organizações
+          </a>
+          <a routerLink="/admin" routerLinkActive="active" class="nav-link">
+            <mat-icon>admin_panel_settings</mat-icon>
+            Admin
           </a>
         </ng-container>
         <ng-container *ngIf="isLoggedIn">
@@ -39,6 +43,14 @@
             <mat-icon>arrow_drop_down</mat-icon>
           </button>
           <mat-menu #menu="matMenu">
+            <a mat-menu-item routerLink="/dashboard/ajuda">
+              <mat-icon>help_outline</mat-icon>
+              Ajuda e tutorial
+            </a>
+            <a mat-menu-item routerLink="/assinatura">
+              <mat-icon>credit_card</mat-icon>
+              Assinatura
+            </a>
             <button mat-menu-item (click)="logout()">
               <mat-icon>logout</mat-icon>
               Logout
@@ -53,5 +65,6 @@
   </div>
 </header>
 <div class="router-container main-content">
+  <app-trial-banner *ngIf="isLoggedIn"></app-trial-banner>
   <router-outlet></router-outlet>
 </div>

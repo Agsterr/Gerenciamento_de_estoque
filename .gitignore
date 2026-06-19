@@ -32,6 +32,18 @@ build/
 ### VS Code ###
 .vscode/
 
+### JDK 21 (projeto usa Java 17; evita interferência no IDE)
+jdk-21_windows-x64_bin/
+
 # Existing ignores
 .env
 .env.*
+
+# Cloudflare Tunnel (credenciais locais)
+docker/cloudflared/config.yml
+docker/cloudflared/*.json
+docker/cloudflared/cert.pem
+
+# Chave Asaas local (Docker monta este arquivo no container)
+docker/secrets/asaas_sandbox_api_key.txt
+docker/secrets/asaas_prod_api_key.txt

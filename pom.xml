@@ -69,13 +69,6 @@
             <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>
         
-        <!-- H2 Database para desenvolvimento local -->
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-
         <!-- Flyway -->
         <dependency>
             <groupId>org.flywaydb</groupId>
@@ -132,11 +125,11 @@
             <version>6.21.0</version>
         </dependency>
 
-        <!-- Stripe -->
+        <!-- Mercado Pago SDK -->
         <dependency>
-            <groupId>com.stripe</groupId>
-            <artifactId>stripe-java</artifactId>
-            <version>24.16.0</version>
+            <groupId>com.mercadopago</groupId>
+            <artifactId>sdk-java</artifactId>
+            <version>2.8.0</version>
         </dependency>
 
         <!-- Email -->
@@ -152,13 +145,16 @@
             <version>3.0.0</version>
         </dependency>
 
-        <!-- Devtools (somente em desenvolvimento) -->
+        <!-- Devtools desabilitado: causa ClassNotFoundException "LocalDateTime" com Hibernate
+             (RestartClassLoader resolve tipo pelo nome simples). Reative se precisar de restart. -->
+        <!--
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
+        -->
 
         <!-- Testes -->
         <dependency>

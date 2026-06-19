@@ -1,0 +1,182 @@
+<header class="header-page">
+  <h2><i class="fas fa-life-ring"></i> Central de Ajuda</h2>
+  <div class="acoes-header">
+    <a routerLink="/dashboard/produtos" class="botao-listar link-btn">
+      <i class="fas fa-arrow-left"></i> Voltar ao painel
+    </a>
+  </div>
+</header>
+
+<div class="ajuda-intro">
+  <p>
+    Este guia explica <strong>o que cadastrar primeiro</strong> e <strong>o que cada módulo precisa</strong>
+    para funcionar. Siga o tutorial passo a passo ou consulte um módulo específico abaixo.
+  </p>
+</div>
+
+<nav class="ajuda-tabs" aria-label="Seções da ajuda">
+  <button type="button" [class.active]="activeTab === 'tutorial'" (click)="setTab('tutorial')">
+    <i class="fas fa-route"></i> Tutorial passo a passo
+  </button>
+  <button type="button" [class.active]="activeTab === 'modulos'" (click)="setTab('modulos')">
+    <i class="fas fa-th-list"></i> Por módulo
+  </button>
+  <button type="button" [class.active]="activeTab === 'mapa'" (click)="setTab('mapa')">
+    <i class="fas fa-project-diagram"></i> Mapa de dependências
+  </button>
+</nav>
+
+<!-- Tutorial -->
+<section class="ajuda-section" *ngIf="activeTab === 'tutorial'">
+  <h3><i class="fas fa-flag-checkered"></i> Ordem recomendada para começar</h3>
+  <ol class="tutorial-steps">
+    <li *ngFor="let step of tutorialSteps" class="tutorial-step">
+      <div class="step-number">{{ step.order }}</div>
+      <div class="step-content">
+        <div class="step-header">
+          <h4>
+            <i class="fas" [ngClass]="step.icon"></i>
+            {{ step.title }}
+          </h4>
+          <a [routerLink]="step.route" class="step-link">
+            Ir para o módulo <i class="fas fa-external-link-alt"></i>
+          </a>
+        </div>
+        <p>{{ step.description }}</p>
+        <div class="step-deps" *ngIf="step.prerequisites.length > 0">
+          <span class="label">Antes, cadastre:</span>
+          <a *ngFor="let dep of step.prerequisites" [routerLink]="dep.route" class="dep-chip">{{ dep.label }}</a>
+        </div>
+        <ul class="step-tips" *ngIf="step.tips.length > 0">
+          <li *ngFor="let tip of step.tips">{{ tip }}</li>
+        </ul>
+      </div>
+    </li>
+  </ol>
+</section>
+
+<!-- Por módulo -->
+<section class="ajuda-section" *ngIf="activeTab === 'modulos'">
+  <h3><i class="fas fa-book-open"></i> Consulta por módulo</h3>
+  <div class="module-accordion">
+    <article *ngFor="let mod of modulesHelp" class="module-card" [class.expanded]="expandedModule === mod.id">
+      <button type="button" class="module-header" (click)="toggleModule(mod.id)">
+        <span class="module-title">
+          <i class="fas" [ngClass]="mod.icon"></i>
+          {{ mod.title }}
+        </span>
+        <i class="fas" [ngClass]="expandedModule === mod.id ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+      </button>
+      <div class="module-body" *ngIf="expandedModule === mod.id">
+        <p class="module-summary">{{ mod.summary }}</p>
+        <div class="module-deps" *ngIf="mod.prerequisites.length > 0">
+          <strong>Depende de:</strong>
+          <a *ngFor="let dep of mod.prerequisites" [routerLink]="dep.route" class="dep-chip">{{ dep.label }}</a>
+        </div>
+        <div class="module-deps none" *ngIf="mod.prerequisites.length === 0">
+          <strong>Sem dependências</strong> — pode ser cadastrado a qualquer momento.
+        </div>
+        <h5>Como usar</h5>
+        <ol>
+          <li *ngFor="let step of mod.howTo">{{ step }}</li>
+        </ol>
+        <ul class="step-tips" *ngIf="mod.tips?.length">
+          <li *ngFor="let tip of mod.tips">{{ tip }}</li>
+        </ul>
+        <a [routerLink]="mod.route" class="step-link">
+          Abrir {{ mod.title }} <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- Mapa -->
+<section class="ajuda-section" *ngIf="activeTab === 'mapa'">
+  <h3><i class="fas fa-sitemap"></i> O que depende do quê</h3>
+  <p class="mapa-intro">
+    Use este mapa para saber quais cadastros precisam existir antes de usar cada funcionalidade.
+  </p>
+
+  <div class="dependency-map">
+    <div class="map-level map-base">
+      <h4>Base (sem dependências)</h4>
+      <div class="map-nodes">
+        <a routerLink="/dashboard/categorias" class="map-node primary">Categorias</a>
+        <a routerLink="/dashboard/consumidores" class="map-node">Consumidores</a>
+        <a routerLink="/dashboard/fornecedores" class="map-node">Fornecedores</a>
+        <a routerLink="/dashboard/depositos" class="map-node">Depósitos</a>
+      </div>
+    </div>
+
+    <div class="map-arrow"><i class="fas fa-arrow-down"></i></div>
+
+    <div class="map-level">
+      <h4>Segundo nível</h4>
+      <div class="map-nodes">
+        <a routerLink="/dashboard/produtos" class="map-node highlight">
+          Produtos
+          <small>← Categorias</small>
+        </a>
+      </div>
+    </div>
+
+    <div class="map-arrow"><i class="fas fa-arrow-down"></i></div>
+
+    <div class="map-level">
+      <h4>Operações</h4>
+      <div class="map-nodes">
+        <a routerLink="/dashboard/entregas" class="map-node">
+          Entregas
+          <small>← Produtos + Consumidores</small>
+        </a>
+        <a routerLink="/dashboard/movimentacoes" class="map-node">
+          Movimentações
+          <small>← Produtos</small>
+        </a>
+        <a routerLink="/dashboard/pedidos-compra" class="map-node">
+          Pedidos de Compra
+          <small>← Fornecedores + Produtos</small>
+        </a>
+        <a routerLink="/dashboard/inventario" class="map-node">
+          Inventário
+          <small>← Depósitos + Produtos</small>
+        </a>
+      </div>
+    </div>
+
+    <div class="map-arrow"><i class="fas fa-arrow-down"></i></div>
+
+    <div class="map-level">
+      <h4>Consulta</h4>
+      <div class="map-nodes">
+        <a routerLink="/dashboard/relatorios" class="map-node muted">Relatórios</a>
+        <a routerLink="/dashboard/auditoria" class="map-node muted">Auditoria</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="mapa-resumo">
+    <h4>Resumo rápido</h4>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Módulo</th>
+          <th>Precisa ter antes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Categorias</td><td>Nada</td></tr>
+        <tr><td>Produtos</td><td>Categorias</td></tr>
+        <tr><td>Consumidores</td><td>Nada</td></tr>
+        <tr><td>Fornecedores</td><td>Nada</td></tr>
+        <tr><td>Depósitos</td><td>Nada</td></tr>
+        <tr><td>Entregas</td><td>Produtos e Consumidores</td></tr>
+        <tr><td>Movimentações</td><td>Produtos</td></tr>
+        <tr><td>Pedidos de Compra</td><td>Fornecedores e Produtos</td></tr>
+        <tr><td>Inventário</td><td>Depósitos e Produtos</td></tr>
+        <tr><td>Relatórios / Auditoria</td><td>Dados gerados pelo uso do sistema</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>

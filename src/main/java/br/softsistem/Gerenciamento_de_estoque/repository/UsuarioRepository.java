@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -35,6 +36,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByUsernameAndOrgId(@Param("username") String username,
                                              @Param("orgId") Long orgId);
 
+    Optional<Usuario> findByUsername(String username);
+
     // ----------------------------------------------------------------
     // Buscas adicionais (por e-mail + orgId e por ID + orgId)
     // ----------------------------------------------------------------
@@ -46,5 +49,22 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     // Busca usuário por email (sem filtro de organização - para autenticação)
     Optional<Usuario> findByEmail(String email);
 
+    Optional<Usuario> findByEmailIgnoreCase(String email);
+
+    List<Usuario> findAllByEmailIgnoreCase(String email);
+
+    List<Usuario> findAllByEmail(String email);
+
+    Optional<Usuario> findByUsernameIgnoreCase(String username);
+
+    List<Usuario> findAllByUsernameIgnoreCase(String username);
+
+    List<Usuario> findAllByUsername(String username);
+
     Optional<Usuario> findByIdAndOrgId(Long id, Long orgId);
+
+    @Query("SELECT COUNT(u) FROM Usuario u WHERE u.ativo = true AND u.org.id = :orgId")
+    long countAtivosByOrgId(@Param("orgId") Long orgId);
+
+    List<Usuario> findByOrg_Id(Long orgId);
 }

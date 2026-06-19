@@ -45,8 +45,30 @@
   .dashboard-subtitle {
     color: #64748b;
     font-size: 1.2rem;
-    margin-bottom: 0;
+    margin-bottom: 12px;
     font-weight: 500;
+  }
+
+  .dashboard-ajuda-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 1px solid #93c5fd;
+    border-radius: 10px;
+    color: #1d4ed8;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: background 0.15s;
+
+    &:hover {
+      background: #dbeafe;
+    }
+
+    i { font-size: 1.1rem; }
   }
 }
 
@@ -168,6 +190,13 @@
       background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
       border-color: #1d4ed8;
     }
+
+    &.menu-ajuda {
+      border-color: #93c5fd;
+      background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
+
+      i { color: #2563eb; }
+    }
   }
 }
 
@@ -202,6 +231,44 @@
       padding: 24px 0 16px 0;
       font-size: 1rem;
       min-height: 100px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 12px;
+  }
+
+  .dashboard-wrapper {
+    padding: 16px;
+    border-radius: 12px;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .dashboard-content {
+    padding: 16px;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .dashboard-header {
+    h2 {
+      font-size: 1.5rem;
+      word-wrap: break-word;
+    }
+
+    .dashboard-subtitle {
+      font-size: 0.95rem;
+      overflow-wrap: anywhere;
+    }
+
+    .dashboard-ajuda-link {
+      width: 100%;
+      justify-content: center;
+      text-align: center;
+      font-size: 0.9rem;
     }
   }
 }

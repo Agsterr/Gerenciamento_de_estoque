@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+
 @RestController
 @RequestMapping(value = "/api/orgs", produces = MediaType.APPLICATION_JSON_VALUE)
 public class OrgController {
@@ -48,16 +49,10 @@ public class OrgController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // --- Atualizar organização ---
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateOrg(@PathVariable Long id, @Valid @RequestBody OrgRequestDto orgRequestDto) {
-        Optional<OrgDto> updatedOrg = orgService.updateOrg(id, orgRequestDto);
-        if (updatedOrg == null) {
-            Map<String,String> body = Map.of("error", "Já existe outra organização com este nome.");
-            return ResponseEntity.status(HttpStatus.CONFLICT).contentType(MediaType.APPLICATION_JSON).body(body);
-        }
-        return updatedOrg.<ResponseEntity<?>>map(o -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(o))
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<OrgDto> updateOrg(@PathVariable Long id, @Valid @RequestBody OrgRequestDto orgRequestDto) {
+        OrgDto updatedOrg = orgService.updateOrg(id, orgRequestDto);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(updatedOrg);
     }
 
     // --- Desativar organização ---

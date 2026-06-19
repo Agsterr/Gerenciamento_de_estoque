@@ -7,15 +7,18 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ConsumidorService } from '../services/consumidor.service';
 import { Consumer } from '../models/consumer.model';
 import { ConsumerPagedResponse } from '../models/consumer-paged-response.model';
+import { PageHintComponent } from '../shared/page-hint/page-hint.component';
+import { PAGE_HINTS } from '../shared/help/help-content.data';
 
 @Component({
   selector: 'app-consumers',
   templateUrl: './consumidor.component.html',
   styleUrls: ['./consumidor.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, PageHintComponent],
 })
 export class ConsumersComponent implements OnInit {
+  pageHint = PAGE_HINTS['consumidores'];
   consumerForm: FormGroup;
   searchTerm = '';
   consumers: Consumer[] = [];

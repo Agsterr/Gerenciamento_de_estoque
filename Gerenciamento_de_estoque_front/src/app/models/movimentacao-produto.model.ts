@@ -8,7 +8,10 @@ export interface MovimentacaoProduto {
   nomeProduto: string; // Nome do produto
   usuarioId?: number; // ID do usuário que fez a movimentação
   nomeUsuario?: string; // Nome do usuário que fez a movimentação
-  nomeConsumidor?: string; // Nome do consumidor (se vinculado a entrega)
+  nomeConsumidor?: string;
+  consumidorId?: number;
+  entregaId?: number;
+  pedidoVendaId?: number;
 }
 
 export interface PageResponse<T> {

@@ -7,6 +7,6 @@ import java.util.Optional;
 public interface RoleRepository extends JpaRepository<Role, Long> {
     Optional<Role> findById(Long id);
     boolean existsByNome(String nome);  // Verifica se uma role já existe pelo nome
-
     Optional<Role> findByNome(String roleAdmin);
+    Optional<Role> findByNomeAndOrgId(String nome, Long orgId);
 }

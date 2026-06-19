@@ -156,67 +156,36 @@
           <div class="field-hint">Usaremos este email para comunicações importantes</div>
         </div>
 
-        <!-- Campo ID da Organização -->
+        <!-- Nome da empresa / organização -->
         <div class="form-group" [@slideInRight]>
-          <label for="orgId">
+          <label for="orgNome">
             <mat-icon>business</mat-icon>
-            ID da Organização
+            Nome da empresa
             <span class="required">*</span>
           </label>
           <div class="input-container">
             <input 
-              id="orgId" 
-              formControlName="orgId" 
+              id="orgNome" 
+              formControlName="orgNome" 
               type="text" 
               class="form-control" 
-              [class.valid]="registerForm.get('orgId')?.valid && registerForm.get('orgId')?.touched"
-              [class.invalid]="registerForm.get('orgId')?.invalid && registerForm.get('orgId')?.touched"
-              placeholder="Digite o ID da organização"
-              (focus)="onFieldFocus('orgId')"
-              (blur)="onFieldBlur('orgId')"
+              [class.valid]="registerForm.get('orgNome')?.valid && registerForm.get('orgNome')?.touched"
+              [class.invalid]="registerForm.get('orgNome')?.invalid && registerForm.get('orgNome')?.touched"
+              placeholder="Ex: Minha Loja Ltda"
+              (focus)="onFieldFocus('orgNome')"
+              (blur)="onFieldBlur('orgNome')"
             />
             <div class="input-icon">
-              <mat-icon *ngIf="registerForm.get('orgId')?.valid && registerForm.get('orgId')?.touched" class="success-icon">check_circle</mat-icon>
-              <mat-icon *ngIf="registerForm.get('orgId')?.invalid && registerForm.get('orgId')?.touched" class="error-icon">error</mat-icon>
+              <mat-icon *ngIf="registerForm.get('orgNome')?.valid && registerForm.get('orgNome')?.touched" class="success-icon">check_circle</mat-icon>
+              <mat-icon *ngIf="registerForm.get('orgNome')?.invalid && registerForm.get('orgNome')?.touched" class="error-icon">error</mat-icon>
             </div>
           </div>
-          <div *ngIf="registerForm.get('orgId')?.invalid && registerForm.get('orgId')?.touched" class="error" [@fadeInOut]>
+          <div *ngIf="registerForm.get('orgNome')?.invalid && registerForm.get('orgNome')?.touched" class="error" [@fadeInOut]>
             <mat-icon>warning</mat-icon>
-            <span>ID da organização é obrigatório</span>
+            <span>Informe o nome da sua empresa (mínimo 2 caracteres)</span>
           </div>
-          <div class="field-hint">Solicite este ID ao administrador da sua empresa</div>
+          <div class="field-hint">O sistema cria sua organização e o trial automaticamente — você não precisa de um ID</div>
         </div>
-      </div>
-
-      <!-- Campo Roles -->
-      <div class="form-group full-width" [@slideInUp]>
-        <label>
-          <mat-icon>admin_panel_settings</mat-icon>
-          Permissões
-          <span class="required">*</span>
-        </label>
-        <div class="roles-container">
-          <div class="roles-grid">
-            <div 
-              *ngFor="let role of roles; trackBy: trackByRole" 
-              class="role-chip"
-              [class.selected]="isRoleSelected(role.nome)"
-              (click)="toggleRole(role.nome)"
-              [@scaleIn]
-            >
-              <mat-icon>{{ getRoleIcon(role.nome) }}</mat-icon>
-              <span>{{ role.nome }}</span>
-              <div class="role-check" *ngIf="isRoleSelected(role.nome)">
-                <mat-icon>check</mat-icon>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div *ngIf="registerForm.get('roles')?.invalid && registerForm.get('roles')?.touched" class="error" [@fadeInOut]>
-          <mat-icon>warning</mat-icon>
-          <span>Selecione pelo menos uma permissão</span>
-        </div>
-        <div class="field-hint">Escolha as permissões adequadas para sua função</div>
       </div>
 
       <!-- Botões -->

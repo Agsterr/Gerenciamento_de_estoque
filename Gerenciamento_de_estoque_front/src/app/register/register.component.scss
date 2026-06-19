@@ -721,12 +721,17 @@ label mat-icon {
 /* ===== RESPONSIVIDADE ===== */
 @media (max-width: 768px) {
   .register-container {
-    padding: 16px;
+    padding: 12px;
+    min-height: calc(100vh - 56px);
+    align-items: flex-start;
+    padding-top: 16px;
+    overflow-x: hidden;
   }
 
   .register-wrapper {
-    padding: 32px 24px;
+    padding: 28px 20px;
     max-width: 100%;
+    overflow-x: hidden;
   }
 
   .form-grid {
@@ -735,7 +740,13 @@ label mat-icon {
   }
 
   .register-header h2 {
-    font-size: 2rem;
+    font-size: 1.75rem;
+    word-wrap: break-word;
+  }
+
+  .register-subtitle {
+    font-size: 0.95rem;
+    overflow-wrap: anywhere;
   }
 
   .logo-icon {
@@ -749,6 +760,15 @@ label mat-icon {
 
   .form-buttons {
     flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .field-hint {
+    overflow-wrap: anywhere;
+    word-wrap: break-word;
   }
 
   .roles-grid {

@@ -1,0 +1,13 @@
+<div *ngIf="showBanner" class="trial-banner" [ngClass]="urgencyClass">
+  <div class="trial-banner__content">
+    <strong>Teste gratuito de {{ totalDays }} dias</strong>
+    <span>
+      Dia {{ daysElapsed + 1 }} de {{ totalDays }}
+      — faltam <strong>{{ daysRemaining }}</strong> dia(s) para assinar
+    </span>
+    <a routerLink="/assinatura" class="trial-banner__link">Assinar agora</a>
+  </div>
+  <div class="trial-banner__track">
+    <div class="trial-banner__fill" [style.width.%]="progressPercent"></div>
+  </div>
+</div>

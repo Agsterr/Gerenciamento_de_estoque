@@ -1,5 +1,4 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../services/auth.service';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -11,12 +10,17 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
   standalone: true,
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
-  imports: [ReactiveFormsModule, CommonModule, RouterModule, MatSnackBarModule],
+  imports: [CommonModule, RouterModule, MatSnackBarModule],
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
   title = 'Bem-vindo à Página Inicial!';
 
-  constructor(private route: ActivatedRoute, private snackBar: MatSnackBar) {
+  constructor(
+    private route: ActivatedRoute,
+    private snackBar: MatSnackBar,
+    private authService: AuthService,
+    private router: Router
+  ) {
     this.route.queryParamMap.subscribe((params) => {
       const notice = params.get('notice');
       if (notice === 'admin_required') {
@@ -26,5 +30,13 @@ export class HomeComponent {
         });
       }
     });
+  }
+
+  ngOnInit(): void {
+    const target = this.authService.resolveEntryRoute();
+    this.authService.markVisited();
+    if (target !== '/home') {
+      this.router.navigateByUrl(target, { replaceUrl: true });
+    }
   }
 }

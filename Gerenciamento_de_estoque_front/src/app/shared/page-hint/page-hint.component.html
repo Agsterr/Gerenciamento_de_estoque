@@ -1,0 +1,18 @@
+<div class="page-hint" role="note">
+  <div class="page-hint-icon">
+    <i class="fas fa-lightbulb"></i>
+  </div>
+  <div class="page-hint-body">
+    <strong>Como começar</strong>
+    <p>{{ message }}</p>
+    <div class="page-hint-deps" *ngIf="prerequisites.length > 0">
+      <span class="deps-label">Depende de:</span>
+      <a *ngFor="let dep of prerequisites" [routerLink]="dep.route" class="dep-link">
+        <i class="fas fa-arrow-right"></i> {{ dep.label }}
+      </a>
+    </div>
+    <a *ngIf="showHelpLink" routerLink="/dashboard/ajuda" class="help-link">
+      <i class="fas fa-book"></i> Ver guia completo
+    </a>
+  </div>
+</div>

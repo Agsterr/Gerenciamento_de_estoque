@@ -1,1 +1,3 @@
-org.springframework.context.ApplicationContextInitializer=br.softsistem.Gerenciamento_de_estoque.config.DotenvConfig
+# DotenvConfig desativado como ApplicationContextInitializer para evitar erro de compilação no IDE.
+# O .env é carregado em GerenciamentoDeEstoqueApplication.main().
+# org.springframework.context.ApplicationContextInitializer=br.softsistem.Gerenciamento_de_estoque.config.DotenvConfig

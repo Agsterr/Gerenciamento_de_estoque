@@ -1,74 +1,75 @@
 package br.softsistem.Gerenciamento_de_estoque.service;
 
 import br.softsistem.Gerenciamento_de_estoque.dto.CategoriaDto.CategoriaRequest;
+import br.softsistem.Gerenciamento_de_estoque.exception.OrganizacaoNaoEncontradaException;
+import br.softsistem.Gerenciamento_de_estoque.exception.ResourceNotFoundException;
 import br.softsistem.Gerenciamento_de_estoque.model.Categoria;
 import br.softsistem.Gerenciamento_de_estoque.model.Org;
 import br.softsistem.Gerenciamento_de_estoque.repository.CategoriaRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.OrgRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
 public class CategoriaService {
 
-    @Autowired
-    CategoriaRepository categoriaRepository;
+    private final CategoriaRepository categoriaRepository;
+    private final OrgRepository orgRepository;
 
-    @Autowired
-    OrgRepository orgRepository;
+    public CategoriaService(CategoriaRepository categoriaRepository, OrgRepository orgRepository) {
+        this.categoriaRepository = categoriaRepository;
+        this.orgRepository = orgRepository;
+    }
 
-    // Listar todas as categorias de uma organização com paginação
     public Page<Categoria> listarTodos(Long orgId, Pageable pageable) {
-        return categoriaRepository.findByOrg_Id(orgId, pageable);  // Filtra por orgId e pagina
+        return categoriaRepository.findByOrg_Id(orgId, pageable);
     }
 
-    // Buscar uma categoria pelo nome e orgId
     public Optional<Categoria> buscarPorNomeEOrgId(String nome, Long orgId) {
-        return categoriaRepository.findByNomeAndOrg_Id(nome, orgId);  // Busca por nome e orgId
+        return categoriaRepository.findByNomeAndOrg_Id(nome, orgId);
     }
 
-    // Buscar categorias cujo nome contenha uma parte do nome e que pertençam a uma organização específica
     public Page<Categoria> buscarPorParteDoNomeEOrgId(String parteDoNome, Long orgId, Pageable pageable) {
-        return categoriaRepository.findByNomeContainingAndOrg_Id(parteDoNome, orgId, pageable);  // Busca por parte do nome e orgId com paginação
+        return categoriaRepository.findByNomeContainingAndOrg_Id(parteDoNome, orgId, pageable);
     }
 
-    // Salvar uma nova categoria associada à organização
+    @Transactional
     public Categoria salvarCategoria(CategoriaRequest request, Long orgId) {
-        Optional<Org> org = orgRepository.findById(orgId);
-        if (org.isPresent()) {
-            Categoria categoria = new Categoria();
-            categoria.setNome(request.nome());
-            categoria.setDescricao(request.descricao());
-            categoria.setOrg(org.get());  // Associando a organização
-            return categoriaRepository.save(categoria);
+        Org org = orgRepository.findById(orgId)
+                .orElseThrow(() -> new OrganizacaoNaoEncontradaException("Organização não encontrada"));
+
+        if (categoriaRepository.findByNomeAndOrg_Id(request.nome(), orgId).isPresent()) {
+            throw new IllegalStateException("Já existe uma categoria com este nome nesta organização.");
         }
-        throw new RuntimeException("Organização não encontrada");  // Pode criar uma exceção personalizada
+
+        Categoria categoria = new Categoria();
+        categoria.setNome(request.nome());
+        categoria.setDescricao(request.descricao());
+        categoria.setOrg(org);
+        return categoriaRepository.save(categoria);
     }
 
-    // Editar uma categoria existente
+    @Transactional
     public Categoria editarCategoria(Long id, CategoriaRequest request, Long orgId) {
-        Optional<Categoria> categoriaExistente = categoriaRepository.findById(id);
-        if (categoriaExistente.isPresent() && categoriaExistente.get().getOrg().getId().equals(orgId)) {
-            Categoria categoria = categoriaExistente.get();
-            categoria.setNome(request.nome());
-            categoria.setDescricao(request.descricao());
-            return categoriaRepository.save(categoria);
-        }
-        return null;  // Se a categoria não for encontrada ou não pertencer à organização
+        Categoria categoria = categoriaRepository.findById(id)
+                .filter(c -> c.getOrg().getId().equals(orgId))
+                .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada ou não pertence à organização"));
+
+        categoria.setNome(request.nome());
+        categoria.setDescricao(request.descricao());
+        return categoriaRepository.save(categoria);
     }
 
-    // Excluir uma categoria existente
-    public boolean excluirCategoria(Long id, Long orgId) {
-        Optional<Categoria> categoriaExistente = categoriaRepository.findById(id);
-        if (categoriaExistente.isPresent() && categoriaExistente.get().getOrg().getId().equals(orgId)) {
-            categoriaRepository.deleteById(id);
-            return true;
-        }
-        return false;
+    @Transactional
+    public void excluirCategoria(Long id, Long orgId) {
+        Categoria categoria = categoriaRepository.findById(id)
+                .filter(c -> c.getOrg().getId().equals(orgId))
+                .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada ou não pertence à organização"));
+
+        categoriaRepository.delete(categoria);
     }
 }

@@ -29,20 +29,24 @@ public class DotenvConfig implements ApplicationContextInitializer<ConfigurableA
             ConfigurableEnvironment environment = applicationContext.getEnvironment();
             Map<String, Object> dotenvProperties = new HashMap<>();
 
-            // Adiciona todas as variáveis do .env ao environment do Spring
+            // Adiciona variáveis do .env, mas SÓ se não existirem no SO
             dotenv.entries().forEach(entry -> {
                 String key = entry.getKey();
                 String value = entry.getValue();
-                dotenvProperties.put(key, value);
-                log.debug("Carregada variável de ambiente: {}", key);
+                if (System.getenv(key) == null) {
+                    dotenvProperties.put(key, value);
+                    log.debug("Carregada variável do .env: {}", key);
+                } else {
+                    log.debug("Variável '{}' já definida no SO, ignorando valor do .env", key);
+                }
             });
 
-            // Adiciona as propriedades ao environment com alta prioridade
-            environment.getPropertySources().addFirst(
+            // Adiciona as propriedades ao environment com BAIXA prioridade (não sobrescreve SO)
+            environment.getPropertySources().addLast(
                     new MapPropertySource("dotenvProperties", dotenvProperties)
             );
 
-            log.info("Arquivo .env carregado com sucesso. {} variáveis carregadas.", dotenvProperties.size());
+            log.info("Arquivo .env carregado com sucesso. {} variáveis aplicadas (variáveis do SO têm prioridade).", dotenvProperties.size());
 
         } catch (Exception e) {
             log.warn("Erro ao carregar arquivo .env: {}", e.getMessage());

@@ -215,6 +215,97 @@ export class RelatoriosComponent {
     });
   }
 
+  // Vendas por período
+  baixarVendasPeriodoPdf() {
+    if (this.loading) return;
+    this.resetStatus();
+    if (!this.inicio || !this.fim) {
+      this.erro = 'Informe início e fim';
+      this.showMessage('Informe as datas de início e fim', true);
+      return;
+    }
+    if (this.inicio > this.fim) {
+      this.erro = 'A data de início não pode ser maior que a data de fim';
+      this.showMessage('Data de início maior que data de fim', true);
+      return;
+    }
+    const inicioISO = this.toOffsetDateTime(this.inicio, false);
+    const fimISO = this.toOffsetDateTime(this.fim, true);
+    this.loading = true;
+    this.relatoriosService.vendasPeriodoPdf(inicioISO, fimISO).subscribe({
+      next: (blob) => {
+        const inicioStr = this.inicio?.toLocaleDateString('pt-BR');
+        const fimStr = this.fim?.toLocaleDateString('pt-BR');
+        this.saveBlob(blob, `relatorio-vendas-${inicioStr}-${fimStr}.pdf`);
+        this.loading = false;
+      },
+      error: () => {
+        this.erro = 'Erro ao gerar PDF de vendas por período.';
+        this.loading = false;
+        this.showMessage('Erro ao gerar relatório de vendas', true);
+      },
+    });
+  }
+
+  baixarVendasPeriodoXlsx() {
+    if (this.loading) return;
+    this.resetStatus();
+    if (!this.inicio || !this.fim) {
+      this.erro = 'Informe início e fim';
+      return;
+    }
+    const inicioISO = this.toOffsetDateTime(this.inicio, false);
+    const fimISO = this.toOffsetDateTime(this.fim, true);
+    this.loading = true;
+    this.relatoriosService.vendasPeriodoXlsx(inicioISO, fimISO).subscribe({
+      next: (blob) => {
+        this.saveBlob(blob, 'relatorio-vendas-periodo.xlsx');
+        this.loading = false;
+      },
+      error: () => {
+        this.erro = 'Erro ao gerar XLSX de vendas por período.';
+        this.loading = false;
+      },
+    });
+  }
+
+  baixarVendasMesPdf() {
+    if (this.loading) return;
+    this.resetStatus();
+    if (!this.ano || this.ano < 2000 || !this.mes) {
+      this.showMessage('Ano ou mês inválido', true);
+      return;
+    }
+    this.loading = true;
+    this.relatoriosService.vendasMesPdf(this.ano, this.mes).subscribe({
+      next: (blob) => {
+        const mesNome = this.meses.find(m => m.valor === this.mes)?.nome;
+        this.saveBlob(blob, `relatorio-vendas-${mesNome}-${this.ano}.pdf`);
+        this.loading = false;
+      },
+      error: () => {
+        this.erro = 'Erro ao gerar PDF de vendas do mês.';
+        this.loading = false;
+      },
+    });
+  }
+
+  baixarVendasMesXlsx() {
+    if (this.loading) return;
+    this.resetStatus();
+    this.loading = true;
+    this.relatoriosService.vendasMesXlsx(this.ano, this.mes).subscribe({
+      next: (blob) => {
+        this.saveBlob(blob, `relatorio-vendas-${this.ano}-${this.mes}.xlsx`);
+        this.loading = false;
+      },
+      error: () => {
+        this.erro = 'Erro ao gerar XLSX de vendas do mês.';
+        this.loading = false;
+      },
+    });
+  }
+
   // Entregas por período - Backend espera OffsetDateTime
   baixarEntregasPeriodoPdf() {
     if (this.loading) return;

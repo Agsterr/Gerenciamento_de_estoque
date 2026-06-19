@@ -1,0 +1,143 @@
+<app-page-hint [message]="pageHint.message" [prerequisites]="pageHint.prerequisites"></app-page-hint>
+
+<header class="header-page">
+  <h2><i class="fas fa-warehouse"></i> Gestão de Depósitos</h2>
+  <div class="acoes-header">
+    <button class="botao-listar" (click)="toggleList()"><i class="fas fa-list"></i> Listar</button>
+    <button class="botao-adicionar" (click)="toggleAddForm()"><i class="fas fa-plus"></i> Novo</button>
+  </div>
+</header>
+
+<div class="summary-section" *ngIf="depositos.length > 0">
+  <div class="summary-card">
+    <i class="fas fa-warehouse"></i>
+    <div class="summary-content">
+      <span class="summary-label">Total de Depósitos</span>
+      <span class="summary-value">{{ depositos.length }}</span>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="mensagem" class="mensagem-feedback sucesso"><i class="fas fa-check-circle"></i> {{ mensagem }}</div>
+<div *ngIf="mensagemErro" class="mensagem-feedback erro"><i class="fas fa-exclamation-circle"></i> {{ mensagemErro }}</div>
+<div *ngIf="loading" class="spinner-overlay"><div class="spinner"></div></div>
+
+<div class="main-content">
+  <div class="card-lista" *ngIf="showList">
+    <div class="busca-container">
+      <div class="busca-input-wrapper">
+        <i class="fas fa-search"></i>
+        <input class="campo-busca" type="text" placeholder="Buscar depósitos..."
+          [(ngModel)]="searchTerm" (input)="applyFilter()" />
+      </div>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th><i class="fas fa-hashtag"></i> ID</th>
+          <th><i class="fas fa-warehouse"></i> Nome</th>
+          <th><i class="fas fa-map-marker-alt"></i> Endereço</th>
+          <th><i class="fas fa-star"></i> Padrão</th>
+          <th><i class="fas fa-cogs"></i> Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let d of filteredDepositos">
+          <td data-label="ID">{{ d.id }}</td>
+          <td data-label="Nome">{{ d.nome }}</td>
+          <td data-label="Endereço">{{ d.endereco || '-' }}</td>
+          <td data-label="Padrão">
+            <span *ngIf="d.padrao" class="badge recebido"><i class="fas fa-check"></i> Sim</span>
+            <span *ngIf="!d.padrao">Não</span>
+          </td>
+          <td class="acoes-tabela" data-label="Ações">
+            <button (click)="verEstoque(d)" class="btn btn-info btn-sm" title="Ver estoque"><i class="fas fa-boxes"></i></button>
+            <button (click)="edit(d)" class="btn btn-primary btn-sm" title="Editar"><i class="fas fa-edit"></i></button>
+            <button (click)="delete(d.id)" class="btn btn-danger btn-sm" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card-form" *ngIf="showAddForm">
+    <h3 class="titulo-form"><i class="fas fa-warehouse"></i> {{ editing ? 'Editar Depósito' : 'Adicionar Depósito' }}</h3>
+    <form (ngSubmit)="submitForm()" class="form-adicionar">
+      <div class="form-group">
+        <label for="nome">Nome *</label>
+        <input id="nome" type="text" [(ngModel)]="form.nome" name="nome" required />
+      </div>
+      <div class="form-group">
+        <label for="endereco">Endereço</label>
+        <input id="endereco" type="text" [(ngModel)]="form.endereco" name="endereco" />
+      </div>
+      <div class="form-group checkbox-group">
+        <input id="padrao" type="checkbox" [(ngModel)]="form.padrao" name="padrao" />
+        <label for="padrao">Depósito padrão</label>
+      </div>
+      <div class="botoes-form">
+        <button type="submit" class="botao-salvar" [disabled]="loading"><i class="fas fa-save"></i> {{ editing ? 'Salvar' : 'Adicionar' }}</button>
+        <button type="button" class="botao-cancelar" (click)="toggleList()" [disabled]="loading"><i class="fas fa-times"></i> Cancelar</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card-lista" *ngIf="showEstoque">
+    <h3 class="titulo-form"><i class="fas fa-boxes"></i> Estoque — {{ depositoEstoqueNome }}</h3>
+    <div style="margin-bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
+      <button class="botao-cancelar" (click)="toggleList()"><i class="fas fa-arrow-left"></i> Voltar</button>
+      <button class="botao-adicionar" (click)="toggleTransfer()" *ngIf="depositos.length > 1"><i class="fas fa-exchange-alt"></i> Transferir</button>
+    </div>
+
+    <div class="card-form" *ngIf="showTransfer" style="margin-bottom: 16px;">
+      <h4><i class="fas fa-exchange-alt"></i> Transferência entre depósitos</h4>
+      <div class="form-group">
+        <label>Origem</label>
+        <select [(ngModel)]="transferOrigemId" name="origem">
+          <option [ngValue]="null">Selecione...</option>
+          <option *ngFor="let d of depositos" [ngValue]="d.id">{{ d.nome }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Destino</label>
+        <select [(ngModel)]="transferDestinoId" name="destino">
+          <option [ngValue]="null">Selecione...</option>
+          <option *ngFor="let d of depositos" [ngValue]="d.id">{{ d.nome }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Produto</label>
+        <select [(ngModel)]="transferProdutoId" name="produto">
+          <option [ngValue]="null">Selecione...</option>
+          <option *ngFor="let p of produtos" [ngValue]="p.id">{{ p.nome }} ({{ p.quantidade }} un.)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Quantidade</label>
+        <input type="number" min="1" [(ngModel)]="transferQuantidade" name="qtdTransfer" />
+      </div>
+      <button type="button" class="botao-salvar" (click)="executarTransferencia()" [disabled]="loading"><i class="fas fa-check"></i> Confirmar transferência</button>
+    </div>
+    <table class="data-table" *ngIf="estoque.length > 0">
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>SKU</th>
+          <th>Quantidade</th>
+          <th>Custo Médio</th>
+          <th>Valor Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let e of estoque">
+          <td data-label="Produto">{{ e.produtoNome }}</td>
+          <td data-label="SKU">{{ e.sku || '-' }}</td>
+          <td data-label="Quantidade">{{ e.quantidade }}</td>
+          <td data-label="Custo Médio">{{ e.custoMedio != null ? (e.custoMedio | currency:'BRL') : '-' }}</td>
+          <td data-label="Valor Total">{{ e.valorTotal != null ? (e.valorTotal | currency:'BRL') : '-' }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p *ngIf="estoque.length === 0 && !loading">Nenhum item em estoque neste depósito.</p>
+  </div>
+</div>

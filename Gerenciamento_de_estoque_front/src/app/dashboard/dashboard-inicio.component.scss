@@ -1,0 +1,100 @@
+.dashboard-inicio { padding: 8px 0 24px; }
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.kpi-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  border-left: 4px solid #007bff;
+}
+
+.kpi-card.destaque { border-left-color: #28a745; }
+.kpi-card.alerta { border-left-color: #dc3545; }
+
+.kpi-label { display: block; font-size: 0.85rem; color: #666; }
+.kpi-valor { display: block; font-size: 1.35rem; font-weight: 700; color: #222; margin-top: 4px; }
+.kpi-link { display: inline-block; margin-top: 8px; font-size: 0.85rem; color: #007bff; text-decoration: none; }
+.kpi-link:hover { text-decoration: underline; }
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.chart-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.chart-card h3 { font-size: 1rem; margin: 0 0 16px; color: #333; }
+
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  min-height: 140px;
+  padding-top: 8px;
+}
+
+.bar-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.bar {
+  width: 100%;
+  max-width: 48px;
+  background: linear-gradient(180deg, #007bff, #0056b3);
+  border-radius: 4px 4px 0 0;
+  min-height: 8px;
+}
+
+.bar-label { font-size: 0.75rem; color: #666; }
+.bar-value { font-size: 0.7rem; color: #888; text-align: center; }
+
+.rank-list { display: flex; flex-direction: column; gap: 10px; }
+
+.rank-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.rank-nome { font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank-bar-wrap { background: #eee; border-radius: 4px; height: 10px; overflow: hidden; }
+.rank-bar { height: 100%; background: #17a2b8; border-radius: 4px; }
+.rank-bar.estoque { background: #6f42c1; }
+.rank-qtd { font-size: 0.8rem; color: #555; white-space: nowrap; }
+
+.acesso-rapido .links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.acesso-rapido a {
+  padding: 10px 16px;
+  background: #f7faff;
+  border-radius: 8px;
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.sem-dados { color: #888; font-size: 0.9rem; }
+.loading-dash { text-align: center; padding: 40px; color: #666; }

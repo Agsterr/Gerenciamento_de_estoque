@@ -15,6 +15,7 @@ import br.softsistem.Gerenciamento_de_estoque.dto.movimentacaoDto.MovimentacaoPr
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -28,25 +29,29 @@ public class MovimentacaoProdutoService {
     private final ProdutoRepository produtoRepository;
     private final EntregaRepository entregaRepository;
     private final ConsumidorRepository consumidorRepository;
+    private final EstoqueDepositoService estoqueDepositoService;
 
     public MovimentacaoProdutoService(MovimentacaoProdutoRepository movimentacaoRepository,
                                       ProdutoRepository produtoRepository,
                                       EntregaRepository entregaRepository,
-                                      ConsumidorRepository consumidorRepository) {
+                                      ConsumidorRepository consumidorRepository,
+                                      EstoqueDepositoService estoqueDepositoService) {
         this.movimentacaoRepository = movimentacaoRepository;
         this.produtoRepository = produtoRepository;
         this.entregaRepository = entregaRepository;
         this.consumidorRepository = consumidorRepository;
+        this.estoqueDepositoService = estoqueDepositoService;
     }
 
-    /**
-     * Registra uma movimentação (entrada ou saída). Retorna o DTO correspondente.
-     */
+    @Transactional
     public MovimentacaoProdutoDto registrarMovimentacao(MovimentacaoProdutoDto dto) {
         Long orgId = SecurityUtils.getCurrentOrgId();
-        // Validação: SAIDA precisa de consumidor ou entrega
-        if (dto.getTipo() == TipoMovimentacao.SAIDA && dto.getConsumidorId() == null && dto.getEntregaId() == null) {
-            throw new IllegalArgumentException("Para movimentação de SAIDA informe consumidorId ou entregaId.");
+        // Validação: SAIDA precisa de consumidor, entrega ou pedido de venda
+        if (dto.getTipo() == TipoMovimentacao.SAIDA
+                && dto.getConsumidorId() == null
+                && dto.getEntregaId() == null
+                && dto.getPedidoVendaId() == null) {
+            throw new IllegalArgumentException("Para movimentação de SAIDA informe consumidorId, entregaId ou pedidoVendaId.");
         }
         Produto produto = produtoRepository.findByIdAndOrgId(dto.getProdutoId(), orgId)
                 .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado ou não pertence à organização"));
@@ -66,14 +71,16 @@ public class MovimentacaoProdutoService {
                     .orElseThrow(() -> new ResourceNotFoundException("Consumidor não encontrado ou não pertence à organização"));
             mov.setConsumidor(cons);
         }
-        // Atualizar estoque
+        // Atualizar estoque global e depósito padrão
         if (dto.getTipo() == TipoMovimentacao.ENTRADA) {
             produto.setQuantidade(produto.getQuantidade() + dto.getQuantidade());
+            estoqueDepositoService.ajustarNoDepositoPadrao(produto, produto.getOrg(), dto.getQuantidade());
         } else if (dto.getTipo() == TipoMovimentacao.SAIDA) {
             if (produto.getQuantidade() < dto.getQuantidade()) {
                 throw new IllegalArgumentException("Quantidade de saída maior que o estoque atual");
             }
             produto.setQuantidade(produto.getQuantidade() - dto.getQuantidade());
+            estoqueDepositoService.ajustarNoDepositoPadrao(produto, produto.getOrg(), -dto.getQuantidade());
         }
 
         produtoRepository.save(produto);
@@ -81,16 +88,14 @@ public class MovimentacaoProdutoService {
         return new MovimentacaoProdutoDto(salvo);
     }
 
-    /**
-     * Edita uma movimentação existente e ajusta o estoque conforme necessário.
-     * @param movimentacaoId ID da movimentação a ser editada
-     * @param dto dados atualizados da movimentação
-     * @return DTO da movimentação atualizada
-     */
+    @Transactional
     public MovimentacaoProdutoDto editarMovimentacao(Long movimentacaoId, MovimentacaoProdutoDto dto) {
         Long orgId = SecurityUtils.getCurrentOrgId();
-        if (dto.getTipo() == TipoMovimentacao.SAIDA && dto.getConsumidorId() == null && dto.getEntregaId() == null) {
-            throw new IllegalArgumentException("Para movimentação de SAIDA informe consumidorId ou entregaId.");
+        if (dto.getTipo() == TipoMovimentacao.SAIDA
+                && dto.getConsumidorId() == null
+                && dto.getEntregaId() == null
+                && dto.getPedidoVendaId() == null) {
+            throw new IllegalArgumentException("Para movimentação de SAIDA informe consumidorId, entregaId ou pedidoVendaId.");
         }
         MovimentacaoProduto movimentacaoExistente = movimentacaoRepository.findById(movimentacaoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Movimentação não encontrada"));
@@ -100,18 +105,16 @@ public class MovimentacaoProdutoService {
         Produto produtoNovo = produtoRepository.findByIdAndOrgId(dto.getProdutoId(), orgId)
                 .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado ou não pertence à organização"));
         Produto produtoAntigo = movimentacaoExistente.getProduto();
-        if (movimentacaoExistente.getTipo() == TipoMovimentacao.ENTRADA) {
-            produtoAntigo.setQuantidade(produtoAntigo.getQuantidade() - movimentacaoExistente.getQuantidade());
-        } else if (movimentacaoExistente.getTipo() == TipoMovimentacao.SAIDA) {
-            produtoAntigo.setQuantidade(produtoAntigo.getQuantidade() + movimentacaoExistente.getQuantidade());
-        }
+        reverterEstoqueMovimentacao(produtoAntigo, movimentacaoExistente);
         if (dto.getTipo() == TipoMovimentacao.ENTRADA) {
             produtoNovo.setQuantidade(produtoNovo.getQuantidade() + dto.getQuantidade());
+            estoqueDepositoService.ajustarNoDepositoPadrao(produtoNovo, produtoNovo.getOrg(), dto.getQuantidade());
         } else if (dto.getTipo() == TipoMovimentacao.SAIDA) {
             if (produtoNovo.getQuantidade() < dto.getQuantidade()) {
                 throw new IllegalArgumentException("Quantidade de saída maior que o estoque atual");
             }
             produtoNovo.setQuantidade(produtoNovo.getQuantidade() - dto.getQuantidade());
+            estoqueDepositoService.ajustarNoDepositoPadrao(produtoNovo, produtoNovo.getOrg(), -dto.getQuantidade());
         }
         movimentacaoExistente.setProduto(produtoNovo);
         movimentacaoExistente.setQuantidade(dto.getQuantidade());
@@ -138,12 +141,17 @@ public class MovimentacaoProdutoService {
         return new MovimentacaoProdutoDto(salvo);
     }
 
-    /**
-     * Edita uma movimentação existente sem alterar o estoque dos produtos.
-     * @param movimentacaoId ID da movimentação a ser editada
-     * @param novaQuantidade nova quantidade da movimentação
-     * @return DTO da movimentação atualizada
-     */
+    private void reverterEstoqueMovimentacao(Produto produto, MovimentacaoProduto mov) {
+        if (mov.getTipo() == TipoMovimentacao.ENTRADA) {
+            produto.setQuantidade(produto.getQuantidade() - mov.getQuantidade());
+            estoqueDepositoService.ajustarNoDepositoPadrao(produto, produto.getOrg(), -mov.getQuantidade());
+        } else if (mov.getTipo() == TipoMovimentacao.SAIDA) {
+            produto.setQuantidade(produto.getQuantidade() + mov.getQuantidade());
+            estoqueDepositoService.ajustarNoDepositoPadrao(produto, produto.getOrg(), mov.getQuantidade());
+        }
+    }
+
+    @Transactional
     public MovimentacaoProdutoDto editarMovimentacaoSemAjustarEstoque(Long movimentacaoId, Integer novaQuantidade) {
         Long orgId = SecurityUtils.getCurrentOrgId();
 
@@ -164,14 +172,7 @@ public class MovimentacaoProdutoService {
         return new MovimentacaoProdutoDto(salvo);
     }
 
-    /**
-     * Cria uma nova movimentação sem afetar o estoque (para casos específicos como edição de produtos).
-     * @param produtoId ID do produto
-     * @param quantidade quantidade da movimentação
-     * @param tipo tipo da movimentação (ENTRADA/SAIDA)
-     * @param dataHora data/hora da movimentação (opcional, usa atual se null)
-     * @return DTO da movimentação criada
-     */
+    @Transactional
     public MovimentacaoProdutoDto criarMovimentacaoSemAfetarEstoque(Long produtoId, Integer quantidade, TipoMovimentacao tipo, LocalDateTime dataHora) {
         Long orgId = SecurityUtils.getCurrentOrgId();
 
@@ -292,50 +293,14 @@ public class MovimentacaoProdutoService {
                 .map(MovimentacaoProdutoDto::new);
     }
 
-    /**
-     * Busca todas as movimentações por nome de consumidor na organização atual.
-     * @param nomeConsumidor nome do consumidor (pode ser parcial)
-     * @param pageable informações de paginação
-     * @return página de movimentações do consumidor
-     */
     public Page<MovimentacaoProdutoDto> buscarPorNomeConsumidor(String nomeConsumidor, Pageable pageable) {
         Long orgId = SecurityUtils.getCurrentOrgId();
-
-        // Primeiro buscamos todas as movimentações da organização
-        List<MovimentacaoProdutoDto> todasMovimentacoes = movimentacaoRepository
-                .findByOrgId(orgId, Pageable.unpaged()) // Buscamos todas sem paginação
-                .stream()
-                .map(MovimentacaoProdutoDto::new)
-                .filter(dto -> dto.getNomeConsumidor() != null &&
-                        dto.getNomeConsumidor().toLowerCase().contains(nomeConsumidor.toLowerCase()))
-                .collect(Collectors.toList());
-
-        // Implementamos a paginação manualmente
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), todasMovimentacoes.size());
-
-        // Verificamos se o índice inicial é válido
-        if (start > todasMovimentacoes.size()) {
-            return Page.empty(pageable);
-        }
-
-        // Criamos uma sublista com os itens da página atual
-        List<MovimentacaoProdutoDto> itensDaPagina = todasMovimentacoes.subList(start, end);
-
-        // Retornamos um Page com os itens filtrados e paginados
-        return new org.springframework.data.domain.PageImpl<>(
-                itensDaPagina,
-                pageable,
-                todasMovimentacoes.size()
-        );
+        return movimentacaoRepository
+                .findByConsumidorNomeContainingAndOrgId(nomeConsumidor, orgId, pageable)
+                .map(MovimentacaoProdutoDto::new);
     }
 
-    /**
-     * Atualiza apenas o consumidor vinculado à movimentação.
-     * @param movimentacaoId ID da movimentação a ser atualizada
-     * @param consumidorId ID do novo consumidor
-     * @return DTO da movimentação atualizada
-     */
+    @Transactional
     public MovimentacaoProdutoDto atualizarConsumidor(Long movimentacaoId, Long consumidorId) {
         Long orgId = SecurityUtils.getCurrentOrgId();
         MovimentacaoProduto mov = movimentacaoRepository.findById(movimentacaoId)

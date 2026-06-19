@@ -41,6 +41,15 @@ public class Produto {
     @Column(nullable = false)
     private Boolean ativo = true;
 
+    @Column(length = 50)
+    private String sku;
+
+    @Column(name = "codigo_barras", length = 50)
+    private String codigoBarras;
+
+    @Column(name = "custo_medio", precision = 12, scale = 2)
+    private BigDecimal custoMedio = BigDecimal.ZERO;
+
     public Produto(long id, String nome, int quantidade, BigDecimal preco) {
         this.id = id;
         this.nome = nome;
@@ -133,6 +142,13 @@ public class Produto {
     public void setAtivo(Boolean ativo) {
         this.ativo = ativo;
     }
+
+    public String getSku() { return sku; }
+    public void setSku(String sku) { this.sku = sku; }
+    public String getCodigoBarras() { return codigoBarras; }
+    public void setCodigoBarras(String codigoBarras) { this.codigoBarras = codigoBarras; }
+    public BigDecimal getCustoMedio() { return custoMedio; }
+    public void setCustoMedio(BigDecimal custoMedio) { this.custoMedio = custoMedio; }
 
     @Transient
     public boolean isEstoqueBaixo() {

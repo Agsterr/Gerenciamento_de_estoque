@@ -12,8 +12,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -22,70 +22,73 @@ public class ConsumidorService {
     private final ConsumidorRepository consumidorRepository;
     private final OrgRepository orgRepository;
 
-    // Constructor Injection
     public ConsumidorService(ConsumidorRepository consumidorRepository, OrgRepository orgRepository) {
         this.consumidorRepository = consumidorRepository;
         this.orgRepository = orgRepository;
     }
 
-    // Listar todos os consumidores de uma organização com paginação
+    private Long requireOrgId() {
+        Long orgId = SecurityUtils.getCurrentOrgId();
+        if (orgId == null) {
+            throw new OrganizacaoNaoEncontradaException("Organização não encontrada no contexto de segurança");
+        }
+        return orgId;
+    }
+
     @Cacheable(value = "consumidores", key = "'lista-' + #root.target.getCurrentOrgId() + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<Consumidor> listarTodos(Pageable pageable) {
-        Long orgId = SecurityUtils.getCurrentOrgId();  // Obtém o org_id do contexto de segurança
-        if (orgId == null) {
-            throw new OrganizacaoNaoEncontradaException("Organização não encontrada no contexto de segurança");
-        }
-        return consumidorRepository.findByOrg_Id(orgId, pageable);  // Filtra consumidores pela organização com paginação
+        Long orgId = requireOrgId();
+        return consumidorRepository.findByOrg_Id(orgId, pageable);
     }
 
-    // Buscar um consumidor por nome e organização
     @Cacheable(value = "consumidores", key = "'nome-' + #nome + '-' + #root.target.getCurrentOrgId()")
     public Optional<Consumidor> buscarPorNome(String nome) {
-        Long orgId = SecurityUtils.getCurrentOrgId();  // Obtém o org_id do contexto de segurança
-        if (orgId == null) {
-            throw new OrganizacaoNaoEncontradaException("Organização não encontrada no contexto de segurança");
-        }
-        return consumidorRepository.findByNomeAndOrg_Id(nome, orgId);  // Filtra pelo nome e org_id
+        Long orgId = requireOrgId();
+        return consumidorRepository.findByNomeAndOrg_Id(nome, orgId);
     }
 
-    // Salvar um consumidor associado à organização
+    public Consumidor buscarPorId(Long id) {
+        Long orgId = requireOrgId();
+        return consumidorRepository.findByIdAndOrgId(id, orgId)
+                .orElseThrow(() -> new ConsumidorNaoEncontradoException("Consumidor não encontrado"));
+    }
+
+    @Transactional
     @CacheEvict(value = "consumidores", allEntries = true)
     public Consumidor salvar(Consumidor consumidor) {
-        Long orgId = SecurityUtils.getCurrentOrgId();  // Obtém o org_id do contexto de segurança
-        if (orgId == null) {
-            throw new OrganizacaoNaoEncontradaException("Organização não encontrada no contexto de segurança");
-        }
-
+        Long orgId = requireOrgId();
         Org org = orgRepository.findById(orgId)
                 .orElseThrow(() -> new OrganizacaoNaoEncontradaException("Organização não encontrada"));
 
-        consumidor.setOrg(org);  // Associa a organização ao consumidor
-        return consumidorRepository.save(consumidor);  // Salva o consumidor associado à organização
+        consumidor.setOrg(org);
+        return consumidorRepository.save(consumidor);
     }
 
-    // Editar um consumidor existente
+    @Transactional
     @CacheEvict(value = "consumidores", allEntries = true)
     public Consumidor editar(Long id, Consumidor consumidorAtualizado) {
-        // Busca o consumidor existente e atualiza seus dados
-        Consumidor consumidorExistente = consumidorRepository.findById(id)
-                .orElseThrow(() -> new ConsumidorNaoEncontradoException("Consumidor não encontrado"));
+        Long orgId = requireOrgId();
+        Consumidor consumidorExistente = consumidorRepository.findByIdAndOrgId(id, orgId)
+                .orElseThrow(() -> new ConsumidorNaoEncontradoException("Consumidor não encontrado ou não pertence à organização"));
 
-        // Atualiza os dados do consumidor
         consumidorExistente.setNome(consumidorAtualizado.getNome());
         consumidorExistente.setCpf(consumidorAtualizado.getCpf());
         consumidorExistente.setEndereco(consumidorAtualizado.getEndereco());
-        // Atualize outros campos conforme necessário
 
-        return consumidorRepository.save(consumidorExistente);  // Salva o consumidor atualizado
+        return consumidorRepository.save(consumidorExistente);
     }
 
-    // Excluir um consumidor existente
+    @Transactional
     @CacheEvict(value = "consumidores", allEntries = true)
     public void excluir(Long id) {
-        // Busca o consumidor a ser excluído
-        Consumidor consumidor = consumidorRepository.findById(id)
-                .orElseThrow(() -> new ConsumidorNaoEncontradoException("Consumidor não encontrado"));
+        Long orgId = requireOrgId();
+        Consumidor consumidor = consumidorRepository.findByIdAndOrgId(id, orgId)
+                .orElseThrow(() -> new ConsumidorNaoEncontradoException("Consumidor não encontrado ou não pertence à organização"));
 
-        consumidorRepository.delete(consumidor);  // Exclui o consumidor
+        consumidorRepository.delete(consumidor);
+    }
+
+    public Long getCurrentOrgId() {
+        return SecurityUtils.getCurrentOrgId();
     }
 }

@@ -1,0 +1,110 @@
+<app-page-hint [message]="pageHint.message" [prerequisites]="pageHint.prerequisites"></app-page-hint>
+
+<header class="header-page">
+  <h2><i class="fas fa-truck"></i> Gestão de Fornecedores</h2>
+  <div class="acoes-header">
+    <button class="botao-listar" (click)="toggleList()"><i class="fas fa-list"></i> Listar</button>
+    <button class="botao-adicionar" (click)="toggleAddForm()"><i class="fas fa-plus"></i> Novo</button>
+  </div>
+</header>
+
+<div class="summary-section" *ngIf="totalElements > 0">
+  <div class="summary-card">
+    <i class="fas fa-truck"></i>
+    <div class="summary-content">
+      <span class="summary-label">Total de Fornecedores</span>
+      <span class="summary-value">{{ totalElements }}</span>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="mensagem" class="mensagem-feedback sucesso"><i class="fas fa-check-circle"></i> {{ mensagem }}</div>
+<div *ngIf="mensagemErro" class="mensagem-feedback erro"><i class="fas fa-exclamation-circle"></i> {{ mensagemErro }}</div>
+
+<div *ngIf="loading" class="spinner-overlay"><div class="spinner"></div></div>
+
+<div class="main-content">
+  <div class="card-lista" *ngIf="showList">
+    <div class="busca-container">
+      <div class="busca-input-wrapper">
+        <i class="fas fa-search"></i>
+        <input class="campo-busca" type="text" placeholder="Buscar por nome, CNPJ ou e-mail..."
+          [(ngModel)]="searchTerm" (input)="applyFilter()" />
+      </div>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th><i class="fas fa-hashtag"></i> ID</th>
+          <th><i class="fas fa-building"></i> Nome</th>
+          <th><i class="fas fa-id-card"></i> CNPJ</th>
+          <th><i class="fas fa-envelope"></i> E-mail</th>
+          <th><i class="fas fa-phone"></i> Telefone</th>
+          <th><i class="fas fa-map-marker-alt"></i> Endereço</th>
+          <th><i class="fas fa-cogs"></i> Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let f of filteredFornecedores">
+          <td data-label="ID">{{ f.id }}</td>
+          <td data-label="Nome">{{ f.nome }}</td>
+          <td data-label="CNPJ">{{ f.cnpj || '-' }}</td>
+          <td data-label="E-mail">{{ f.email || '-' }}</td>
+          <td data-label="Telefone">{{ f.telefone || '-' }}</td>
+          <td data-label="Endereço">{{ f.endereco || '-' }}</td>
+          <td class="acoes-tabela" data-label="Ações">
+            <button (click)="edit(f)" class="btn btn-primary btn-sm" title="Editar"><i class="fas fa-edit"></i></button>
+            <button (click)="delete(f.id)" class="btn btn-danger btn-sm" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="pagination-bar" *ngIf="totalPages > 0">
+      <div class="pagination-info-left">Página {{ currentPage + 1 }} de {{ totalPages }} ({{ totalElements }} fornecedores)</div>
+      <div class="pagination-row">
+        <button class="btn-pag" (click)="paginaAnterior()" [disabled]="currentPage === 0"><i class="fas fa-chevron-left"></i></button>
+        <ng-container *ngFor="let _ of [].constructor(totalPages); let i = index">
+          <button class="pagina-numero" [class.ativa]="i === currentPage" (click)="irParaPagina(i)" [disabled]="i === currentPage">{{ i + 1 }}</button>
+        </ng-container>
+        <button class="btn-pag" (click)="proximaPagina()" [disabled]="currentPage >= totalPages - 1"><i class="fas fa-chevron-right"></i></button>
+      </div>
+      <div class="pagination-info-right select-page-size">
+        <label>Exibir</label>
+        <select [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+          <option *ngFor="let s of [10, 20, 30, 40]" [value]="s">{{ s }}</option>
+        </select>
+        <span>por página</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-form" *ngIf="showAddForm">
+    <h3 class="titulo-form"><i class="fas fa-truck-loading"></i> {{ editing ? 'Editar Fornecedor' : 'Adicionar Fornecedor' }}</h3>
+    <form (ngSubmit)="submitForm()" class="form-adicionar">
+      <div class="form-group">
+        <label for="nome">Nome *</label>
+        <input id="nome" type="text" [(ngModel)]="form.nome" name="nome" required />
+      </div>
+      <div class="form-group">
+        <label for="cnpj">CNPJ</label>
+        <input id="cnpj" type="text" [(ngModel)]="form.cnpj" name="cnpj" maxlength="18" />
+      </div>
+      <div class="form-group">
+        <label for="email">E-mail</label>
+        <input id="email" type="email" [(ngModel)]="form.email" name="email" />
+      </div>
+      <div class="form-group">
+        <label for="telefone">Telefone</label>
+        <input id="telefone" type="text" [(ngModel)]="form.telefone" name="telefone" />
+      </div>
+      <div class="form-group">
+        <label for="endereco">Endereço</label>
+        <input id="endereco" type="text" [(ngModel)]="form.endereco" name="endereco" />
+      </div>
+      <div class="botoes-form">
+        <button type="submit" class="botao-salvar" [disabled]="loading"><i class="fas fa-save"></i> {{ editing ? 'Salvar' : 'Adicionar' }}</button>
+        <button type="button" class="botao-cancelar" (click)="toggleList()" [disabled]="loading"><i class="fas fa-times"></i> Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>

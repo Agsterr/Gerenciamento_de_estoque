@@ -1,6 +1,5 @@
 package br.softsistem.Gerenciamento_de_estoque.config;
 
-import br.softsistem.Gerenciamento_de_estoque.service.PlanService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -8,43 +7,55 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import br.softsistem.Gerenciamento_de_estoque.service.PlanService;
+
 /**
- * Componente responsável por inicializar e sincronizar planos com Stripe na inicialização da aplicação
+ * Inicializa planos na startup. Com Asaas usa planos locais; com Mercado Pago sincroniza da API.
  */
 @Component
-@Order(100) // Executa após outras inicializações
+@Order(100)
 public class PlanInitializer implements ApplicationRunner {
-    
+
     private static final Logger log = LoggerFactory.getLogger(PlanInitializer.class);
-    
+
     private final PlanService planService;
-    private final StripeConfig stripeConfig;
-    
-    public PlanInitializer(PlanService planService, StripeConfig stripeConfig) {
+    private final PaymentProviderConfig paymentProviderConfig;
+    private final MercadoPagoConfig mercadoPagoConfig;
+
+    public PlanInitializer(
+            PlanService planService,
+            PaymentProviderConfig paymentProviderConfig,
+            MercadoPagoConfig mercadoPagoConfig) {
         this.planService = planService;
-        this.stripeConfig = stripeConfig;
+        this.paymentProviderConfig = paymentProviderConfig;
+        this.mercadoPagoConfig = mercadoPagoConfig;
     }
-    
+
     @Override
-    public void run(ApplicationArguments args) throws Exception {
-        log.info("Iniciando configuração de planos...");
-        
+    public void run(ApplicationArguments args) {
+        log.info("Iniciando configuração de planos (provedor: {})...", paymentProviderConfig.getProvider());
+
+        if (paymentProviderConfig.isMercadoPago()) {
+            syncMercadoPagoPlans();
+        } else {
+            planService.getDefaultSaasPlan().ifPresentOrElse(
+                    plan -> log.info("Plano SaaS ativo: {} — R$ {}/mês (checkout envia valor ao Asaas)",
+                            plan.getName(), plan.getPrice()),
+                    () -> log.warn("Nenhum plano SaaS ativo encontrado. Execute as migrations ou crie o plano BASIC."));
+        }
+    }
+
+    private void syncMercadoPagoPlans() {
         try {
-            // Verificar se o Stripe está configurado
-            if (!stripeConfig.isStripeConfigured()) {
-                log.warn("Stripe não está configurado. Sincronização de planos será ignorada.");
-                log.info("Para habilitar a sincronização automática, configure as chaves do Stripe no arquivo .env");
+            if (!mercadoPagoConfig.isMercadoPagoConfigured()) {
+                log.warn("Mercado Pago não configurado. Sincronização ignorada.");
                 return;
             }
-            
-            // Sincronizar planos com Stripe
-            log.info("Stripe configurado. Iniciando sincronização de planos...");
-            planService.syncAllPlansWithStripe();
-            log.info("Sincronização de planos concluída com sucesso!");
-            
+            log.info("Sincronizando planos do Mercado Pago...");
+            var result = planService.syncMercadoPagoPlans(true);
+            log.info("Sincronização concluída: {}", result);
         } catch (Exception e) {
-            log.error("Erro durante a inicialização dos planos: {}", e.getMessage(), e);
-            log.warn("A aplicação continuará funcionando, mas os planos podem não estar sincronizados com o Stripe");
+            log.error("Erro na sincronização de planos MP: {}", e.getMessage(), e);
         }
     }
 }

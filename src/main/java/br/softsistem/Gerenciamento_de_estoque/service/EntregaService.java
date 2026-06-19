@@ -18,6 +18,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -31,25 +32,29 @@ public class EntregaService {
     private final ProdutoRepository produtoRepository;
     private final UsuarioRepository usuarioRepository;
     private final MovimentacaoProdutoRepository movimentacaoProdutoRepository;
+    private final EstoqueDepositoService estoqueDepositoService;
 
     public EntregaService(
             EntregaRepository entregaRepository,
             ConsumidorRepository consumidorRepository,
             ProdutoRepository produtoRepository,
             UsuarioRepository usuarioRepository,
-            MovimentacaoProdutoRepository movimentacaoProdutoRepository
+            MovimentacaoProdutoRepository movimentacaoProdutoRepository,
+            EstoqueDepositoService estoqueDepositoService
     ) {
         this.entregaRepository = entregaRepository;
         this.consumidorRepository = consumidorRepository;
         this.produtoRepository = produtoRepository;
         this.usuarioRepository = usuarioRepository;
         this.movimentacaoProdutoRepository = movimentacaoProdutoRepository;
+        this.estoqueDepositoService = estoqueDepositoService;
     }
 
     // ================================
     // CRIAR ENTREGA (com entregador automático)
     // ================================
 
+    @Transactional
     @CacheEvict(value = {"entregas-relatorios", "produtos"}, allEntries = true)
     public EntregaComAvisoResponseDto criarEntrega(EntregaRequestDto entregaRequest) {
         Long orgId = SecurityUtils.getCurrentOrgId();
@@ -69,9 +74,10 @@ public class EntregaService {
             throw new IllegalArgumentException("Estoque insuficiente para a entrega.");
         }
 
-        // Ajusta estoque
+        // Ajusta estoque global e no depósito padrão
         produto.setQuantidade(produto.getQuantidade() - entregaRequest.getQuantidade());
         produtoRepository.save(produto);
+        estoqueDepositoService.ajustarNoDepositoPadrao(produto, produto.getOrg(), -entregaRequest.getQuantidade());
 
         // Calcula flag e mensagem de estoque baixo
         boolean estoqueBaixo = produto.isEstoqueBaixo();
@@ -131,6 +137,7 @@ public class EntregaService {
     // ================================
     // EDITAR ENTREGA (mantém entregador antigo)
     // ================================
+    @Transactional
     @CacheEvict(value = {"entregas-relatorios", "produtos"}, allEntries = true)
     public Entrega editarEntrega(Long id, EntregaRequestDto entregaRequest) {
         Long orgId = SecurityUtils.getCurrentOrgId();
@@ -161,10 +168,12 @@ public class EntregaService {
         if (!produtoAntigo.getId().equals(produto.getId())) {
             // Produto mudou: devolve ao estoque do antigo e subtrai do novo
             produtoAntigo.setQuantidade(produtoAntigo.getQuantidade() + quantidadeAnterior);
+            estoqueDepositoService.ajustarNoDepositoPadrao(produtoAntigo, produtoAntigo.getOrg(), quantidadeAnterior);
             if (produto.getQuantidade() < novaQuantidade) {
                 throw new IllegalArgumentException("Estoque insuficiente para a alteração do produto/quantidade.");
             }
             produto.setQuantidade(produto.getQuantidade() - novaQuantidade);
+            estoqueDepositoService.ajustarNoDepositoPadrao(produto, produto.getOrg(), -novaQuantidade);
             produtoRepository.save(produtoAntigo);
             produtoRepository.save(produto);
         } else {
@@ -175,8 +184,10 @@ public class EntregaService {
                     throw new IllegalArgumentException("Estoque insuficiente para a alteração da quantidade.");
                 }
                 produto.setQuantidade(produto.getQuantidade() - diff);
+                estoqueDepositoService.ajustarNoDepositoPadrao(produto, produto.getOrg(), -diff);
             } else if (diff < 0) { // devolver ao estoque
                 produto.setQuantidade(produto.getQuantidade() + Math.abs(diff));
+                estoqueDepositoService.ajustarNoDepositoPadrao(produto, produto.getOrg(), Math.abs(diff));
             }
             if (diff != 0) {
                 produtoRepository.save(produto);
@@ -227,6 +238,7 @@ public class EntregaService {
     // ================================
     // DELETAR ENTREGA
     // ================================
+    @Transactional
     @CacheEvict(value = {"entregas-relatorios", "produtos"}, allEntries = true)
     public void deletarEntrega(Long id) {
         Long orgId = SecurityUtils.getCurrentOrgId();
@@ -241,10 +253,11 @@ public class EntregaService {
             throw new ResourceNotFoundException("Você não pode excluir uma entrega de outra organização.");
         }
 
-        // Antes de deletar, se for necessário, você pode ajustar o estoque de volta:
+        // Antes de deletar, devolve estoque global e no depósito
         Produto produto = entrega.getProduto();
         produto.setQuantidade(produto.getQuantidade() + entrega.getQuantidade());
         produtoRepository.save(produto);
+        estoqueDepositoService.ajustarNoDepositoPadrao(produto, produto.getOrg(), entrega.getQuantidade());
 
         // Remover movimentação associada, se houver
         movimentacaoProdutoRepository.deleteByEntregaId(entrega.getId());

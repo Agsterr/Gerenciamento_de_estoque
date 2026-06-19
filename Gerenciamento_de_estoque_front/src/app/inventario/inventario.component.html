@@ -1,0 +1,123 @@
+<app-page-hint [message]="pageHint.message" [prerequisites]="pageHint.prerequisites"></app-page-hint>
+
+<header class="header-page">
+  <h2><i class="fas fa-clipboard-list"></i> Inventário</h2>
+  <div class="acoes-header">
+    <button class="botao-listar" (click)="toggleList()"><i class="fas fa-list"></i> Listar</button>
+    <button class="botao-adicionar" (click)="toggleNova()"><i class="fas fa-plus"></i> Nova Contagem</button>
+  </div>
+</header>
+
+<div *ngIf="mensagem" class="mensagem-feedback sucesso"><i class="fas fa-check-circle"></i> {{ mensagem }}</div>
+<div *ngIf="mensagemErro" class="mensagem-feedback erro"><i class="fas fa-exclamation-circle"></i> {{ mensagemErro }}</div>
+<div *ngIf="loading" class="spinner-overlay"><div class="spinner"></div></div>
+
+<div class="main-content">
+  <div class="card-lista" *ngIf="showList">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th><i class="fas fa-hashtag"></i> ID</th>
+          <th><i class="fas fa-warehouse"></i> Depósito</th>
+          <th><i class="fas fa-info-circle"></i> Status</th>
+          <th><i class="fas fa-calendar"></i> Criado em</th>
+          <th><i class="fas fa-calendar-check"></i> Finalizado em</th>
+          <th><i class="fas fa-cogs"></i> Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of contagens">
+          <td data-label="ID">{{ c.id }}</td>
+          <td data-label="Depósito">{{ c.depositoNome }}</td>
+          <td data-label="Status"><span class="badge" [ngClass]="statusClass(c.status)">{{ c.status }}</span></td>
+          <td data-label="Criado em">{{ c.criadoEm ? (c.criadoEm | date:'dd/MM/yyyy HH:mm') : '-' }}</td>
+          <td data-label="Finalizado em">{{ c.finalizadoEm ? (c.finalizadoEm | date:'dd/MM/yyyy HH:mm') : '-' }}</td>
+          <td class="acoes-tabela" data-label="Ações">
+            <button *ngIf="isAberta(c)" (click)="abrirContagem(c)" class="btn btn-primary btn-sm" title="Continuar contagem">
+              <i class="fas fa-edit"></i> Contar
+            </button>
+            <button (click)="abrirContagem(c)" class="btn btn-info btn-sm" title="Ver detalhes">
+              <i class="fas fa-eye"></i> Ver
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="pagination-bar" *ngIf="totalPages > 0">
+      <div class="pagination-info-left">Página {{ currentPage + 1 }} de {{ totalPages }} ({{ totalElements }} contagens)</div>
+      <div class="pagination-row">
+        <button class="btn-pag" (click)="paginaAnterior()" [disabled]="currentPage === 0"><i class="fas fa-chevron-left"></i></button>
+        <ng-container *ngFor="let _ of [].constructor(totalPages); let i = index">
+          <button class="pagina-numero" [class.ativa]="i === currentPage" (click)="irParaPagina(i)" [disabled]="i === currentPage">{{ i + 1 }}</button>
+        </ng-container>
+        <button class="btn-pag" (click)="proximaPagina()" [disabled]="currentPage >= totalPages - 1"><i class="fas fa-chevron-right"></i></button>
+      </div>
+      <div class="pagination-info-right select-page-size">
+        <label>Exibir</label>
+        <select [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+          <option *ngFor="let s of [10, 20, 30]" [value]="s">{{ s }}</option>
+        </select>
+        <span>por página</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-form" *ngIf="showNova">
+    <h3 class="titulo-form"><i class="fas fa-play-circle"></i> Iniciar Nova Contagem</h3>
+    <form (ngSubmit)="iniciarContagem()" class="form-adicionar">
+      <div class="form-group">
+        <label for="deposito">Depósito *</label>
+        <select id="deposito" [(ngModel)]="depositoId" name="depositoId" required>
+          <option [ngValue]="null">Selecione...</option>
+          <option *ngFor="let d of depositos" [ngValue]="d.id">{{ d.nome }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="observacao">Observação</label>
+        <textarea id="observacao" [(ngModel)]="observacao" name="observacao" rows="2"></textarea>
+      </div>
+      <div class="botoes-form">
+        <button type="submit" class="botao-salvar" [disabled]="loading"><i class="fas fa-play"></i> Iniciar</button>
+        <button type="button" class="botao-cancelar" (click)="toggleList()" [disabled]="loading"><i class="fas fa-times"></i> Cancelar</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card-lista" *ngIf="showContagem && contagemAtual">
+    <h3 class="titulo-form">
+      <i class="fas fa-clipboard-check"></i>
+      Contagem #{{ contagemAtual.id }} — {{ contagemAtual.depositoNome }}
+      <span class="badge" [ngClass]="statusClass(contagemAtual.status)">{{ contagemAtual.status }}</span>
+    </h3>
+    <button class="botao-cancelar" (click)="toggleList()" style="margin-bottom: 16px;"><i class="fas fa-arrow-left"></i> Voltar</button>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>Qtd. Sistema</th>
+          <th>Qtd. Contada</th>
+          <th>Diferença</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of contagemAtual.itens">
+          <td data-label="Produto">{{ item.produtoNome }}</td>
+          <td data-label="Qtd. Sistema">{{ item.quantidadeSistema }}</td>
+          <td data-label="Qtd. Contada">
+            <input *ngIf="isAberta(contagemAtual)" type="number" [(ngModel)]="contagensInput[item.id]" [name]="'qtd' + item.id" min="0" style="width: 100px;" />
+            <span *ngIf="!isAberta(contagemAtual)">{{ item.quantidadeContada ?? '-' }}</span>
+          </td>
+          <td data-label="Diferença">
+            <span *ngIf="isAberta(contagemAtual)">{{ (contagensInput[item.id] ?? 0) - item.quantidadeSistema }}</span>
+            <span *ngIf="!isAberta(contagemAtual)">{{ item.diferenca ?? '-' }}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="botoes-form" *ngIf="isAberta(contagemAtual)">
+      <button type="button" class="botao-salvar" (click)="salvarItens()" [disabled]="loading"><i class="fas fa-save"></i> Salvar Quantidades</button>
+      <button type="button" class="btn btn-success" (click)="finalizar()" [disabled]="loading"><i class="fas fa-check-double"></i> Finalizar Contagem</button>
+      <button type="button" class="btn btn-danger" (click)="cancelarContagem()" [disabled]="loading"><i class="fas fa-ban"></i> Cancelar Contagem</button>
+    </div>
+  </div>
+</div>

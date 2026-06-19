@@ -126,4 +126,29 @@ export class RelatoriosService {
       headers,
     });
   }
+
+  // Vendas (pedidos confirmados)
+  vendasPeriodoPdf(inicioISO: string, fimISO: string): Observable<Blob> {
+    const params = new HttpParams().set('inicio', inicioISO).set('fim', fimISO);
+    const headers = this.getAuthHeaders().set('Accept', 'application/pdf');
+    return this.http.get(`${this.baseUrl}/vendas-periodo.pdf`, { params, responseType: 'blob', headers });
+  }
+
+  vendasPeriodoXlsx(inicioISO: string, fimISO: string): Observable<Blob> {
+    const params = new HttpParams().set('inicio', inicioISO).set('fim', fimISO);
+    const headers = this.getAuthHeaders().set('Accept', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    return this.http.get(`${this.baseUrl}/vendas-periodo.xlsx`, { params, responseType: 'blob', headers });
+  }
+
+  vendasMesPdf(ano: number, mes: number): Observable<Blob> {
+    const params = new HttpParams().set('ano', ano.toString()).set('mes', mes.toString());
+    const headers = this.getAuthHeaders().set('Accept', 'application/pdf');
+    return this.http.get(`${this.baseUrl}/vendas-mes.pdf`, { params, responseType: 'blob', headers });
+  }
+
+  vendasMesXlsx(ano: number, mes: number): Observable<Blob> {
+    const params = new HttpParams().set('ano', ano.toString()).set('mes', mes.toString());
+    const headers = this.getAuthHeaders().set('Accept', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    return this.http.get(`${this.baseUrl}/vendas-mes.xlsx`, { params, responseType: 'blob', headers });
+  }
 }

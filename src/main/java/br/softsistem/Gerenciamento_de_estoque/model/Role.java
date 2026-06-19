@@ -9,14 +9,16 @@ import java.util.List;
 
 @Entity
 @Transactional
-@Table(name = "role")
+@Table(name = "role", uniqueConstraints = {
+        @UniqueConstraint(name = "uq_role_org_nome", columnNames = {"org_id", "nome"})
+})
 public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String nome;
 
     // Relacionamento com a entidade Org (Organização)

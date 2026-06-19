@@ -2,14 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-import { RoleService } from '../services/role.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { environment } from '../../environments/environment';
-import { trigger, state, style, transition, animate, query, stagger } from '@angular/animations';
+import { trigger, transition, style, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-register',
@@ -44,18 +43,11 @@ import { trigger, state, style, transition, animate, query, stagger } from '@ang
       transition(':leave', [
         animate('200ms ease-in', style({ opacity: 0, transform: 'scale(0.95)' }))
       ])
-    ]),
-    trigger('scaleIn', [
-      transition(':enter', [
-        style({ transform: 'scale(0.8)', opacity: 0 }),
-        animate('300ms cubic-bezier(0.35, 0, 0.25, 1)', style({ transform: 'scale(1)', opacity: 1 }))
-      ])
     ])
   ]
 })
 export class RegisterComponent implements OnInit {
   registerForm: FormGroup;
-  roles: any[] = [];
   successMessage: string = '';
   errorMessage: string = '';
   showPassword: boolean = false;
@@ -71,40 +63,28 @@ export class RegisterComponent implements OnInit {
     private fb: FormBuilder,
     private router: Router,
     private authService: AuthService,
-    private roleService: RoleService,
     private snackBar: MatSnackBar
   ) {
     this.registerForm = this.fb.group({
       username: ['', Validators.required],
       senha: ['', [Validators.required, Validators.minLength(6)]],
       email: ['', [Validators.required, Validators.email]],
-      orgId: ['', Validators.required],
-      roles: [[], Validators.required],
+      orgNome: ['', [Validators.required, Validators.minLength(2)]],
     });
   }
 
   ngOnInit(): void {
-    // Verifica se há uma mensagem de erro armazenada no localStorage
+    this.authService.markVisited();
+    if (this.authService.isTokenValid()) {
+      this.router.navigate(['/dashboard'], { replaceUrl: true });
+      return;
+    }
+
     const errorMessage = localStorage.getItem('authErrorMessage');
     if (errorMessage) {
       this.errorMessage = errorMessage;
       localStorage.removeItem('authErrorMessage');
     }
-
-    // Carregar as roles do backend
-    this.roleService.listarRoles().subscribe({
-      next: (roles: any[]) => {
-        this.roles = roles;
-      },
-      error: (err: HttpErrorResponse) => {
-        console.error('Erro ao carregar roles:', err);
-        this.errorMessage = 'Erro ao carregar roles.';
-        this.snackBar.open(this.errorMessage, 'Fechar', {
-          duration: 3000,
-          panelClass: ['error-snackbar'],
-        });
-      }
-    });
   }
 
   togglePasswordVisibility(): void {
@@ -157,7 +137,7 @@ export class RegisterComponent implements OnInit {
   }
 
   getFormProgress(): number {
-    const fields = ['username', 'senha', 'email', 'orgId', 'roles'];
+    const fields = ['username', 'senha', 'email', 'orgNome'];
     let filledFields = 0;
 
     fields.forEach(field => {
@@ -170,120 +150,59 @@ export class RegisterComponent implements OnInit {
     return Math.round((filledFields / fields.length) * 100);
   }
 
-  isRoleSelected(roleName: string): boolean {
-    const selectedRoles = this.registerForm.get('roles')?.value || [];
-    return selectedRoles.includes(roleName);
-  }
-
-  toggleRole(roleName: string): void {
-    const currentRoles = this.registerForm.get('roles')?.value || [];
-    const index = currentRoles.indexOf(roleName);
-    
-    if (index > -1) {
-      currentRoles.splice(index, 1);
-    } else {
-      currentRoles.push(roleName);
-    }
-    
-    this.registerForm.get('roles')?.setValue([...currentRoles]);
-    this.registerForm.get('roles')?.markAsTouched();
-  }
-
-  getRoleIcon(roleName: string): string {
-    const iconMap: { [key: string]: string } = {
-      'ADMIN': 'admin_panel_settings',
-      'USER': 'person',
-      'MANAGER': 'supervisor_account',
-      'VIEWER': 'visibility',
-      'EDITOR': 'edit'
-    };
-    return iconMap[roleName.toUpperCase()] || 'assignment_ind';
-  }
-
-  trackByRole(index: number, role: any): any {
-    return role.id || role.nome;
-  }
-
   onSubmit(): void {
     if (this.registerForm.valid && !this.isSubmitting) {
-      const { username, senha, email } = this.registerForm.value;
-      let { orgId, roles } = this.registerForm.value;
-
-      // Garante que orgId seja número e válido
-      const parsedOrgId = Number(orgId);
-      if (!Number.isFinite(parsedOrgId) || parsedOrgId <= 0) {
-        this.errorMessage = 'ID da organização inválido. Informe um número válido.';
-        this.snackBar.open(this.errorMessage, 'Fechar', {
-          duration: 3000,
-          panelClass: ['error-snackbar'],
-        });
-        return;
-      }
-
-      // Garante que roles seja um array de strings
-      roles = Array.isArray(roles) ? roles.map((r: any) => String(r)) : [];
-
-      // Verifica se pelo menos uma role foi selecionada
-      if (roles.length === 0) {
-        this.errorMessage = 'Você precisa selecionar pelo menos uma permissão.';
-        this.snackBar.open(this.errorMessage, 'Fechar', {
-          duration: 3000,
-          panelClass: ['error-snackbar'],
-        });
-        return;
-      }
+      const { username, senha, email, orgNome } = this.registerForm.value;
 
       this.isSubmitting = true;
       this.errorMessage = '';
 
-      const payload = { username, senha, email, orgId: parsedOrgId, roles };
+      const payload = {
+        username: String(username).trim(),
+        senha,
+        email: String(email).trim(),
+        orgNome: String(orgNome).trim(),
+      };
 
-      // Chama o serviço de autenticação para registrar o usuário
-      this.authService
-        .register(payload)
-        .subscribe({
-          next: (response) => {
-            if (!environment.production) {
-              console.log('Registro bem-sucedido:', response);
-            }
-            this.successMessage = 'Conta criada com sucesso! Redirecionando...';
-            this.snackBar.open(this.successMessage, 'Fechar', {
-              duration: 3000,
-              panelClass: ['success-snackbar'],
-            });
-            this.errorMessage = '';
-            
-            // Delay para mostrar a mensagem de sucesso
-            setTimeout(() => {
-              this.router.navigate(['/login']);
-            }, 2000);
-          },
-          error: (err: HttpErrorResponse) => {
-            console.error('Erro ao registrar:', err);
-            // Mensagens mais específicas para 400
-            if (err.status === 400) {
-              this.errorMessage = err.error?.message || 'Dados inválidos. Verifique o ID da organização e os campos obrigatórios.';
-            } else if (err.status === 403) {
-              this.errorMessage = 'Ação não permitida. É necessário ter permissão de ADMIN.';
-            } else {
-              this.errorMessage = 'Erro ao criar conta. Verifique os dados e tente novamente.';
-            }
-            this.snackBar.open(this.errorMessage, 'Fechar', {
-              duration: 4000,
-              panelClass: ['error-snackbar'],
-            });
-            this.successMessage = '';
-            this.isSubmitting = false;
-          },
-        });
+      this.authService.register(payload).subscribe({
+        next: (response) => {
+          if (!environment.production) {
+            console.log('Registro bem-sucedido:', response);
+          }
+          this.successMessage = 'Conta criada com sucesso! Redirecionando...';
+          this.snackBar.open(this.successMessage, 'Fechar', {
+            duration: 3000,
+            panelClass: ['success-snackbar'],
+          });
+          this.errorMessage = '';
+
+          setTimeout(() => {
+            this.router.navigate(['/login']);
+          }, 2000);
+        },
+        error: (err: HttpErrorResponse) => {
+          console.error('Erro ao registrar:', err);
+          const apiMessage = err.error?.error || err.error?.message;
+          if (err.status === 400 || err.status === 409) {
+            this.errorMessage = apiMessage || 'Dados inválidos. Verifique os campos e tente novamente.';
+          } else {
+            this.errorMessage = apiMessage || 'Erro ao criar conta. Verifique os dados e tente novamente.';
+          }
+          this.snackBar.open(this.errorMessage, 'Fechar', {
+            duration: 4000,
+            panelClass: ['error-snackbar'],
+          });
+          this.successMessage = '';
+          this.isSubmitting = false;
+        },
+      });
     } else if (!this.registerForm.valid) {
       this.errorMessage = 'Por favor, preencha todos os campos corretamente.';
       this.snackBar.open(this.errorMessage, 'Fechar', {
         duration: 3000,
         panelClass: ['error-snackbar'],
       });
-      
-      // Marca todos os campos como touched para mostrar erros
+
       Object.keys(this.registerForm.controls).forEach(key => {
         this.registerForm.get(key)?.markAsTouched();
       });

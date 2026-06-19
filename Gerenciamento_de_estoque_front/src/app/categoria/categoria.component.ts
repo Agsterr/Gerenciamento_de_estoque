@@ -7,15 +7,18 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { PageCategoriaResponse } from '../models/page-categoria-response.model';
+import { PageHintComponent } from '../shared/page-hint/page-hint.component';
+import { PAGE_HINTS } from '../shared/help/help-content.data';
 
 @Component({
   selector: 'app-categoria',
   templateUrl: './categoria.component.html',
   styleUrls: ['./categoria.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, PageHintComponent],
 })
 export class CategoriaComponent implements OnInit {
+  pageHint = PAGE_HINTS['categorias'];
   categoriaForm: FormGroup;
   categorias: Categoria[] = [];
   // Adicionado: lista filtrada e termo de busca

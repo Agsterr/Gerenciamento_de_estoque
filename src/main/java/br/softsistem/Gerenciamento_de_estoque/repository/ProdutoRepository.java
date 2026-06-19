@@ -19,4 +19,10 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
 
     List<Produto> findByAtivoTrueAndOrgId(Long orgId);
+
+    long countByAtivoTrueAndOrgId(Long orgId);
+
+    Optional<Produto> findByCodigoBarrasAndOrgIdAndAtivoTrue(String codigoBarras, Long orgId);
+
+    Optional<Produto> findBySkuAndOrgIdAndAtivoTrue(String sku, Long orgId);
 }

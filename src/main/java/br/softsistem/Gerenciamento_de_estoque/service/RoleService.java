@@ -3,6 +3,7 @@ package br.softsistem.Gerenciamento_de_estoque.service;
 import br.softsistem.Gerenciamento_de_estoque.model.Role;
 import br.softsistem.Gerenciamento_de_estoque.repository.RoleRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,22 +13,19 @@ public class RoleService {
 
     private final RoleRepository roleRepository;
 
-    // Injeção via construtor
     public RoleService(RoleRepository roleRepository) {
         this.roleRepository = roleRepository;
     }
 
-    // Retorna todas as roles
     public List<Role> getAllRoles() {
         return roleRepository.findAll();
     }
 
-    // Retorna uma role por ID
     public Optional<Role> getRoleById(Long id) {
         return roleRepository.findById(id);
     }
 
-    // Cria uma nova role
+    @Transactional
     public Role createRole(Role role) {
         if (roleRepository.existsByNome(role.getNome())) {
             throw new IllegalArgumentException("Role com o nome já existe.");
@@ -35,7 +33,7 @@ public class RoleService {
         return roleRepository.save(role);
     }
 
-    // Atualiza uma role existente
+    @Transactional
     public Optional<Role> updateRole(Long id, Role roleDetails) {
         Optional<Role> existingRole = roleRepository.findById(id);
         if (existingRole.isPresent()) {
@@ -47,7 +45,7 @@ public class RoleService {
         return Optional.empty();
     }
 
-    // Exclui uma role
+    @Transactional
     public boolean deleteRole(Long id) {
         if (roleRepository.existsById(id)) {
             roleRepository.deleteById(id);

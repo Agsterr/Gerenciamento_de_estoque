@@ -1,0 +1,116 @@
+<app-page-hint [message]="pageHint.message" [prerequisites]="pageHint.prerequisites"></app-page-hint>
+
+<header class="header-page">
+  <h2><i class="fas fa-shopping-cart"></i> Pedidos de Compra</h2>
+  <div class="acoes-header">
+    <button class="botao-listar" (click)="toggleList()"><i class="fas fa-list"></i> Listar</button>
+    <button class="botao-adicionar" (click)="toggleAddForm()"><i class="fas fa-plus"></i> Novo Pedido</button>
+  </div>
+</header>
+
+<div *ngIf="mensagem" class="mensagem-feedback sucesso"><i class="fas fa-check-circle"></i> {{ mensagem }}</div>
+<div *ngIf="mensagemErro" class="mensagem-feedback erro"><i class="fas fa-exclamation-circle"></i> {{ mensagemErro }}</div>
+<div *ngIf="loading" class="spinner-overlay"><div class="spinner"></div></div>
+
+<div class="main-content">
+  <div class="card-lista" *ngIf="showList">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th><i class="fas fa-hashtag"></i> Número</th>
+          <th><i class="fas fa-truck"></i> Fornecedor</th>
+          <th><i class="fas fa-warehouse"></i> Depósito</th>
+          <th><i class="fas fa-info-circle"></i> Status</th>
+          <th><i class="fas fa-dollar-sign"></i> Valor Total</th>
+          <th><i class="fas fa-cogs"></i> Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of pedidos">
+          <td data-label="Número">{{ p.numero }}</td>
+          <td data-label="Fornecedor">{{ p.fornecedorNome || p.fornecedorId }}</td>
+          <td data-label="Depósito">{{ p.depositoNome || p.depositoId || '-' }}</td>
+          <td data-label="Status"><span class="badge" [ngClass]="statusClass(p.status)">{{ p.status }}</span></td>
+          <td data-label="Valor Total">{{ p.valorTotal | currency:'BRL' }}</td>
+          <td class="acoes-tabela" data-label="Ações">
+            <button *ngIf="podeAcao(p)" (click)="receber(p.id)" class="btn btn-success btn-sm" title="Receber"><i class="fas fa-check"></i> Receber</button>
+            <button *ngIf="podeAcao(p)" (click)="cancelar(p.id)" class="btn btn-danger btn-sm" title="Cancelar"><i class="fas fa-ban"></i> Cancelar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="pagination-bar" *ngIf="totalPages > 0">
+      <div class="pagination-info-left">Página {{ currentPage + 1 }} de {{ totalPages }} ({{ totalElements }} pedidos)</div>
+      <div class="pagination-row">
+        <button class="btn-pag" (click)="paginaAnterior()" [disabled]="currentPage === 0"><i class="fas fa-chevron-left"></i></button>
+        <ng-container *ngFor="let _ of [].constructor(totalPages); let i = index">
+          <button class="pagina-numero" [class.ativa]="i === currentPage" (click)="irParaPagina(i)" [disabled]="i === currentPage">{{ i + 1 }}</button>
+        </ng-container>
+        <button class="btn-pag" (click)="proximaPagina()" [disabled]="currentPage >= totalPages - 1"><i class="fas fa-chevron-right"></i></button>
+      </div>
+      <div class="pagination-info-right select-page-size">
+        <label>Exibir</label>
+        <select [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+          <option *ngFor="let s of [10, 20, 30]" [value]="s">{{ s }}</option>
+        </select>
+        <span>por página</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-form" *ngIf="showAddForm">
+    <h3 class="titulo-form"><i class="fas fa-file-invoice"></i> Novo Pedido de Compra</h3>
+    <form (ngSubmit)="submitForm()" class="form-adicionar">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="fornecedor">Fornecedor *</label>
+          <select id="fornecedor" [(ngModel)]="fornecedorId" name="fornecedorId" required>
+            <option [ngValue]="null">Selecione...</option>
+            <option *ngFor="let f of fornecedores" [ngValue]="f.id">{{ f.nome }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="deposito">Depósito</label>
+          <select id="deposito" [(ngModel)]="depositoId" name="depositoId">
+            <option [ngValue]="null">Selecione...</option>
+            <option *ngFor="let d of depositos" [ngValue]="d.id">{{ d.nome }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="observacao">Observação</label>
+        <textarea id="observacao" [(ngModel)]="observacao" name="observacao" rows="2"></textarea>
+      </div>
+
+      <h4><i class="fas fa-list"></i> Itens do pedido <small>(cada item = um produto)</small></h4>
+      <div class="item-row" *ngFor="let item of itens; let i = index">
+        <div class="form-group">
+          <label>Produto *</label>
+          <select [(ngModel)]="item.produtoId" [name]="'produtoId' + i">
+            <option [ngValue]="null">Selecione...</option>
+            <option *ngFor="let pr of produtos" [ngValue]="pr.id">{{ pr.nome }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Quantidade</label>
+          <input type="number" [(ngModel)]="item.quantidade" [name]="'quantidade' + i" min="1" />
+        </div>
+        <div class="form-group">
+          <label>Preço Unitário</label>
+          <input type="number" [(ngModel)]="item.precoUnitario" [name]="'preco' + i" min="0" step="0.01" />
+        </div>
+        <button type="button" class="btn btn-danger btn-sm" (click)="removeItem(i)" [disabled]="itens.length === 1" title="Remover item">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </div>
+      <button type="button" class="btn btn-info btn-sm" (click)="addItem()" style="margin-bottom: 16px;">
+        <i class="fas fa-plus"></i> Adicionar Item
+      </button>
+
+      <div class="botoes-form">
+        <button type="submit" class="botao-salvar" [disabled]="loading"><i class="fas fa-save"></i> Criar Pedido</button>
+        <button type="button" class="botao-cancelar" (click)="toggleList()" [disabled]="loading"><i class="fas fa-times"></i> Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>

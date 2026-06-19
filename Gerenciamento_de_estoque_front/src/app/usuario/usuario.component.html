@@ -1,6 +1,63 @@
-<div *ngIf="!isAdmin" class="error">{{ errorMessage }}</div>
-<div *ngIf="isAdmin && usuarios.length > 0">
-  <ul>
-    <li *ngFor="let usuario of usuarios">{{ usuario.nome }}</li>
-  </ul>
+<header class="header-usuario">
+  <h2><i class="fas fa-user-cog"></i> Gestão de Usuários</h2>
+</header>
+
+<div *ngIf="!isAdmin" class="mensagem erro">{{ errorMessage }}</div>
+<div *ngIf="mensagem" class="mensagem sucesso">{{ mensagem }}</div>
+<div *ngIf="errorMessage && isAdmin" class="mensagem erro">{{ errorMessage }}</div>
+
+<div *ngIf="loading" class="spinner-overlay"><div class="spinner"></div></div>
+
+<div *ngIf="isAdmin" class="usuario-content">
+  <div class="reativar-box">
+    <h3>Reativar usuário</h3>
+    <div class="reativar-form">
+      <input
+        type="text"
+        placeholder="Nome de usuário"
+        [(ngModel)]="reativarUsername"
+      />
+      <button (click)="reativar()">Reativar</button>
+    </div>
+  </div>
+
+  <table class="tabela-usuarios" *ngIf="usuarios.length > 0">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Usuário</th>
+        <th>E-mail</th>
+        <th>Roles</th>
+        <th>Status</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let usuario of usuarios">
+        <td>{{ usuario.id }}</td>
+        <td>{{ usuario.username }}</td>
+        <td>{{ usuario.email }}</td>
+        <td>{{ usuario.roles.join(', ') }}</td>
+        <td>
+          <span class="badge" [class.ativo]="usuario.ativo">
+            {{ usuario.ativo ? 'Ativo' : 'Inativo' }}
+          </span>
+        </td>
+        <td>
+          <button
+            *ngIf="usuario.ativo"
+            class="btn-desativar"
+            (click)="desativar(usuario)"
+          >Desativar</button>
+          <button
+            *ngIf="!usuario.ativo"
+            class="btn-ativar"
+            (click)="ativar(usuario)"
+          >Ativar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p *ngIf="usuarios.length === 0 && !loading" class="vazio">Nenhum usuário ativo encontrado.</p>
 </div>

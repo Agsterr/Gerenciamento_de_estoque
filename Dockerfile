@@ -23,7 +23,7 @@ RUN chmod +x mvnw || true
 RUN mvn dependency:go-offline -Dproject.build.sourceEncoding=UTF-8 -Dfile.encoding=UTF-8 -B
 
 # Copiar código fonte
-COPY src ./src
+COPY src/main ./src/main
 
 # Compilar aplicação (pulando testes para build mais rápido)
 RUN mvn clean package -DskipTests -Dproject.build.sourceEncoding=UTF-8 -Dfile.encoding=UTF-8 -B
@@ -31,10 +31,11 @@ RUN mvn clean package -DskipTests -Dproject.build.sourceEncoding=UTF-8 -Dfile.en
 # Estágio final - runtime
 FROM eclipse-temurin:17-jre-alpine
 
-# Instalar dependências do sistema necessárias
+# Instalar dependências do sistema necessárias (+ wget para healthcheck)
 RUN apk add --no-cache \
     fontconfig \
     ttf-dejavu \
+    wget \
     && rm -rf /var/cache/apk/*
 
 # Criar usuário não-root para segurança

@@ -7,8 +7,17 @@ html, body {
   background-color: #121212; /* Dark Mode */
   color: #f0f0f0; /* Texto claro */
   line-height: 1.6;
-  -webkit-font-smoothing: antialiased; /* suaviza fontes em WebKit */
-  -moz-osx-font-smoothing: grayscale;  /* suaviza fontes no Firefox para Mac */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+app-root {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* Links com transição suave e melhor visibilidade */

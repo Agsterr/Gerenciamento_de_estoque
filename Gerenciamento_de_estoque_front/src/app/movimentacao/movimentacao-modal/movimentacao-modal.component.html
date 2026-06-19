@@ -11,8 +11,7 @@
 
   <form [formGroup]="movimentacaoForm" (ngSubmit)="onSubmit()">
     <div mat-dialog-content class="modal-content">
-      
-      <!-- Tipo de Movimentação -->
+
       <div class="form-row">
         <mat-form-field appearance="fill" class="full-width">
           <mat-label>Tipo de Movimentação</mat-label>
@@ -21,130 +20,68 @@
               {{ getTipoDisplayName(tipo) }}
             </mat-option>
           </mat-select>
-          <mat-error *ngIf="tipo?.hasError('required')">
-            Tipo de movimentação é obrigatório
-          </mat-error>
         </mat-form-field>
       </div>
 
-      <!-- ID do Produto -->
       <div class="form-row">
         <mat-form-field appearance="fill" class="full-width">
-          <mat-label>ID do Produto</mat-label>
-          <input matInput 
-                 type="number" 
-                 formControlName="produtoId"
-                 placeholder="Digite o ID do produto"
-                 min="1">
-          <mat-error *ngIf="produtoId?.hasError('required')">
-            ID do produto é obrigatório
-          </mat-error>
-          <mat-error *ngIf="produtoId?.hasError('min')">
-            ID do produto deve ser maior que 0
-          </mat-error>
+          <mat-label>Produto</mat-label>
+          <mat-select formControlName="produtoId">
+            <mat-option [value]="null">Selecione...</mat-option>
+            <mat-option *ngFor="let p of produtos" [value]="p.id">
+              {{ p.nome }} (estoque: {{ p.quantidade }})
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="produtoId?.hasError('required')">Selecione um produto</mat-error>
         </mat-form-field>
       </div>
 
-      <!-- Nome do Produto -->
-      <div class="form-row">
-        <mat-form-field appearance="fill" class="full-width">
-          <mat-label>Nome do Produto</mat-label>
-          <input matInput 
-                 formControlName="nomeProduto"
-                 placeholder="Digite o nome do produto"
-                 minlength="2">
-          <mat-error *ngIf="nomeProduto?.hasError('required')">
-            Nome do produto é obrigatório
-          </mat-error>
-          <mat-error *ngIf="nomeProduto?.hasError('minlength')">
-            Nome do produto deve ter pelo menos 2 caracteres
-          </mat-error>
-        </mat-form-field>
-      </div>
-
-      <!-- Quantidade -->
       <div class="form-row">
         <mat-form-field appearance="fill" class="full-width">
           <mat-label>Quantidade</mat-label>
-          <input matInput 
-                 type="number" 
-                 formControlName="quantidade"
-                 placeholder="Digite a quantidade"
-                 min="1"
-                 max="999999">
-          <mat-error *ngIf="quantidade?.hasError('required')">
-            Quantidade é obrigatória
-          </mat-error>
-          <mat-error *ngIf="quantidade?.hasError('min')">
-            Quantidade deve ser maior que 0
-          </mat-error>
-          <mat-error *ngIf="quantidade?.hasError('max')">
-            Quantidade deve ser menor que 999.999
-          </mat-error>
+          <input matInput type="number" formControlName="quantidade" min="1" max="999999">
+          <mat-error *ngIf="quantidade?.hasError('required')">Quantidade é obrigatória</mat-error>
         </mat-form-field>
       </div>
 
-      <!-- Data e Hora -->
+      <div class="form-row" *ngIf="tipo?.value === TipoMovimentacao.SAIDA && !isEdicao">
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Consumidor (obrigatório para saída manual)</mat-label>
+          <mat-select formControlName="consumidorId">
+            <mat-option [value]="null">Selecione...</mat-option>
+            <mat-option *ngFor="let c of consumidores" [value]="c.id">{{ c.nome }}</mat-option>
+          </mat-select>
+          <mat-hint>Entregas geram saída automaticamente — use consumidor só em saída manual</mat-hint>
+          <mat-error *ngIf="consumidorId?.hasError('required')">Consumidor é obrigatório para saída</mat-error>
+        </mat-form-field>
+      </div>
+
       <div class="form-row">
         <mat-form-field appearance="fill" class="full-width">
-          <mat-label>Data e Hora</mat-label>
-          <input matInput 
-                 [matDatepicker]="dataHoraPicker" 
-                 formControlName="dataHora"
-                 placeholder="Selecione a data e hora">
+          <mat-label>Data</mat-label>
+          <input matInput [matDatepicker]="dataHoraPicker" formControlName="dataHora">
           <mat-datepicker-toggle matSuffix [for]="dataHoraPicker"></mat-datepicker-toggle>
           <mat-datepicker #dataHoraPicker></mat-datepicker>
-          <mat-error *ngIf="dataHora?.hasError('required')">
-            Data e hora são obrigatórias
-          </mat-error>
         </mat-form-field>
       </div>
 
-      <!-- Usuário (apenas em modo de edição) -->
-      <div class="form-row" *ngIf="isEdicao && data.movimentacao?.nomeUsuario">
-        <mat-form-field appearance="fill" class="full-width">
-          <mat-label>Usuário</mat-label>
-          <input matInput 
-                 [value]="data.movimentacao?.nomeUsuario"
-                 readonly
-                 placeholder="Usuário que realizou a movimentação">
-          <mat-icon matSuffix>person</mat-icon>
-        </mat-form-field>
+      <div class="form-row" *ngIf="isEdicao && data.movimentacao?.entregaId">
+        <p class="info-vinculo"><i class="fas fa-truck"></i> Vinculada à entrega #{{ data.movimentacao?.entregaId }}</p>
       </div>
 
-      <!-- Observações -->
       <div class="form-row">
         <mat-form-field appearance="fill" class="full-width">
-          <mat-label>Observações (Opcional)</mat-label>
-          <textarea matInput 
-                    formControlName="observacoes"
-                    placeholder="Digite observações sobre a movimentação"
-                    rows="3"
-                    maxlength="500"></textarea>
-          <mat-hint>{{ observacoes?.value?.length || 0 }}/500 caracteres</mat-hint>
-          <mat-error *ngIf="observacoes?.hasError('maxlength')">
-            Observações devem ter no máximo 500 caracteres
-          </mat-error>
+          <mat-label>Observações (opcional)</mat-label>
+          <textarea matInput formControlName="observacoes" rows="2" maxlength="500"></textarea>
         </mat-form-field>
       </div>
 
     </div>
 
     <div mat-dialog-actions class="modal-actions">
-      <button mat-button 
-              type="button" 
-              (click)="onCancel()" 
-              [disabled]="loading">
-        <i class="fas fa-times"></i>
-        Cancelar
-      </button>
-      
-      <button mat-raised-button 
-              color="primary" 
-              type="submit" 
-              [disabled]="movimentacaoForm.invalid || loading">
-        <i class="fas" [ngClass]="loading ? 'fa-spinner fa-spin' : (isEdicao ? 'fa-save' : 'fa-plus')" *ngIf="!loading || loading"></i>
-        {{ loading ? 'Salvando...' : (isEdicao ? 'Atualizar Movimentação' : 'Criar Movimentação') }}
+      <button mat-button type="button" (click)="onCancel()" [disabled]="loading">Cancelar</button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="movimentacaoForm.invalid || loading">
+        {{ isEdicao ? 'Atualizar' : 'Registrar' }}
       </button>
     </div>
   </form>

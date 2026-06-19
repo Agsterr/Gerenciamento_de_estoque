@@ -1,0 +1,70 @@
+<header class="header-page">
+  <h2><i class="fas fa-history"></i> Auditoria</h2>
+</header>
+
+<div *ngIf="mensagemErro" class="mensagem-feedback erro"><i class="fas fa-exclamation-circle"></i> {{ mensagemErro }}</div>
+<div *ngIf="loading" class="spinner-overlay"><div class="spinner"></div></div>
+
+<div class="main-content">
+  <div class="card-lista">
+    <div class="busca-container">
+      <div class="form-row" style="align-items: flex-end;">
+        <div class="form-group">
+          <label for="entidade">Filtrar por entidade</label>
+          <input id="entidade" class="campo-busca" type="text" list="entidades-list"
+            placeholder="Ex: PRODUTO, FORNECEDOR..."
+            [(ngModel)]="filtroEntidade" (keyup.enter)="aplicarFiltro()" />
+          <datalist id="entidades-list">
+            <option *ngFor="let e of entidadesSugeridas" [value]="e"></option>
+          </datalist>
+        </div>
+        <button class="botao-adicionar" (click)="aplicarFiltro()"><i class="fas fa-filter"></i> Filtrar</button>
+        <button class="botao-listar" (click)="limparFiltro()"><i class="fas fa-times"></i> Limpar</button>
+      </div>
+    </div>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th><i class="fas fa-hashtag"></i> ID</th>
+          <th><i class="fas fa-cube"></i> Entidade</th>
+          <th><i class="fas fa-link"></i> Entidade ID</th>
+          <th><i class="fas fa-bolt"></i> Ação</th>
+          <th><i class="fas fa-user"></i> Usuário</th>
+          <th><i class="fas fa-align-left"></i> Detalhes</th>
+          <th><i class="fas fa-clock"></i> Data/Hora</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let log of logs">
+          <td data-label="ID">{{ log.id }}</td>
+          <td data-label="Entidade">{{ log.entidade }}</td>
+          <td data-label="Entidade ID">{{ log.entidadeId ?? '-' }}</td>
+          <td data-label="Ação">{{ log.acao }}</td>
+          <td data-label="Usuário">{{ log.usuario || '-' }}</td>
+          <td data-label="Detalhes">{{ log.detalhes || '-' }}</td>
+          <td data-label="Data/Hora">{{ log.criadoEm | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p *ngIf="logs.length === 0 && !loading">Nenhum registro encontrado.</p>
+
+    <div class="pagination-bar" *ngIf="totalPages > 0">
+      <div class="pagination-info-left">Página {{ currentPage + 1 }} de {{ totalPages }} ({{ totalElements }} registros)</div>
+      <div class="pagination-row">
+        <button class="btn-pag" (click)="paginaAnterior()" [disabled]="currentPage === 0"><i class="fas fa-chevron-left"></i></button>
+        <ng-container *ngFor="let _ of [].constructor(totalPages); let i = index">
+          <button class="pagina-numero" [class.ativa]="i === currentPage" (click)="irParaPagina(i)" [disabled]="i === currentPage">{{ i + 1 }}</button>
+        </ng-container>
+        <button class="btn-pag" (click)="proximaPagina()" [disabled]="currentPage >= totalPages - 1"><i class="fas fa-chevron-right"></i></button>
+      </div>
+      <div class="pagination-info-right select-page-size">
+        <label>Exibir</label>
+        <select [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+          <option *ngFor="let s of [30, 50, 100]" [value]="s">{{ s }}</option>
+        </select>
+        <span>por página</span>
+      </div>
+    </div>
+  </div>
+</div>

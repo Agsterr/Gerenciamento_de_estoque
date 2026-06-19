@@ -165,6 +165,72 @@ public class EntregaController {
     }
 
     /**
+     * Alias de compatibilidade para front-end legado.
+     * GET /entregas/consumidor/{consumidorId}/anual?inicioAno=YYYY-MM-DD&fimAno=YYYY-MM-DD
+     */
+    @GetMapping("/consumidor/{consumidorId}/anual")
+    public ResponseEntity<Page<EntregaResponseDto>> porConsumidorAnualLegado(
+            @PathVariable Long consumidorId,
+            @RequestParam("inicioAno") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicioAno,
+            @RequestParam("fimAno") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fimAno,
+            @RequestParam(value = "orgId", required = false) Long orgId,
+            Pageable pageable) {
+        LocalDateTime inicio = inicioAno.atStartOfDay();
+        LocalDateTime fim = fimAno.atTime(23, 59, 59);
+        Page<EntregaResponseDto> pageDto = entregaService.listarEntregasPorConsumidorPorPeriodo(consumidorId, inicio, fim, pageable);
+        return ResponseEntity.ok(pageDto);
+    }
+
+    /**
+     * Alias de compatibilidade para front-end legado.
+     * GET /entregas/consumidor/{consumidorId}/mensal?inicioMes=YYYY-MM-DD&fimMes=YYYY-MM-DD
+     */
+    @GetMapping("/consumidor/{consumidorId}/mensal")
+    public ResponseEntity<Page<EntregaResponseDto>> porConsumidorMensalLegado(
+            @PathVariable Long consumidorId,
+            @RequestParam("inicioMes") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicioMes,
+            @RequestParam("fimMes") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fimMes,
+            @RequestParam(value = "orgId", required = false) Long orgId,
+            Pageable pageable) {
+        LocalDateTime inicio = inicioMes.atStartOfDay();
+        LocalDateTime fim = fimMes.atTime(23, 59, 59);
+        Page<EntregaResponseDto> pageDto = entregaService.listarEntregasPorConsumidorPorPeriodo(consumidorId, inicio, fim, pageable);
+        return ResponseEntity.ok(pageDto);
+    }
+
+    /**
+     * Alias de compatibilidade para front-end legado.
+     * GET /entregas/organizacao/anual?inicioAno=YYYY-MM-DD&fimAno=YYYY-MM-DD
+     */
+    @GetMapping("/organizacao/anual")
+    public ResponseEntity<Page<EntregaResponseDto>> porOrganizacaoAnualLegado(
+            @RequestParam("inicioAno") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicioAno,
+            @RequestParam("fimAno") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fimAno,
+            @RequestParam(value = "orgId", required = false) Long orgId,
+            Pageable pageable) {
+        LocalDateTime inicio = inicioAno.atStartOfDay();
+        LocalDateTime fim = fimAno.atTime(23, 59, 59);
+        Page<EntregaResponseDto> pageDto = entregaService.listarEntregasPorPeriodo(inicio, fim, pageable);
+        return ResponseEntity.ok(pageDto);
+    }
+
+    /**
+     * Alias de compatibilidade para front-end legado.
+     * GET /entregas/organizacao/mensal?inicioMes=YYYY-MM-DD&fimMes=YYYY-MM-DD
+     */
+    @GetMapping("/organizacao/mensal")
+    public ResponseEntity<Page<EntregaResponseDto>> porOrganizacaoMensalLegado(
+            @RequestParam("inicioMes") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicioMes,
+            @RequestParam("fimMes") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fimMes,
+            @RequestParam(value = "orgId", required = false) Long orgId,
+            Pageable pageable) {
+        LocalDateTime inicio = inicioMes.atStartOfDay();
+        LocalDateTime fim = fimMes.atTime(23, 59, 59);
+        Page<EntregaResponseDto> pageDto = entregaService.listarEntregasPorPeriodo(inicio, fim, pageable);
+        return ResponseEntity.ok(pageDto);
+    }
+
+    /**
      * Endpoint para obter o total de entregas realizadas pela organização.
      *
      * @return ResponseEntity com o número total de entregas

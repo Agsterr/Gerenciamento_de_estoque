@@ -1,0 +1,210 @@
+<div class="assinatura-container">
+
+  <header class="assinatura-header">
+    <h2><i class="fas fa-credit-card"></i> Assinatura e Planos</h2>
+    <a routerLink="/dashboard" class="voltar-link"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</a>
+  </header>
+
+  <div *ngIf="blockMessage" class="alerta-bloqueio">
+    <i class="fas fa-exclamation-triangle"></i> {{ blockMessage }}
+  </div>
+
+  <div *ngIf="mensagem" class="mensagem sucesso">{{ mensagem }}</div>
+  <div *ngIf="mensagemErro" class="mensagem erro">{{ mensagemErro }}</div>
+
+  <section class="sandbox-panel" *ngIf="showSandboxSimulator">
+    <h3><i class="fas fa-flask"></i> Ambiente de testes (Sandbox)</h3>
+    <p>
+      1. Escolha o modo de pagamento e clique em <strong>Gerar Pix</strong>, <strong>Gerar boleto</strong> ou <strong>Assinar (recorrente)</strong>.<br>
+      2. Para Pix/boleto, volte para esta página <strong>sem pagar</strong> no banco.<br>
+      3. Clique em <strong>Simular pagamento</strong> para ativar a assinatura.
+    </p>
+    <button
+      type="button"
+      class="btn-simular-grande"
+      (click)="simularPagamentoSandbox()"
+      [disabled]="loading"
+    >
+      {{ loading ? 'Simulando...' : 'Simular pagamento (Sandbox)' }}
+    </button>
+  </section>
+
+  <div *ngIf="loading" class="spinner-overlay"><div class="spinner"></div></div>
+
+  <section class="assinatura-atual" *ngIf="assinaturaAtual">
+    <h3>Sua assinatura atual</h3>
+    <div class="card-assinatura">
+      <div class="info-linha">
+        <span class="label">Plano</span>
+        <span class="valor">{{ assinaturaAtual.planName || '—' }}</span>
+      </div>
+      <div class="info-linha">
+        <span class="label">Status</span>
+        <span class="valor status-badge" [class.ativo]="assinaturaAtual.isActive">
+          {{ statusLabel(assinaturaAtual.status) }}
+        </span>
+      </div>
+      <div class="info-linha" *ngIf="assinaturaAtual.paymentProvider">
+        <span class="label">Provedor</span>
+        <span class="valor">{{ provedorLabel(assinaturaAtual.paymentProvider) }}</span>
+      </div>
+      <div class="info-linha" *ngIf="assinaturaAtual.paymentMode">
+        <span class="label">Forma de pagamento</span>
+        <span class="valor">{{ modoPagamentoLabel(assinaturaAtual.paymentMode) }}</span>
+      </div>
+      <div class="info-linha" *ngIf="assinaturaAtual.status === 'TRIAL' || assinaturaAtual.isInTrial">
+        <span class="label">Período de teste ({{ assinaturaAtual.trialDaysTotal ?? 15 }} dias)</span>
+        <span class="valor">Dia {{ (assinaturaAtual.trialDaysElapsed ?? 0) + 1 }} — faltam {{ assinaturaAtual.trialDaysRemaining ?? '—' }} dia(s)</span>
+      </div>
+      <div class="info-linha" *ngIf="(assinaturaAtual.status === 'TRIAL' || assinaturaAtual.isInTrial) && assinaturaAtual.trialEnd">
+        <span class="label">Teste termina em</span>
+        <span class="valor">{{ assinaturaAtual.trialEnd | date:'dd/MM/yyyy' }}</span>
+      </div>
+      <div class="info-linha alerta-pendente" *ngIf="assinaturaAtual.pendingPayment">
+        <span class="label">Cobrança Asaas</span>
+        <span class="valor">
+          Aguardando confirmação
+          <button type="button" class="btn-verificar" (click)="verificarPagamento()">Verificar pagamento</button>
+        </span>
+      </div>
+      <div class="info-linha" *ngIf="assinaturaAtual.currentPeriodEnd">
+        <span class="label">Próximo vencimento</span>
+        <span class="valor">{{ assinaturaAtual.currentPeriodEnd | date:'dd/MM/yyyy' }}</span>
+      </div>
+      <button
+        *ngIf="assinaturaAtual.isActive || assinaturaAtual.status === 'TRIAL'"
+        class="btn-cancelar"
+        (click)="cancelar()"
+      >
+        Cancelar assinatura
+      </button>
+    </div>
+  </section>
+
+  <section class="sem-assinatura" *ngIf="!assinaturaAtual">
+    <p>Você ainda não possui uma assinatura ativa. Escolha um plano abaixo para começar.</p>
+  </section>
+
+  <section class="pagamento-pendente" *ngIf="pagamentoPendente">
+    <h3><i class="fas fa-hourglass-half"></i> Pagamento gerado</h3>
+
+    <div class="pix-panel" *ngIf="modoPagamento === 'PIX' && pagamentoPendente.pixQrCodeImage">
+      <p>Escaneie o QR Code ou copie o código Pix:</p>
+      <img
+        class="pix-qr"
+        [src]="'data:image/png;base64,' + pagamentoPendente.pixQrCodeImage"
+        alt="QR Code Pix"
+      />
+      <div class="pix-copia" *ngIf="pagamentoPendente.pixCopyPaste">
+        <code>{{ pagamentoPendente.pixCopyPaste }}</code>
+        <button type="button" class="btn-copiar" (click)="copiarPix()">
+          {{ pixCopiado ? 'Copiado!' : 'Copiar código Pix' }}
+        </button>
+      </div>
+      <p class="vencimento" *ngIf="pagamentoPendente.pixExpirationDate">
+        Expira em: {{ pagamentoPendente.pixExpirationDate | date:'dd/MM/yyyy HH:mm' }}
+      </p>
+    </div>
+
+    <div class="boleto-panel" *ngIf="modoPagamento === 'BOLETO'">
+      <p *ngIf="pagamentoPendente.dueDate">Vencimento: {{ pagamentoPendente.dueDate | date:'dd/MM/yyyy' }}</p>
+      <div class="linha-digitavel" *ngIf="pagamentoPendente.identificationField">
+        <span class="label">Linha digitável</span>
+        <code>{{ pagamentoPendente.identificationField }}</code>
+        <button type="button" class="btn-copiar" (click)="copiarLinhaDigitavel()">
+          {{ pixCopiado ? 'Copiado!' : 'Copiar linha digitável' }}
+        </button>
+      </div>
+      <a
+        *ngIf="pagamentoPendente.bankSlipUrl || pagamentoPendente.paymentUrl"
+        class="btn-boleto-link"
+        [href]="pagamentoPendente.bankSlipUrl || pagamentoPendente.paymentUrl"
+        target="_blank"
+        rel="noopener"
+      >
+        <i class="fas fa-external-link-alt"></i> Abrir boleto (PDF)
+      </a>
+    </div>
+
+    <button type="button" class="btn-verificar-grande" (click)="verificarPagamento()" [disabled]="loading">
+      Verificar pagamento
+    </button>
+  </section>
+
+  <section class="planos-grid">
+    <h3>Planos disponíveis</h3>
+
+    <div class="modo-pagamento-grid">
+      <button
+        type="button"
+        class="modo-card"
+        *ngFor="let modo of modosPagamento"
+        [class.selecionado]="modoPagamento === modo.id"
+        (click)="selecionarModo(modo.id)"
+      >
+        <i class="fas" [ngClass]="modo.icone"></i>
+        <strong>{{ modo.titulo }}</strong>
+        <span>{{ modo.descricao }}</span>
+      </button>
+    </div>
+
+    <div class="cpf-field">
+      <label for="cpfCnpj">CPF/CNPJ do pagador</label>
+      <input
+        id="cpfCnpj"
+        type="text"
+        [(ngModel)]="cpfCnpj"
+        placeholder="000.000.000-00"
+        autocomplete="off"
+      />
+      <small>No ambiente de testes, pode ficar em branco.</small>
+    </div>
+
+    <div class="planos">
+      <div class="plano-card" *ngFor="let plano of planos">
+        <h4>{{ plano.name }}</h4>
+        <p class="descricao">{{ plano.description }}</p>
+        <p class="preco">{{ formatarPreco(plano.price) }}<span>/mês</span></p>
+        <ul class="features">
+          <li *ngIf="plano.maxUsers"><i class="fas fa-users"></i> Até {{ plano.maxUsers }} usuários</li>
+          <li *ngIf="plano.hasReports"><i class="fas fa-file-alt"></i> Relatórios</li>
+          <li *ngIf="plano.hasAdvancedAnalytics"><i class="fas fa-chart-line"></i> Analytics avançado</li>
+          <li *ngIf="plano.hasApiAccess"><i class="fas fa-code"></i> Acesso à API</li>
+        </ul>
+        <button class="btn-assinar" (click)="assinarPlano(plano)" [disabled]="loading">
+          {{ botaoAssinarLabel() }}
+        </button>
+      </div>
+    </div>
+
+    <p class="hint" *ngIf="modoPagamento === 'RECURRING'">
+      Ao assinar, você será redirecionado para a página de pagamento do Asaas (cartão, Pix ou boleto recorrente).
+    </p>
+    <p class="hint" *ngIf="modoPagamento !== 'RECURRING'">
+      O pagamento aparecerá nesta página. Renove manualmente antes do fim de cada período de 30 dias.
+    </p>
+  </section>
+
+  <section class="historico" *ngIf="historico.length > 0">
+    <h3>Histórico</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Plano</th>
+          <th>Status</th>
+          <th>Início</th>
+          <th>Fim</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of historico">
+          <td>{{ item.planName || '—' }}</td>
+          <td>{{ statusLabel(item.status) }}</td>
+          <td>{{ item.createdAt | date:'dd/MM/yyyy' }}</td>
+          <td>{{ item.endedAt || item.canceledAt | date:'dd/MM/yyyy' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>

@@ -9,15 +9,18 @@ import { PageEntregaResponse } from '../models/src/app/models/entrega/PageEntreg
 import { EntregaRequest } from '../models/src/app/models/entrega/entrega-request.model';
 import { BuscaEntregaComponent } from './busca-entrega/busca-entrega.component';
 import { AuthService } from '../services/auth.service';
+import { PageHintComponent } from '../shared/page-hint/page-hint.component';
+import { PAGE_HINTS } from '../shared/help/help-content.data';
 
 @Component({
   selector: 'app-entregas',
   standalone: true,
-  imports: [CommonModule, FormsModule,  BuscaEntregaComponent],
+  imports: [CommonModule, FormsModule,  BuscaEntregaComponent, PageHintComponent],
   templateUrl: './entregas.component.html',
   styleUrls: ['./entregas.component.scss']
 })
 export class EntregasComponent implements OnInit {
+  pageHint = PAGE_HINTS['entregas'];
   entregas: EntregaResponse[] = [];
   filteredEntregas: EntregaResponse[] = [];
   searchTerm = '';

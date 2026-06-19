@@ -2,7 +2,11 @@
   <div class="dashboard-wrapper">
     <header class="dashboard-header">
       <h2>Bem-vindo ao Painel de Controle</h2>
-      <p class="dashboard-subtitle">Gerencie produtos, consumidores, entregas e mais!</p>
+      <p class="dashboard-subtitle">Controle de estoque, vendas, compras e indicadores</p>
+      <a routerLink="ajuda" class="dashboard-ajuda-link">
+        <i class="fas fa-life-ring"></i>
+        Primeira vez aqui? Veja o guia de início — comece pelas categorias, depois produtos
+      </a>
     </header>
 
     <section class="dashboard-resumo">
@@ -44,17 +48,21 @@
     </section>
 
     <nav class="dashboard-menu">
+      <a routerLink="inicio" routerLinkActive="active">
+        <i class="fas fa-chart-pie"></i>
+        <span>Início</span>
+      </a>
       <a routerLink="produtos" routerLinkActive="active">
         <i class="fas fa-box"></i>
         <span>Produtos</span>
       </a>
       <a routerLink="consumidores" routerLinkActive="active">
         <i class="fas fa-users"></i>
-        <span>Consumidores</span>
+        <span>Clientes</span>
       </a>
-      <a routerLink="entregas" routerLinkActive="active">
-        <i class="fas fa-truck"></i>
-        <span>Entregas</span>
+      <a routerLink="pedidos-venda" routerLinkActive="active">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <span>Vendas</span>
       </a>
       <a routerLink="categorias" routerLinkActive="active">
         <i class="fas fa-list-alt"></i>
@@ -67,6 +75,38 @@
       <a routerLink="relatorios" routerLinkActive="active">
         <i class="fas fa-chart-bar"></i>
         <span>Relatórios</span>
+      </a>
+      <a routerLink="fornecedores" routerLinkActive="active">
+        <i class="fas fa-truck-loading"></i>
+        <span>Fornecedores</span>
+      </a>
+      <a routerLink="depositos" routerLinkActive="active">
+        <i class="fas fa-warehouse"></i>
+        <span>Depósitos</span>
+      </a>
+      <a routerLink="pedidos-compra" routerLinkActive="active">
+        <i class="fas fa-shopping-cart"></i>
+        <span>Compras</span>
+      </a>
+      <a routerLink="inventario" routerLinkActive="active">
+        <i class="fas fa-clipboard-check"></i>
+        <span>Inventário</span>
+      </a>
+      <a routerLink="auditoria" routerLinkActive="active">
+        <i class="fas fa-history"></i>
+        <span>Auditoria</span>
+      </a>
+      <a routerLink="usuarios" routerLinkActive="active">
+        <i class="fas fa-user-cog"></i>
+        <span>Usuários</span>
+      </a>
+      <a routerLink="/assinatura" routerLinkActive="active">
+        <i class="fas fa-credit-card"></i>
+        <span>Assinatura</span>
+      </a>
+      <a routerLink="ajuda" routerLinkActive="active" class="menu-ajuda">
+        <i class="fas fa-life-ring"></i>
+        <span>Ajuda</span>
       </a>
     </nav>
 

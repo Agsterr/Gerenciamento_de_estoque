@@ -1,0 +1,21 @@
+<div class="blocked-card">
+  <h2>Assinatura necessária</h2>
+  <p>Seu período de teste de 15 dias terminou. Assine para continuar usando o sistema.</p>
+
+  <div class="plan-summary" *ngIf="planName">
+    <strong>{{ planName }}</strong>
+    <span class="price">R$ {{ planPrice | number:'1.2-2' }}/mês</span>
+  </div>
+
+  <label>
+    CPF/CNPJ
+    <input type="text" [(ngModel)]="cpfCnpj" placeholder="000.000.000-00" />
+  </label>
+
+  <button type="button" (click)="payWithAsaas()" [disabled]="loading || !planId">
+    {{ loading ? 'Gerando link no Asaas...' : 'Pagar mensalidade com Asaas' }}
+  </button>
+
+  <p class="hint">Você será redirecionado para a página segura de pagamento do Asaas.</p>
+  <p class="error" *ngIf="error">{{ error }}</p>
+</div>

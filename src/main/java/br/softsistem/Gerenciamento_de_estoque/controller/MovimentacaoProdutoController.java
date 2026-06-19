@@ -30,7 +30,7 @@ public class MovimentacaoProdutoController {
     @PostMapping
     public ResponseEntity<MovimentacaoProdutoDto> registrar(@RequestBody @Valid MovimentacaoProdutoDto dto) {
         MovimentacaoProdutoDto response = service.registrarMovimentacao(dto);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(201).body(response);
     }
 
     /**

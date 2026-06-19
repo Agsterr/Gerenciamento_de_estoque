@@ -138,9 +138,17 @@ public interface MovimentacaoProdutoRepository extends JpaRepository<Movimentaca
      */
     Page<MovimentacaoProduto> findByTipoInAndOrgId(List<TipoMovimentacao> tipos, Long orgId, Pageable pageable);
 
+    @Query("SELECT m FROM MovimentacaoProduto m WHERE m.consumidor.nome LIKE %:nomeConsumidor% AND m.org.id = :orgId")
+    Page<MovimentacaoProduto> findByConsumidorNomeContainingAndOrgId(@Param("nomeConsumidor") String nomeConsumidor, @Param("orgId") Long orgId, Pageable pageable);
+
     // Vinculo com entrega para facilitar edição/remoção de movimentações relacionadas a entregas
     java.util.Optional<MovimentacaoProduto> findByEntregaId(Long entregaId);
     void deleteByEntregaId(Long entregaId);
+    void deleteByPedidoVendaId(Long pedidoVendaId);
+
+    @Query("SELECT COALESCE(SUM(m.quantidade), 0) FROM MovimentacaoProduto m WHERE m.org.id = :orgId AND m.tipo = :tipo AND m.dataHora >= :inicio AND m.dataHora < :fim")
+    Long sumQuantidadePorTipo(@Param("orgId") Long orgId, @Param("tipo") TipoMovimentacao tipo,
+                              @Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim);
 
     /**
      * Busca a movimentação mais recente de um produto específico.

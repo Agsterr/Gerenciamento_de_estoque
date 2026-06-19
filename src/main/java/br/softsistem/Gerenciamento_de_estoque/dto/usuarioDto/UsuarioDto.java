@@ -9,6 +9,7 @@ public record UsuarioDto(
         String username,
         String email,
         Boolean ativo,
+        Long orgId,
         List<String> roles
 ) {
     public UsuarioDto(Usuario usuario) {
@@ -17,6 +18,7 @@ public record UsuarioDto(
                 usuario.getUsername(),
                 usuario.getEmail(),
                 usuario.getAtivo(),
+                usuario.getOrg() != null ? usuario.getOrg().getId() : null,
                 usuario.getRoles().stream().map(Role::getNome).toList()
         );
     }

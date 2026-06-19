@@ -37,4 +37,12 @@ public class SecurityUtils {
 
         return null; // userId não disponível ou autenticação não é do tipo esperado
     }
+
+    public static String getCurrentUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            return authentication.getName();
+        }
+        return "sistema";
+    }
 }

@@ -1,18 +1,29 @@
 package br.softsistem.Gerenciamento_de_estoque.model;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "usuarios")
@@ -59,6 +70,15 @@ public class Usuario implements UserDetails {
     @JoinColumn(name = "org_id", nullable = false) // Chave estrangeira para a organização
     private Org org;
 
+    @Column(name = "bypass_subscription", nullable = false)
+    private Boolean bypassSubscription = false;
+
+    @Column(name = "asaas_customer_id")
+    private String asaasCustomerId;
+
+    @Column(name = "cpf_cnpj", length = 18)
+    private String cpfCnpj;
+
     public Usuario(long l, String entregadorTest, String senha) {
     }
 
@@ -69,8 +89,12 @@ public class Usuario implements UserDetails {
     // Métodos de UserDetails
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Aqui você pode adicionar as permissões do usuário (roles)
-        return Collections.emptyList();
+        if (roles == null || roles.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return roles.stream()
+                .map(role -> (GrantedAuthority) () -> role.getNome())
+                .toList();
     }
 
     @Override
@@ -162,6 +186,39 @@ public class Usuario implements UserDetails {
 
     public void setOrg(Org org) {
         this.org = org;
+    }
+
+    public Boolean getBypassSubscription() {
+        return bypassSubscription;
+    }
+
+    public void setBypassSubscription(Boolean bypassSubscription) {
+        this.bypassSubscription = bypassSubscription;
+    }
+
+    public boolean hasSubscriptionBypass() {
+        return Boolean.TRUE.equals(bypassSubscription);
+    }
+
+    public boolean isSuperAdmin() {
+        return roles != null && roles.stream()
+                .anyMatch(r -> "ROLE_SUPER_ADMIN".equals(r.getNome()));
+    }
+
+    public String getAsaasCustomerId() {
+        return asaasCustomerId;
+    }
+
+    public void setAsaasCustomerId(String asaasCustomerId) {
+        this.asaasCustomerId = asaasCustomerId;
+    }
+
+    public String getCpfCnpj() {
+        return cpfCnpj;
+    }
+
+    public void setCpfCnpj(String cpfCnpj) {
+        this.cpfCnpj = cpfCnpj;
     }
 
     @Override

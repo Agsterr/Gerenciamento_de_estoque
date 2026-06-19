@@ -129,6 +129,26 @@ public class EmailService {
     }
     
     /**
+     * Envia email de alerta do sistema (para webhooks, monitoramento, etc.)
+     */
+    public void sendAlertEmail(String subject, String message, String severity) {
+        try {
+            // Por enquanto, apenas logar. Em produção, enviar para lista de emails configurada
+            log.warn("📧 ALERTA [{}]: {} - {}", severity, subject, message);
+            
+            // TODO: Implementar envio real para lista de emails de alerta
+            // String alertEmails = alertEmailList; // Configurar em application.properties
+            // String[] recipients = alertEmails.split(",");
+            // for (String recipient : recipients) {
+            //     sendEmail(recipient.trim(), subject, buildAlertContent(subject, message, severity));
+            // }
+            
+        } catch (Exception e) {
+            log.error("Erro ao enviar email de alerta: {}", e.getMessage(), e);
+        }
+    }
+    
+    /**
      * Método genérico para envio de emails
      */
     private void sendEmail(String to, String subject, String content) throws MessagingException, java.io.UnsupportedEncodingException {
@@ -141,6 +161,30 @@ public class EmailService {
         helper.setText(content, true);
         
         mailSender.send(message);
+    }
+    
+    /**
+     * Constrói conteúdo HTML para email de alerta
+     */
+    private String buildAlertContent(String subject, String message, String severity) {
+        String color = switch (severity) {
+            case "CRITICAL" -> "#dc3545"; // Vermelho
+            case "HIGH" -> "#fd7e14"; // Laranja
+            case "MEDIUM" -> "#ffc107"; // Amarelo
+            default -> "#6c757d"; // Cinza
+        };
+        
+        return String.format(
+            "<html><body>" +
+            "<div style='padding: 20px; border-left: 4px solid %s; background-color: #f8f9fa;'>" +
+            "<h2 style='color: %s; margin-top: 0;'>%s</h2>" +
+            "<p style='color: #333;'>%s</p>" +
+            "<p style='color: #666; font-size: 12px;'>Severidade: %s | Data/Hora: %s</p>" +
+            "</div>" +
+            "</body></html>",
+            color, color, subject, message.replace("\n", "<br>"), severity, 
+            java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"))
+        );
     }
     
     // Métodos para construir o conteúdo dos emails

@@ -42,7 +42,13 @@ public record ProdutoDto(
 
         Boolean ativo,
 
-        Boolean estoqueBaixo
+        Boolean estoqueBaixo,
+
+        String sku,
+
+        String codigoBarras,
+
+        BigDecimal custoMedio
 ) {
     public ProdutoDto(Produto produto) {
         this(
@@ -51,13 +57,16 @@ public record ProdutoDto(
                 produto.getPreco(),
                 produto.getDescricao(),
                 produto.getCategoria().getId(),
-                produto.getCategoria().getNome(), // ✅ pega o nome da categoria
+                produto.getCategoria().getNome(),
                 produto.getOrg().getId(),
                 produto.getCriadoEm(),
                 produto.getQuantidade(),
                 produto.getQuantidadeMinima(),
                 produto.getAtivo(),
-                produto.isEstoqueBaixo()
+                produto.isEstoqueBaixo(),
+                produto.getSku(),
+                produto.getCodigoBarras(),
+                produto.getCustoMedio()
         );
     }
 }

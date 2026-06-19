@@ -1,4 +1,22 @@
 // Header moderno
+.estoque-baixo { color: #dc3545; font-weight: 600; }
+.badge-estoque-baixo {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  background: #dc3545;
+  color: #fff;
+  border-radius: 4px;
+}
+.filtro-estoque-baixo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
 .header-produto {
   display: flex;
   justify-content: space-between;
@@ -162,6 +180,19 @@
 }
 
 // ---------- Tabela e Paginação PADRÃO ENTREGAS ----------
+.table-scroll-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 20px;
+  margin-bottom: 8px;
+
+  .entrega-table {
+    min-width: 720px;
+    margin-top: 0;
+  }
+}
+
 .entrega-table {
   width: 100%;
   border-collapse: collapse;
@@ -435,6 +466,18 @@
   align-items: center;
   gap: 8px;
 }
+.form-legenda {
+  margin: -8px 0 16px;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+.obrigatorio {
+  color: #dc3545;
+  font-weight: 700;
+}
+.form-alert {
+  margin-bottom: 16px;
+}
 .card-form input, .card-form select {
   width: 100%;
   padding: 14px 12px;
@@ -613,3 +656,17 @@ input.invalido, select.invalido {
   gap: 10px;
 }
 
+.campo-dica {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: #6c757d;
+  line-height: 1.4;
+}
+
+.estoque-readonly {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #007bff;
+  margin: 4px 0 0;
+}

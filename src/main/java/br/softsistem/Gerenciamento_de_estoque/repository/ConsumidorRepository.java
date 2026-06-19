@@ -19,4 +19,6 @@ public interface ConsumidorRepository extends JpaRepository<Consumidor, Long> {
 
     // Buscar consumidor por ID e organização (segurança multi-tenant)
     Optional<Consumidor> findByIdAndOrgId(Long id, Long orgId);
+
+    long countByOrg_Id(Long orgId);
 }

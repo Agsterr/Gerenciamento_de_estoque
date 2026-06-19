@@ -10,6 +10,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,16 +26,29 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // Para o método loadUserByUsername, normalmente usamos o username, mas também precisamos do orgId
-        // Para fazer isso, você pode pegar o orgId de algum contexto, como o token JWT, um parâmetro da requisição, etc.
-        // Supondo que o orgId seja obtido de alguma outra forma (por exemplo, como parte do token JWT)
+        String loginId = username != null ? username.trim() : "";
+        if (loginId.isEmpty()) {
+            throw new UsernameNotFoundException("Usuário não encontrado");
+        }
 
-        // O exemplo a seguir usa um orgId hardcoded (substitua com a lógica necessária para obter o orgId)
-        Long orgId = getOrgIdFromSomewhere(); // Lógica para obter o orgId
-
-        // Carregar o usuário pelo username e orgId
-        Usuario usuario = usuarioRepository.findByUsernameAndOrgId(username, orgId)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado ou não pertence à organização"));
+        Usuario usuario;
+        if (loginId.contains("@")) {
+            String email = loginId.toLowerCase(Locale.ROOT);
+            List<Usuario> byEmail = usuarioRepository.findAllByEmailIgnoreCase(email);
+            if (byEmail.isEmpty()) {
+                byEmail = usuarioRepository.findAllByEmail(email);
+            }
+            usuario = byEmail.stream().findFirst()
+                    .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado por e-mail"));
+        } else {
+            List<Usuario> byUsername = usuarioRepository.findAllByUsernameIgnoreCase(loginId);
+            if (byUsername.isEmpty()) {
+                usuario = usuarioRepository.findByUsername(loginId)
+                        .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado por username"));
+            } else {
+                usuario = byUsername.get(0);
+            }
+        }
 
         // Converte as roles do banco de dados para SimpleGrantedAuthority
         Collection<SimpleGrantedAuthority> authorities = usuario.getRoles().stream()
@@ -50,12 +65,5 @@ public class CustomUserDetailsService implements UserDetailsService {
                 usuario.isAccountNonLocked(),
                 authorities // Adiciona as roles
         );
-    }
-
-    // Método fictício para ilustrar a obtenção do orgId
-    private Long getOrgIdFromSomewhere() {
-        // Exemplo de como você pode obter o orgId de algum contexto, como JWT, etc.
-        // Se você estiver usando um sistema de autenticação baseado em JWT, você obteria o orgId do token JWT
-        return 1L;  // Retorne o orgId real que você recupera do contexto
     }
 }

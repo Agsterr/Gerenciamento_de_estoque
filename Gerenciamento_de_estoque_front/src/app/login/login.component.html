@@ -63,35 +63,6 @@
         </div>
       </div>
 
-      <!-- Campo: ID da Organização -->
-      <div class="form-group">
-        <label for="orgId">
-          <mat-icon aria-hidden="true">business</mat-icon>
-          ID da Organização
-        </label>
-        <input 
-          id="orgId" 
-          type="text" 
-          inputmode="numeric"
-          pattern="^[0-9]+$"
-          formControlName="orgId" 
-          class="form-control" 
-          placeholder="Ex: 1"
-          required
-          autocomplete="off"
-          [attr.aria-invalid]="loginForm.get('orgId')?.invalid && loginForm.get('orgId')?.touched"
-          [attr.aria-describedby]="(loginForm.get('orgId')?.invalid && loginForm.get('orgId')?.touched) ? 'orgId-error' : null"
-        />
-        <div class="error" *ngIf="loginForm.get('orgId')?.touched && loginForm.get('orgId')?.hasError('required')" id="orgId-error" aria-live="polite">
-          <mat-icon aria-hidden="true">warning</mat-icon>
-          <span>ID da organização é obrigatório</span>
-        </div>
-        <div *ngIf="loginForm.get('orgId')?.hasError('pattern')" class="error" aria-live="polite">
-          <mat-icon aria-hidden="true">warning</mat-icon>
-          <span>Apenas números válidos são permitidos</span>
-        </div>
-      </div>
-
       <!-- Checkbox para salvar credenciais -->
       <div class="lembrar-credenciais">
         <label class="checkbox-container">
@@ -103,7 +74,7 @@
           />
           <span class="checkbox-custom" aria-hidden="true"></span>
           <mat-icon class="checkbox-icon" aria-hidden="true">save</mat-icon>
-          <span class="checkbox-label">Lembrar usuário, senha e organização</span>
+          <span class="checkbox-label">Lembrar usuário e senha</span>
         </label>
         <small id="lembrar-ajuda" class="checkbox-help">Use em dispositivos pessoais e confiáveis.</small>
       </div>
@@ -123,6 +94,11 @@
       <div *ngIf="errorMessage" class="alert alert-danger" aria-live="assertive">
         <mat-icon aria-hidden="true">error</mat-icon>
         <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="login-link">
+        <span>Não tem conta?</span>
+        <a routerLink="/register" class="link">Criar conta</a>
       </div>
     </form>
   </div>

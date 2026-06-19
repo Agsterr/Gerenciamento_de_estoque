@@ -12,7 +12,10 @@ export class Produto {
     public orgId: number,
     public ativo: boolean,
     public criadoEm: string,
-    public status: string // <- Ex: 'Estoque Baixo', 'Normal'
+    public status: string,
+    public sku?: string,
+    public codigoBarras?: string,
+    public custoMedio?: number
   ) {}
 
   /**
@@ -32,7 +35,10 @@ export class Produto {
       dto.orgId,
       dto.ativo ?? true,
       dto.criadoEm,
-      status
+      status,
+      dto.sku,
+      dto.codigoBarras,
+      dto.custoMedio
     );
   }
 }

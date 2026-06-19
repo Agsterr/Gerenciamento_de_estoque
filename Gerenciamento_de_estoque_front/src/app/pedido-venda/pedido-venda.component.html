@@ -1,0 +1,310 @@
+<app-page-hint [message]="pageHint.message" [prerequisites]="pageHint.prerequisites"></app-page-hint>
+
+
+
+<header class="header-page">
+
+  <h2><i class="fas fa-file-invoice-dollar"></i> Pedidos de Venda</h2>
+
+  <p class="subtitulo">Vendas para clientes ou retiradas internas para funcionários — controla estoque e quem retirou</p>
+
+  <div class="acoes-header">
+
+    <button class="botao-listar" (click)="toggleList()"><i class="fas fa-list"></i> Listar</button>
+
+    <button class="botao-adicionar" (click)="toggleAddForm()"><i class="fas fa-plus"></i> Novo Pedido</button>
+
+  </div>
+
+</header>
+
+
+
+<div *ngIf="mensagem" class="mensagem-feedback sucesso"><i class="fas fa-check-circle"></i> {{ mensagem }}</div>
+
+<div *ngIf="mensagemErro" class="mensagem-feedback erro"><i class="fas fa-exclamation-circle"></i> {{ mensagemErro }}</div>
+
+<div *ngIf="loading" class="spinner-overlay"><div class="spinner"></div></div>
+
+
+
+<div class="main-content">
+
+  <div class="card-lista" *ngIf="showList">
+
+    <div class="table-scroll-wrapper">
+    <table class="data-table">
+
+      <thead>
+
+        <tr>
+
+          <th>Número</th>
+
+          <th>Tipo</th>
+
+          <th>Cliente / Funcionário</th>
+
+          <th>Registrado por</th>
+
+          <th>Data/Hora</th>
+
+          <th>Pagamento</th>
+
+          <th>Status</th>
+
+          <th>Total</th>
+
+          <th>Ações</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        <tr *ngFor="let p of pedidos">
+
+          <td>{{ p.numero }}</td>
+
+          <td><span class="badge" [class.interno]="isPedidoInterno(p)">{{ isPedidoInterno(p) ? 'Interno' : 'Venda' }}</span></td>
+
+          <td>{{ destinatarioLabel(p) }}</td>
+
+          <td>{{ p.vendedorNome || p.vendedorId }}</td>
+
+          <td>{{ p.dataHora | date:'dd/MM/yyyy HH:mm' }}</td>
+
+          <td>
+
+            <ng-container *ngIf="!isPedidoInterno(p)">
+
+              {{ labelForma(p.formaPagamento) }} · {{ labelCondicao(p.condicaoPagamento) }}
+
+            </ng-container>
+
+            <span *ngIf="isPedidoInterno(p)" class="text-muted">Sem pagamento</span>
+
+          </td>
+
+          <td><span class="badge" [ngClass]="statusClass(p.status)">{{ p.status }}</span></td>
+
+          <td>{{ isPedidoInterno(p) ? '—' : (p.valorTotal | currency:'BRL') }}</td>
+
+          <td class="acoes-tabela">
+
+            <button *ngIf="podeConfirmar(p)" (click)="confirmar(p.id)" class="btn btn-success btn-sm" title="Confirmar"><i class="fas fa-check"></i></button>
+
+            <button *ngIf="podeAcao(p)" (click)="cancelar(p.id)" class="btn btn-danger btn-sm" title="Cancelar"><i class="fas fa-ban"></i></button>
+
+          </td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+    </div>
+
+    <div class="pagination-bar" *ngIf="totalPages > 0">
+
+      <div class="pagination-info-left">Página {{ currentPage + 1 }} de {{ totalPages }} ({{ totalElements }} pedidos)</div>
+
+      <div class="pagination-row">
+
+        <button class="btn-pag" (click)="paginaAnterior()" [disabled]="currentPage === 0"><i class="fas fa-chevron-left"></i></button>
+
+        <button class="btn-pag" (click)="proximaPagina()" [disabled]="currentPage >= totalPages - 1"><i class="fas fa-chevron-right"></i></button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="card-form" *ngIf="showAddForm">
+
+    <h3 class="titulo-form"><i class="fas fa-shopping-bag"></i> Novo Pedido</h3>
+
+    <form (ngSubmit)="submitForm()" class="form-adicionar">
+
+      <div class="form-group">
+
+        <label>Tipo *</label>
+
+        <select [(ngModel)]="tipoPedido" name="tipoPedido" (ngModelChange)="onTipoChange()">
+
+          <option *ngFor="let t of tiposPedido" [value]="t.value">{{ t.label }}</option>
+
+        </select>
+
+      </div>
+
+
+
+      <div class="form-row">
+
+        <div class="form-group" *ngIf="!isInterno">
+
+          <label>Cliente *</label>
+
+          <select [(ngModel)]="consumidorId" name="consumidorId" [required]="!isInterno">
+
+            <option [ngValue]="null">Selecione...</option>
+
+            <option *ngFor="let c of clientes" [ngValue]="c.id">{{ c.nome }}</option>
+
+          </select>
+
+        </div>
+
+        <div class="form-group" *ngIf="isInterno">
+
+          <label>Funcionário *</label>
+
+          <select [(ngModel)]="funcionarioId" name="funcionarioId" [required]="isInterno">
+
+            <option [ngValue]="null">Selecione...</option>
+
+            <option *ngFor="let v of vendedores" [ngValue]="v.id">{{ v.username }}</option>
+
+          </select>
+
+        </div>
+
+        <div class="form-group">
+
+          <label>Registrado por</label>
+
+          <select [(ngModel)]="vendedorId" name="vendedorId">
+
+            <option [ngValue]="null">Usuário logado</option>
+
+            <option *ngFor="let v of vendedores" [ngValue]="v.id">{{ v.username }}</option>
+
+          </select>
+
+        </div>
+
+        <div class="form-group">
+
+          <label>Data e hora *</label>
+
+          <input type="datetime-local" [(ngModel)]="dataHora" name="dataHora" required />
+
+        </div>
+
+      </div>
+
+
+
+      <div class="form-row" *ngIf="!isInterno">
+
+        <div class="form-group">
+
+          <label>Forma de pagamento *</label>
+
+          <select [(ngModel)]="formaPagamento" name="formaPagamento" required>
+
+            <option *ngFor="let f of formasPagamento" [value]="f.value">{{ f.label }}</option>
+
+          </select>
+
+        </div>
+
+        <div class="form-group">
+
+          <label>Condição de pagamento *</label>
+
+          <select [(ngModel)]="condicaoPagamento" name="condicaoPagamento" required>
+
+            <option *ngFor="let c of condicoesPagamento" [value]="c.value">{{ c.label }}</option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+
+
+      <p *ngIf="isInterno" class="hint-interno"><i class="fas fa-info-circle"></i> Retirada interna não gera cobrança — informe produtos e quantidades.</p>
+
+
+
+      <div class="form-group">
+
+        <label>Observação</label>
+
+        <textarea [(ngModel)]="observacao" name="observacao" rows="2"></textarea>
+
+      </div>
+
+
+
+      <h4><i class="fas fa-boxes"></i> Itens <small>(produtos)</small></h4>
+
+      <div class="item-row" *ngFor="let item of itens; let i = index">
+
+        <div class="form-group flex-2">
+
+          <label>Produto *</label>
+
+          <select [(ngModel)]="item.produtoId" [name]="'produtoId' + i" (ngModelChange)="onProdutoChange(item)">
+
+            <option [ngValue]="null">Selecione...</option>
+
+            <option *ngFor="let pr of produtos" [ngValue]="pr.id">{{ pr.nome }} (est: {{ pr.quantidade }})</option>
+
+          </select>
+
+        </div>
+
+        <div class="form-group">
+
+          <label>Qtd *</label>
+
+          <input type="number" [(ngModel)]="item.quantidade" [name]="'qtd' + i" min="1" />
+
+        </div>
+
+        <div class="form-group" *ngIf="!isInterno">
+
+          <label>Preço un. *</label>
+
+          <input type="number" [(ngModel)]="item.precoUnitario" [name]="'preco' + i" min="0" step="0.01" />
+
+        </div>
+
+        <button type="button" class="btn btn-danger btn-sm" (click)="removeItem(i)" [disabled]="itens.length === 1"><i class="fas fa-trash-alt"></i></button>
+
+      </div>
+
+      <button type="button" class="btn btn-info btn-sm add-item-btn" (click)="addItem()"><i class="fas fa-plus"></i> Adicionar produto</button>
+
+
+
+      <div class="form-group checkbox-row">
+
+        <label><input type="checkbox" [(ngModel)]="confirmarAoSalvar" name="confirmar" /> Confirmar e baixar estoque ao salvar</label>
+
+      </div>
+
+
+
+      <div class="botoes-form">
+
+        <button type="submit" class="botao-salvar" [disabled]="loading"><i class="fas fa-save"></i> {{ isInterno ? 'Salvar Retirada' : 'Salvar Pedido' }}</button>
+
+        <button type="button" class="botao-cancelar" (click)="toggleList()"><i class="fas fa-times"></i> Cancelar</button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+

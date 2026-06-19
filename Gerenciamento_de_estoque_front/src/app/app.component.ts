@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
 import { AuthService } from './services/auth.service';
+import { TrialBannerComponent } from './subscription/trial-banner/trial-banner.component';
 
 @Component({
   selector: 'app-root',
@@ -17,6 +18,7 @@ import { AuthService } from './services/auth.service';
     MatIconModule,
     MatMenuModule,
     MatButtonModule,
+    TrialBannerComponent,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
@@ -38,18 +40,9 @@ export class AppComponent {
     return user?.username || 'Usuário';
   }
 
-  // Verifica se o usuário é admin
-  get isAdmin(): boolean {
-    const user = this.authService.getLoggedUser();
-    if (!user || !Array.isArray(user.roles)) return false;
-    try {
-      return user.roles.some((role: any) => {
-        if (typeof role === 'string') return role === 'ROLE_ADMIN';
-        return role?.name === 'ROLE_ADMIN' || role?.authority === 'ROLE_ADMIN' || role?.role === 'ROLE_ADMIN';
-      });
-    } catch {
-      return false;
-    }
+  // Verifica se é o admin master da plataforma (ROLE_SUPER_ADMIN)
+  get isMasterAdmin(): boolean {
+    return this.authService.isMasterAdmin();
   }
 
   // Faz logout

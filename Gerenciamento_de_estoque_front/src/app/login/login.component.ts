@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../services/auth.service';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { LoginRequest } from '../models/login-request.model';
 import { MatIconModule } from '@angular/material/icon';
 import { environment } from '../../environments/environment';
@@ -20,7 +20,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     ReactiveFormsModule,
     MatIconModule,
     MatSnackBarModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    RouterModule,
   ],
 })
 export class LoginComponent implements OnInit {
@@ -38,39 +39,38 @@ export class LoginComponent implements OnInit {
     this.loginForm = this.fb.group({
       username: ['', Validators.required],
       senha: ['', Validators.required],
-      orgId: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
       lembrarCredenciais: [false]
     });
 
-    // Recuperar credenciais salvas
     const savedUsername = localStorage.getItem('savedUsername');
     const savedPassword = localStorage.getItem('savedPassword');
-    const savedOrgId = localStorage.getItem('savedOrgId');
-    
-    if (savedUsername && savedPassword && savedOrgId) {
+
+    if (savedUsername && savedPassword) {
       this.loginForm.patchValue({
         username: savedUsername,
         senha: savedPassword,
-        orgId: savedOrgId,
         lembrarCredenciais: true
       });
     }
   }
 
   ngOnInit(): void {
-    // Qualquer lógica de inicialização adicional pode ser colocada aqui
+    this.authService.markVisited();
+    if (this.authService.isTokenValid()) {
+      this.router.navigate(['/dashboard'], { replaceUrl: true });
+    }
   }
 
   onSubmit(): void {
     if (this.loginForm.valid) {
       this.isSubmitting = true;
-      const loginData: LoginRequest = this.loginForm.value as LoginRequest;
+      const { username, senha } = this.loginForm.value;
+      const loginData: LoginRequest = { username, senha };
 
       // Salvar ou remover credenciais do localStorage
       if (this.loginForm.get('lembrarCredenciais')?.value) {
         localStorage.setItem('savedUsername', loginData.username);
         localStorage.setItem('savedPassword', loginData.senha);
-        localStorage.setItem('savedOrgId', loginData.orgId.toString());
       } else {
         localStorage.removeItem('savedUsername');
         localStorage.removeItem('savedPassword');

@@ -4,10 +4,13 @@ import br.softsistem.Gerenciamento_de_estoque.dto.login.LoginRequestDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.login.LoginResponseDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioRequestDto;
+import br.softsistem.Gerenciamento_de_estoque.exception.UsuarioDesativadoException;
 import br.softsistem.Gerenciamento_de_estoque.service.AuthService;
+import br.softsistem.Gerenciamento_de_estoque.service.LoginAuditoriaService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -19,9 +22,11 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final LoginAuditoriaService loginAuditoriaService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, LoginAuditoriaService loginAuditoriaService) {
         this.authService = authService;
+        this.loginAuditoriaService = loginAuditoriaService;
     }
 
     /**
@@ -29,13 +34,18 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(
-            @Valid @RequestBody LoginRequestDto request
+            @Valid @RequestBody LoginRequestDto request,
+            HttpServletRequest httpRequest
     ) {
         try {
-            LoginResponseDto response = authService.login(request);
+            LoginResponseDto response = authService.login(request, httpRequest);
             return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+        } catch (BadCredentialsException ex) {
+            loginAuditoriaService.registrarFalha(request.username(), httpRequest);
+            throw ex;
+        } catch (UsuarioDesativadoException ex) {
+            loginAuditoriaService.registrarFalha(request.username(), httpRequest, ex.getMessage());
+            throw ex;
         }
     }
 
@@ -43,16 +53,11 @@ public class AuthController {
      * Recebe JSON com { username, senha, email, roles, orgId },
      * repassa para o AuthService e retorna o DTO do usuário criado.
      */
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/register")
     public ResponseEntity<UsuarioDto> register(
             @RequestBody @Valid UsuarioRequestDto usuarioRequestDto
     ) {
-        try {
-            UsuarioDto criado = authService.register(usuarioRequestDto);
-            return ResponseEntity.ok(criado);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+        UsuarioDto criado = authService.register(usuarioRequestDto);
+        return ResponseEntity.status(201).body(criado);
     }
 }

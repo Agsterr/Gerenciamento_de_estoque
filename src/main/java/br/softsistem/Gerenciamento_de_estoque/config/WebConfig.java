@@ -23,14 +23,12 @@ public class WebConfig implements WebMvcConfigurer {
     
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // Aplicar rate limiting apenas em endpoints específicos
         registry.addInterceptor(rateLimitingInterceptor)
                 .addPathPatterns(
-                    "/api/subscriptions/**",
+                    "/api/subscription/**",
                     "/api/webhooks/**"
                 )
                 .excludePathPatterns(
-                    "/api/webhooks/stripe/test", // Excluir endpoint de teste
                     "/swagger-ui/**",
                     "/v3/api-docs/**"
                 );

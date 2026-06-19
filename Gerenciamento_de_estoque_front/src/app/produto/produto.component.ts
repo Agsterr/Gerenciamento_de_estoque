@@ -11,18 +11,23 @@ import {
   FormsModule,
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { PageHintComponent } from '../shared/page-hint/page-hint.component';
+import { PAGE_HINTS } from '../shared/help/help-content.data';
 
 @Component({
   selector: 'app-produto',
   templateUrl: './produto.component.html',
   styleUrls: ['./produto.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, PageHintComponent],
 })
 export class ProdutoComponent implements OnInit {
+  pageHint = PAGE_HINTS['produtos'];
   produtos: Produto[] = [];
   filteredProdutos: Produto[] = [];
   searchTerm: string = '';
+  barcodeSearch: string = '';
+  filtroEstoqueBaixo = false;
   categorias: Categoria[] = [];
   produtoForm: FormGroup;
   mensagem = '';
@@ -37,6 +42,7 @@ export class ProdutoComponent implements OnInit {
   showAddForm = false;
   editingProduto = false;
   produtoEditando: Produto | null = null;
+  formSubmitted = false;
 
   constructor(
     private produtoService: ProdutoService,
@@ -47,10 +53,56 @@ export class ProdutoComponent implements OnInit {
       id: [null],
       nome: ['', Validators.required],
       descricao: ['', Validators.required],
-      preco: [0, [Validators.required, Validators.min(0.01)]],
-      quantidade: [0, [Validators.required, Validators.min(0)]],
-      quantidadeMinima: [0, [Validators.required, Validators.min(0)]],
+      preco: [null, [Validators.required, Validators.min(0.01)]],
+      quantidade: [0, [Validators.min(0)]],
+      quantidadeMinima: [null, [Validators.required, Validators.min(0)]],
       categoriaId: [null, Validators.required],
+      sku: [''],
+      codigoBarras: [''],
+      custoMedio: [null, [Validators.min(0)]],
+    });
+  }
+
+  campoInvalido(campo: string): boolean {
+    const control = this.produtoForm.get(campo);
+    return !!(control && control.invalid && (control.touched || this.formSubmitted));
+  }
+
+  getCampoErro(campo: string): string {
+    const control = this.produtoForm.get(campo);
+    if (!control?.errors) {
+      return '';
+    }
+    const labels: Record<string, string> = {
+      nome: 'Nome',
+      descricao: 'Descrição',
+      preco: 'Preço',
+      quantidade: 'Quantidade',
+      quantidadeMinima: 'Quantidade mínima',
+      categoriaId: 'Categoria',
+    };
+    if (control.errors['required']) {
+      return `${labels[campo] || 'Campo'} é obrigatório.`;
+    }
+    if (control.errors['min']) {
+      return campo === 'preco' ? 'Preço deve ser maior que zero.' : 'Valor inválido.';
+    }
+    return 'Campo inválido.';
+  }
+
+  private resetFormulario(): void {
+    this.formSubmitted = false;
+    this.produtoForm.reset({
+      id: null,
+      nome: '',
+      descricao: '',
+      preco: null,
+      quantidade: 0,
+      quantidadeMinima: null,
+      categoriaId: null,
+      sku: '',
+      codigoBarras: '',
+      custoMedio: null,
     });
   }
 
@@ -94,7 +146,7 @@ export class ProdutoComponent implements OnInit {
     this.showAddForm = false;
     this.editingProduto = false;
     this.produtoEditando = null;
-    this.produtoForm.reset();
+    this.resetFormulario();
     this.mensagem = '';
     this.mensagemErro = '';
     this.fetchProdutos(this.currentPage);
@@ -105,16 +157,22 @@ export class ProdutoComponent implements OnInit {
     this.showList = false;
     this.editingProduto = false;
     this.produtoEditando = null;
-    this.produtoForm.reset();
+    this.resetFormulario();
     this.mensagem = '';
     this.mensagemErro = '';
   }
 
   submitAddForm(): void {
+    this.formSubmitted = true;
+    this.mensagem = '';
+    this.produtoForm.markAllAsTouched();
+
     if (this.produtoForm.invalid) {
-      this.mensagemErro = 'Preencha todos os campos corretamente!';
+      this.mensagemErro = 'Preencha os campos obrigatórios destacados em vermelho.';
       return;
     }
+
+    this.mensagemErro = '';
     this.editingProduto ? this.updateProduto() : this.createProduto();
   }
 
@@ -129,7 +187,12 @@ export class ProdutoComponent implements OnInit {
       },
       error: err => {
         this.loading = false;
-        this.mensagemErro = err.error?.error || 'Erro ao adicionar produto!';
+        const details = err.error?.details;
+        if (Array.isArray(details) && details.length) {
+          this.mensagemErro = details.join(' · ');
+        } else {
+          this.mensagemErro = err.error?.error || 'Erro ao adicionar produto!';
+        }
       }
     });
   }
@@ -139,6 +202,10 @@ export class ProdutoComponent implements OnInit {
     if (!upd.id) {
       this.mensagemErro = 'ID obrigatório para edição';
       return;
+    }
+    // Estoque não é editado pelo formulário
+    if (this.produtoEditando) {
+      upd.quantidade = this.produtoEditando.quantidade;
     }
     this.loading = true;
     this.produtoService.atualizarProduto(upd, upd.id).subscribe({
@@ -172,13 +239,42 @@ export class ProdutoComponent implements OnInit {
 
   applyFilter(): void {
     const t = this.searchTerm.trim().toLowerCase();
-    this.filteredProdutos = t
-      ? this.produtos.filter(p =>
+    let list = [...this.produtos];
+    if (t) {
+      list = list.filter(p =>
           p.nome.toLowerCase().includes(t) ||
           (p.descricao && p.descricao.toLowerCase().includes(t)) ||
-          (p.categoriaNome && p.categoriaNome.toLowerCase().includes(t))
-        )
-      : [...this.produtos];
+          (p.categoriaNome && p.categoriaNome.toLowerCase().includes(t)) ||
+          (p.sku && p.sku.toLowerCase().includes(t)) ||
+          (p.codigoBarras && p.codigoBarras.includes(t))
+        );
+    }
+    if (this.filtroEstoqueBaixo) {
+      list = list.filter(p => this.isEstoqueBaixo(p));
+    }
+    this.filteredProdutos = list;
+  }
+
+  isEstoqueBaixo(p: Produto): boolean {
+    const qtd = p.quantidade ?? 0;
+    const min = p.quantidadeMinima ?? 0;
+    return qtd <= min;
+  }
+
+  buscarPorBarcode(): void {
+    if (!this.barcodeSearch.trim()) return;
+    this.loading = true;
+    this.produtoService.buscarPorCodigoBarras(this.barcodeSearch.trim()).subscribe({
+      next: (p) => {
+        this.loading = false;
+        this.filteredProdutos = [Produto.fromDto(p)];
+        this.mensagem = `Produto encontrado: ${(p as any).nome}`;
+      },
+      error: () => {
+        this.loading = false;
+        this.mensagemErro = 'Nenhum produto encontrado para este código de barras.';
+      }
+    });
   }
 
   editProduto(p: Produto): void {
@@ -186,6 +282,7 @@ export class ProdutoComponent implements OnInit {
     this.showAddForm = true;
     this.showList = false;
     this.produtoEditando = p;
+    this.formSubmitted = false;
     this.produtoForm.patchValue({
       id: p.id,
       nome: p.nome,
@@ -193,7 +290,10 @@ export class ProdutoComponent implements OnInit {
       preco: p.preco,
       quantidade: p.quantidade,
       quantidadeMinima: p.quantidadeMinima,
-      categoriaId: p.categoriaId
+      categoriaId: p.categoriaId,
+      sku: p.sku,
+      codigoBarras: p.codigoBarras,
+      custoMedio: p.custoMedio
     });
     this.mensagem = '';
     this.mensagemErro = '';
