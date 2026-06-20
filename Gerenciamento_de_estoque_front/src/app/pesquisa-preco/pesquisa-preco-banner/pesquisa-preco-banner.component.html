@@ -1,0 +1,11 @@
+<div *ngIf="showBanner" class="pesquisa-preco-banner" role="status">
+  <div class="pesquisa-preco-banner__content">
+    <i class="fas fa-poll" aria-hidden="true"></i>
+    <span>
+      <strong>Pesquisa de preço</strong>
+      — ajude-nos a definir um valor justo para o sistema. Leva menos de 1 minuto.
+    </span>
+    <a routerLink="/dashboard/pesquisa-preco" class="pesquisa-preco-banner__cta">Responder agora</a>
+    <button type="button" class="pesquisa-preco-banner__dismiss" (click)="dismiss()">Agora não</button>
+  </div>
+</div>

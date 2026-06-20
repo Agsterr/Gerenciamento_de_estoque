@@ -6,6 +6,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
 import { AuthService } from './services/auth.service';
 import { TrialBannerComponent } from './subscription/trial-banner/trial-banner.component';
+import { PesquisaPrecoBannerComponent } from './pesquisa-preco/pesquisa-preco-banner/pesquisa-preco-banner.component';
 
 @Component({
   selector: 'app-root',
@@ -19,6 +20,7 @@ import { TrialBannerComponent } from './subscription/trial-banner/trial-banner.c
     MatMenuModule,
     MatButtonModule,
     TrialBannerComponent,
+    PesquisaPrecoBannerComponent,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],

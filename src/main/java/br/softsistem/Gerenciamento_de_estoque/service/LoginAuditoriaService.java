@@ -22,11 +22,14 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
 @Service
 public class LoginAuditoriaService {
+
+    /** Limites abertos para consultas JPQL sem filtro de data (evita NULL em parâmetros no PostgreSQL). */
+    private static final LocalDateTime QUERY_INICIO_ABERTO = LocalDateTime.of(1970, 1, 1, 0, 0);
+    private static final LocalDateTime QUERY_FIM_ABERTO = LocalDateTime.of(3000, 1, 1, 0, 0);
 
     private final AcessoLoginRepository repository;
     private final LoginLogArchiveService archiveService;
@@ -64,7 +67,7 @@ public class LoginAuditoriaService {
 
     @Transactional(readOnly = true)
     public Page<AcessoLoginDto> listarGlobal(Pageable pageable, Integer ano, Integer mes, Integer dia, Long orgId) {
-        DateRange range = resolveDateRange(ano, mes, dia);
+        DateRange range = boundsForQuery(ano, mes, dia);
         return repository.findFiltrado(orgId, range.inicio(), range.fim(), pageable)
                 .map(AcessoLoginDto::new);
     }
@@ -72,7 +75,7 @@ public class LoginAuditoriaService {
     @Transactional(readOnly = true)
     public Page<AcessoLoginDto> listarPorOrg(Pageable pageable, Integer ano, Integer mes, Integer dia) {
         Long orgId = requireCurrentOrgId();
-        DateRange range = resolveDateRange(ano, mes, dia);
+        DateRange range = boundsForQuery(ano, mes, dia);
         return repository.findFiltrado(orgId, range.inicio(), range.fim(), pageable)
                 .map(AcessoLoginDto::new);
     }
@@ -131,7 +134,7 @@ public class LoginAuditoriaService {
     @Transactional
     public LoginLogActionResultDto exportarGlobal(Integer ano, Integer mes, Integer dia, Long orgId) {
         requirePeriodo(ano);
-        DateRange range = resolveDateRange(ano, mes, dia);
+        DateRange range = boundsForQuery(ano, mes, dia);
         List<AcessoLoginDto> registros = fetchDtoFiltrado(orgId, range);
         if (registros.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -160,13 +163,13 @@ public class LoginAuditoriaService {
     public LoginLogActionResultDto apagarGlobal(Integer ano, Integer mes, Integer dia, Long orgId, boolean confirm) {
         requireConfirm(confirm);
         requirePeriodo(ano);
-        DateRange range = resolveDateRange(ano, mes, dia);
-        long total = repository.countFiltrado(orgId, range.inicio(), range.fim());
+        DateRange queryRange = boundsForQuery(ano, mes, dia);
+        long total = repository.countFiltrado(orgId, queryRange.inicio(), queryRange.fim());
         if (total == 0) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Nenhum log encontrado para apagar no período informado.");
         }
-        int apagados = repository.deleteFiltrado(orgId, range.inicio(), range.fim());
+        int apagados = repository.deleteFiltrado(orgId, queryRange.inicio(), queryRange.fim());
         return new LoginLogActionResultDto(
                 null,
                 0,
@@ -182,8 +185,8 @@ public class LoginAuditoriaService {
     @Transactional
     public LoginLogActionResultDto compactarGlobal(Integer ano, Integer mes, Integer dia, Long orgId) {
         LoginLogActionResultDto export = exportarGlobal(ano, mes, dia, orgId);
-        DateRange range = resolveDateRange(ano, mes, dia);
-        int apagados = repository.deleteFiltrado(orgId, range.inicio(), range.fim());
+        DateRange queryRange = boundsForQuery(ano, mes, dia);
+        int apagados = repository.deleteFiltrado(orgId, queryRange.inicio(), queryRange.fim());
         return new LoginLogActionResultDto(
                 export.filename(),
                 export.registrosExportados(),
@@ -200,7 +203,7 @@ public class LoginAuditoriaService {
     /** Compacta todos os logs anteriores à data de corte (retenção). */
     @Transactional
     public LoginLogActionResultDto compactarAnterioresA(LocalDate cutoff, Long orgId) {
-        DateRange range = new DateRange(null, cutoff.atStartOfDay());
+        DateRange range = boundsForQuery(new DateRange(null, cutoff.atStartOfDay()));
         List<AcessoLoginDto> registros = fetchDtoFiltrado(orgId, range);
         if (registros.isEmpty()) {
             return new LoginLogActionResultDto(null, 0, 0, "Nenhum log antigo para compactar.");
@@ -235,7 +238,7 @@ public class LoginAuditoriaService {
     @Transactional
     public Path exportarParaDownload(Integer ano, Integer mes, Integer dia, Long orgId) {
         requirePeriodo(ano);
-        DateRange range = resolveDateRange(ano, mes, dia);
+        DateRange range = boundsForQuery(ano, mes, dia);
         List<AcessoLoginDto> registros = fetchDtoFiltrado(orgId, range);
         if (registros.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -251,7 +254,8 @@ public class LoginAuditoriaService {
     }
 
     private List<AcessoLoginDto> fetchDtoFiltrado(Long orgId, DateRange range) {
-        return repository.findAllFiltrado(orgId, range.inicio(), range.fim())
+        DateRange queryRange = boundsForQuery(range);
+        return repository.findAllFiltrado(orgId, queryRange.inicio(), queryRange.fim())
                 .stream()
                 .map(AcessoLoginDto::new)
                 .toList();
@@ -305,6 +309,16 @@ public class LoginAuditoriaService {
         }
         LocalDate data = LocalDate.of(ano, mes, dia);
         return new DateRange(data.atStartOfDay(), data.plusDays(1).atStartOfDay());
+    }
+
+    private DateRange boundsForQuery(Integer ano, Integer mes, Integer dia) {
+        return boundsForQuery(resolveDateRange(ano, mes, dia));
+    }
+
+    private DateRange boundsForQuery(DateRange range) {
+        LocalDateTime inicio = range.inicio() != null ? range.inicio() : QUERY_INICIO_ABERTO;
+        LocalDateTime fim = range.fim() != null ? range.fim() : QUERY_FIM_ABERTO;
+        return new DateRange(inicio, fim);
     }
 
     private AcessoLogin baseLog(String username, HttpServletRequest request) {

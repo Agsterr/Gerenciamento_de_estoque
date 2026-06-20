@@ -66,5 +66,6 @@
     <span>Modo demonstração — os dados são temporários e serão apagados ao fazer logout.</span>
   </div>
   <app-trial-banner *ngIf="isLoggedIn && !hideSubscriptionUi"></app-trial-banner>
+  <app-pesquisa-preco-banner *ngIf="isLoggedIn && !isMasterAdmin"></app-pesquisa-preco-banner>
   <router-outlet></router-outlet>
 </div>

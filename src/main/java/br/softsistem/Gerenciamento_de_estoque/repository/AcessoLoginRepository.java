@@ -18,8 +18,8 @@ public interface AcessoLoginRepository extends JpaRepository<AcessoLogin, Long> 
     @Query("""
             SELECT a FROM AcessoLogin a
             WHERE (:orgId IS NULL OR a.org.id = :orgId)
-              AND (:inicio IS NULL OR a.dataHora >= :inicio)
-              AND (:fim IS NULL OR a.dataHora < :fim)
+              AND a.dataHora >= :inicio
+              AND a.dataHora < :fim
             ORDER BY a.dataHora DESC
             """)
     Page<AcessoLogin> findFiltrado(
@@ -43,8 +43,8 @@ public interface AcessoLoginRepository extends JpaRepository<AcessoLogin, Long> 
     @Query("""
             SELECT a FROM AcessoLogin a
             WHERE (:orgId IS NULL OR a.org.id = :orgId)
-              AND (:inicio IS NULL OR a.dataHora >= :inicio)
-              AND (:fim IS NULL OR a.dataHora < :fim)
+              AND a.dataHora >= :inicio
+              AND a.dataHora < :fim
             ORDER BY a.dataHora ASC
             """)
     List<AcessoLogin> findAllFiltrado(
@@ -55,8 +55,8 @@ public interface AcessoLoginRepository extends JpaRepository<AcessoLogin, Long> 
     @Query("""
             SELECT COUNT(a) FROM AcessoLogin a
             WHERE (:orgId IS NULL OR a.org.id = :orgId)
-              AND (:inicio IS NULL OR a.dataHora >= :inicio)
-              AND (:fim IS NULL OR a.dataHora < :fim)
+              AND a.dataHora >= :inicio
+              AND a.dataHora < :fim
             """)
     long countFiltrado(
             @Param("orgId") Long orgId,
@@ -67,8 +67,8 @@ public interface AcessoLoginRepository extends JpaRepository<AcessoLogin, Long> 
     @Query("""
             DELETE FROM AcessoLogin a
             WHERE (:orgId IS NULL OR a.org.id = :orgId)
-              AND (:inicio IS NULL OR a.dataHora >= :inicio)
-              AND (:fim IS NULL OR a.dataHora < :fim)
+              AND a.dataHora >= :inicio
+              AND a.dataHora < :fim
             """)
     int deleteFiltrado(
             @Param("orgId") Long orgId,

@@ -53,6 +53,11 @@ export class AdminComponent implements OnInit {
   cacheName = '';
   eventTypeLote = '';
 
+  get cacheNomes(): string[] {
+    const names = this.cacheStats?.cacheNames;
+    return Array.isArray(names) ? names : [];
+  }
+
   constructor(
     private authService: AuthService,
     private webhookService: AdminWebhookService,

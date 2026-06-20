@@ -82,14 +82,28 @@
       <div *ngIf="abaAtiva === 'cache'">
         <button class="botao-listar" (click)="carregarCache()" style="margin-bottom: 16px;"><i class="fas fa-sync"></i> Atualizar</button>
 
-        <div class="sub-card" *ngIf="cacheInfo">
-          <h4><i class="fas fa-info-circle"></i> Informações</h4>
-          <pre>{{ cacheInfo | json }}</pre>
-        </div>
-
         <div class="sub-card" *ngIf="cacheStats">
-          <h4><i class="fas fa-chart-bar"></i> Estatísticas</h4>
-          <pre>{{ cacheStats | json }}</pre>
+          <h4><i class="fas fa-chart-bar"></i> Caches em memória</h4>
+          <p class="cache-meta" *ngIf="cacheStats.backend">
+            <strong>Backend:</strong> {{ cacheStats.backend }}
+            <span *ngIf="cacheStats.totalCaches != null"> · <strong>Total:</strong> {{ cacheStats.totalCaches }}</span>
+          </p>
+          <p *ngIf="cacheStats.message" class="cache-hint">{{ cacheStats.message }}</p>
+          <table class="tabela-admin" *ngIf="cacheNomes.length">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Implementação</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let nome of cacheNomes">
+                <td><code>{{ nome }}</code></td>
+                <td>{{ cacheInfo?.[nome]?.nativeCache || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p *ngIf="!cacheNomes.length && !cacheStats.message">Nenhum cache registrado.</p>
         </div>
 
         <div class="form-row" style="margin-top: 16px; align-items: flex-end;">

@@ -12,8 +12,8 @@ import { PesquisaPrecoResposta } from '../services/admin.service';
   styleUrls: ['./pesquisa-preco.component.scss'],
 })
 export class PesquisaPrecoComponent implements OnInit {
-  valorMin = 30;
-  valorMax = 80;
+  valorMin: number | null = null;
+  valorMax: number | null = null;
   comentario = '';
   minhaResposta: PesquisaPrecoResposta | null = null;
   loading = false;
@@ -41,6 +41,10 @@ export class PesquisaPrecoComponent implements OnInit {
   }
 
   enviar(): void {
+    if (this.valorMin == null || this.valorMax == null) {
+      this.mensagemErro = 'Informe os valores mínimo e máximo.';
+      return;
+    }
     if (this.valorMax < this.valorMin) {
       this.mensagemErro = 'O valor máximo deve ser maior ou igual ao mínimo.';
       return;
