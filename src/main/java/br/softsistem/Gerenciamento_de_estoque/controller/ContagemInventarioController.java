@@ -22,12 +22,12 @@ public class ContagemInventarioController {
 
     @GetMapping
     public Page<ContagemInventarioDto> listar(Pageable pageable) {
-        return service.listar(pageable).map(ContagemInventarioDto::new);
+        return service.listarDto(pageable);
     }
 
     @GetMapping("/{id}")
     public ContagemInventarioDto buscar(@PathVariable Long id) {
-        return new ContagemInventarioDto(service.buscarPorId(id));
+        return service.buscarDto(id);
     }
 
     @PostMapping

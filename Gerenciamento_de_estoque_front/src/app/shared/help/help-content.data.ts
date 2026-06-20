@@ -338,7 +338,7 @@ export const PAGE_HINTS: Record<string, { message: string; prerequisites: HelpPr
     ],
   },
   inventario: {
-    message: 'Para iniciar uma contagem de inventário, cadastre um depósito e tenha produtos no sistema.',
+    message: 'Abaixo você vê o estoque atual dos produtos. Para conferir fisicamente e ajustar quantidades, cadastre um depósito e clique em "Nova Contagem".',
     prerequisites: [
       { label: 'Depósitos', route: '/dashboard/depositos' },
       { label: 'Produtos', route: '/dashboard/produtos' },

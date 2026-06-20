@@ -1,6 +1,7 @@
 package br.softsistem.Gerenciamento_de_estoque.service;
 
 import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
+import br.softsistem.Gerenciamento_de_estoque.dto.erp.PedidoCompraDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.erp.PedidoCompraItemRequest;
 import br.softsistem.Gerenciamento_de_estoque.dto.erp.PedidoCompraRequest;
 import br.softsistem.Gerenciamento_de_estoque.enumeracao.AcaoAuditoria;
@@ -57,6 +58,16 @@ public class PedidoCompraService {
 
     public Page<PedidoCompra> listar(Pageable pageable) {
         return pedidoRepository.findByOrgIdOrderByCriadoEmDesc(requireOrgId(), pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PedidoCompraDto> listarDto(Pageable pageable) {
+        return listar(pageable).map(PedidoCompraDto::new);
+    }
+
+    @Transactional(readOnly = true)
+    public PedidoCompraDto buscarDto(Long id) {
+        return new PedidoCompraDto(buscarPorId(id));
     }
 
     public PedidoCompra buscarPorId(Long id) {

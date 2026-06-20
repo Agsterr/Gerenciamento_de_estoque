@@ -1,1 +1,41 @@
 @import '../shared/erp-page';
+
+.subtitulo {
+  color: #666;
+  margin: 0 0 16px;
+  font-size: 0.95rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 32px 16px;
+  color: #666;
+
+  i {
+    font-size: 2rem;
+    margin-bottom: 12px;
+    display: block;
+  }
+}
+
+.link-btn {
+  display: inline-block;
+  margin-top: 8px;
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.alerta-info {
+  background: #f0f4ff;
+  border-left: 3px solid #007bff;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  color: #444;
+  font-size: 0.95rem;
+
+  a {
+    color: #007bff;
+    font-weight: 500;
+  }
+}

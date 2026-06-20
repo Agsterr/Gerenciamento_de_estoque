@@ -1,21 +1,26 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { InventarioService, ContagemInventario } from '../services/inventario.service';
 import { DepositoService, Deposito } from '../services/deposito.service';
+import { ProdutoService } from '../services/produto.service';
+import { Produto } from '../models/produto.model';
 import { PageHintComponent } from '../shared/page-hint/page-hint.component';
 import { PAGE_HINTS } from '../shared/help/help-content.data';
 
 @Component({
   selector: 'app-inventario',
   standalone: true,
-  imports: [CommonModule, FormsModule, PageHintComponent],
+  imports: [CommonModule, FormsModule, PageHintComponent, RouterModule],
   templateUrl: './inventario.component.html',
   styleUrls: ['./inventario.component.scss'],
 })
 export class InventarioComponent implements OnInit {
   pageHint = PAGE_HINTS['inventario'];
   contagens: ContagemInventario[] = [];
+  produtos: Produto[] = [];
+  totalProdutos = 0;
   depositos: Deposito[] = [];
   contagemAtual: ContagemInventario | null = null;
   showList = true;
@@ -35,14 +40,26 @@ export class InventarioComponent implements OnInit {
 
   constructor(
     private inventarioService: InventarioService,
-    private depositoService: DepositoService
+    private depositoService: DepositoService,
+    private produtoService: ProdutoService
   ) {}
 
   ngOnInit(): void {
     this.fetchContagens();
+    this.carregarEstoqueAtual();
     this.depositoService.listar().subscribe({
       next: (d) => (this.depositos = d),
       error: () => this.onError('Erro ao carregar depósitos.'),
+    });
+  }
+
+  carregarEstoqueAtual(): void {
+    this.produtoService.listarProdutos(0, 500).subscribe({
+      next: (resp) => {
+        this.produtos = resp.content || [];
+        this.totalProdutos = resp.totalElements ?? this.produtos.length;
+      },
+      error: () => this.onError('Erro ao carregar estoque atual.'),
     });
   }
 
@@ -76,6 +93,14 @@ export class InventarioComponent implements OnInit {
   }
 
   toggleNova(): void {
+    if (this.depositos.length === 0) {
+      this.onError('Cadastre um depósito antes de iniciar uma contagem.');
+      return;
+    }
+    if (this.produtos.length === 0) {
+      this.onError('Cadastre produtos antes de iniciar uma contagem.');
+      return;
+    }
     this.showNova = true;
     this.showList = false;
     this.showContagem = false;

@@ -120,6 +120,7 @@ export class PedidoVendaComponent implements OnInit {
         this.totalElements = resp.totalElements;
         this.totalPages = Math.ceil(resp.totalElements / this.pageSize) || 1;
         this.pedidos = resp.content;
+        this.mensagemErro = '';
         this.loading = false;
       },
       error: () => {

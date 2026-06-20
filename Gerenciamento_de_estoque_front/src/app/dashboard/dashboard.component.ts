@@ -1,120 +1,118 @@
-import { Component, OnInit } from '@angular/core';
-import { ProdutoService } from '../services/produto.service';
-import { ConsumidorService } from '../services/consumidor.service';
-import { Router, RouterModule } from '@angular/router';
-import { Produto } from '../models/produto.model';
-import { Consumer } from '../models/consumer.model';
-import { EntregasService } from '../services/entregas.service';
-import { CategoriaService } from '../services/categoria.service';
-import { MovimentacaoProdutoService } from '../services/movimentacao-produto.service';
-import { EntregaResponse } from '../models/src/app/models/entrega/entrega-response.model';
-import { Categoria } from '../models/categoria.model';
-import { MovimentacaoProduto, PageResponse } from '../models/movimentacao-produto.model';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { filter, Subscription } from 'rxjs';
+
+export interface DashboardNavItem {
+  path: string;
+  icon: string;
+  label: string;
+  external?: boolean;
+  adminOnly?: boolean;
+}
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
-  imports: [
-    RouterModule
-  ],
+  imports: [RouterModule, CommonModule],
 })
-export class DashboardComponent implements OnInit {
-  produtos: Produto[] = [];
-  consumidores: Consumer[] = [];
-  entregas: EntregaResponse[] = [];
-  categorias: Categoria[] = [];
-  movimentacoes: MovimentacaoProduto[] = [];
+export class DashboardComponent implements OnInit, OnDestroy {
+  isMobile = false;
+  isHubRoute = true;
+  moreMenuOpen = false;
+  pageTitle = 'Início';
 
-  totalProdutos = 0;
-  totalConsumidores = 0;
-  totalEntregas = 0;
-  totalCategorias = 0;
-  totalMovimentacoes = 0;
+  readonly primaryMobile: DashboardNavItem[] = [
+    { path: 'inicio', icon: 'fa-home', label: 'Início' },
+    { path: 'produtos', icon: 'fa-box', label: 'Produtos' },
+    { path: 'consumidores', icon: 'fa-users', label: 'Clientes' },
+    { path: 'pedidos-venda', icon: 'fa-file-invoice-dollar', label: 'Vendas' },
+  ];
 
-  constructor(
-    private produtoService: ProdutoService,
-    private consumidorService: ConsumidorService,
-    private entregasService: EntregasService,
-    private categoriaService: CategoriaService,
-    private movimentacaoProdutoService: MovimentacaoProdutoService,
-    private router: Router
-  ) {}
+  readonly secondaryMenu: DashboardNavItem[] = [
+    { path: 'categorias', icon: 'fa-list-alt', label: 'Categorias' },
+    { path: 'movimentacoes', icon: 'fa-exchange-alt', label: 'Movimentações' },
+    { path: 'relatorios', icon: 'fa-chart-bar', label: 'Relatórios' },
+    { path: 'fornecedores', icon: 'fa-truck-loading', label: 'Fornecedores' },
+    { path: 'depositos', icon: 'fa-warehouse', label: 'Depósitos' },
+    { path: 'pedidos-compra', icon: 'fa-shopping-cart', label: 'Compras' },
+    { path: 'inventario', icon: 'fa-clipboard-check', label: 'Inventário' },
+    { path: 'auditoria', icon: 'fa-history', label: 'Auditoria' },
+    { path: 'usuarios', icon: 'fa-user-cog', label: 'Usuários', adminOnly: true },
+    { path: '/assinatura', icon: 'fa-credit-card', label: 'Assinatura', external: true },
+    { path: 'ajuda', icon: 'fa-life-ring', label: 'Ajuda' },
+  ];
+
+  readonly desktopMenu: DashboardNavItem[] = [
+    { path: 'inicio', icon: 'fa-chart-pie', label: 'Início' },
+    ...this.primaryMobile.filter((i) => i.path !== 'inicio'),
+    ...this.secondaryMenu,
+  ];
+
+  private readonly titleByPath: Record<string, string> = {
+    inicio: 'Início',
+    produtos: 'Produtos',
+    consumidores: 'Clientes',
+    'pedidos-venda': 'Vendas',
+    categorias: 'Categorias',
+    movimentacoes: 'Movimentações',
+    relatorios: 'Relatórios',
+    fornecedores: 'Fornecedores',
+    depositos: 'Depósitos',
+    'pedidos-compra': 'Compras',
+    inventario: 'Inventário',
+    auditoria: 'Auditoria',
+    usuarios: 'Usuários',
+    ajuda: 'Ajuda',
+  };
+
+  private routerSub?: Subscription;
+
+  constructor(private router: Router) {}
 
   ngOnInit(): void {
-    this.carregarProdutos();
-    this.carregarConsumidores();
-    this.carregarEntregas();
-    this.carregarCategorias();
-    this.carregarMovimentacoes();
+    this.onResize();
+    this.updateLayoutFlags(this.router.url);
+    this.routerSub = this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe((e) => {
+        this.updateLayoutFlags(e.urlAfterRedirects);
+        this.moreMenuOpen = false;
+      });
   }
 
- carregarProdutos(): void {
-  this.produtoService.listarProdutos().subscribe({
-    next: (data) => {
-      this.produtos = data.content;
-      this.totalProdutos = data.totalElements ?? this.produtos.length;
-    },
-    error: (err) => {
-      console.error('Erro ao carregar produtos:', err);
-    },
-  });
-}
-
-  carregarConsumidores(): void {
-    this.consumidorService.listarConsumidoresPaged().subscribe({
-      next: (data) => {
-        this.consumidores = data.content || [];
-        this.totalConsumidores = data.totalElements ?? this.consumidores.length;
-      },
-      error: (err) => {
-        console.error('Erro ao carregar consumidores:', err);
-      },
-    });
+  ngOnDestroy(): void {
+    this.routerSub?.unsubscribe();
   }
 
-  carregarEntregas(): void {
-    this.entregasService.listarEntregas(0, 10).subscribe({
-      next: (data) => {
-        this.entregas = data.content || [];
-        this.totalEntregas = data.totalElements ?? this.entregas.length;
-      },
-      error: (err) => {
-        console.error('Erro ao carregar entregas:', err);
-      },
-    });
+  @HostListener('window:resize')
+  onResize(): void {
+    this.isMobile = window.matchMedia('(max-width: 768px)').matches;
   }
 
-  carregarCategorias(): void {
-    this.categoriaService.listarCategorias(0, 10).subscribe({
-      next: (data) => {
-        this.categorias = data.content || [];
-        this.totalCategorias = data.totalElements ?? this.categorias.length;
-      },
-      error: (err) => {
-        console.error('Erro ao carregar categorias:', err);
-      },
-    });
+  toggleMoreMenu(): void {
+    this.moreMenuOpen = !this.moreMenuOpen;
   }
 
-  carregarMovimentacoes(): void {
-    this.movimentacaoProdutoService.buscarPorAno(new Date().getFullYear(), 0, 10).subscribe({
-      next: (data: PageResponse<MovimentacaoProduto>) => {
-        this.movimentacoes = data.content || [];
-        this.totalMovimentacoes = data.totalElements ?? this.movimentacoes.length;
-      },
-      error: (err) => {
-        console.error('Erro ao carregar movimentações:', err);
-      },
-    });
+  closeMoreMenu(): void {
+    this.moreMenuOpen = false;
   }
 
-  verDetalhesProduto(produtoId: number): void {
-    this.router.navigate([`/dashboard/produtos/${produtoId}`]);
+  navLink(item: DashboardNavItem): string {
+    return item.external ? item.path : `/dashboard/${item.path}`;
   }
 
-  verDetalhesConsumidor(consumidorId: number): void {
-    this.router.navigate([`/dashboard/consumidores/${consumidorId}`]);
+  private updateLayoutFlags(url: string): void {
+    this.isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const segment = this.extractSegment(url);
+    this.isHubRoute = !segment || segment === 'inicio';
+    this.pageTitle = this.titleByPath[segment] ?? 'Painel';
+  }
+
+  private extractSegment(url: string): string {
+    const match = url.match(/\/dashboard\/?([^/?#]+)?/);
+    return match?.[1] ?? '';
   }
 }

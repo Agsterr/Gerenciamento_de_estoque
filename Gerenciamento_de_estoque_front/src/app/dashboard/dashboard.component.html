@@ -1,117 +1,121 @@
-<div class="dashboard-container">
-  <div class="dashboard-wrapper">
-    <header class="dashboard-header">
-      <h2>Bem-vindo ao Painel de Controle</h2>
-      <p class="dashboard-subtitle">Controle de estoque, vendas, compras e indicadores</p>
-      <a routerLink="ajuda" class="dashboard-ajuda-link">
-        <i class="fas fa-life-ring"></i>
-        Primeira vez aqui? Veja o guia de início — comece pelas categorias, depois produtos
+<div
+  class="dashboard-container"
+  [class.mobile-module]="isMobile && !isHubRoute"
+  [class.mobile-hub]="isMobile && isHubRoute"
+>
+  <!-- Menu lateral (desktop) -->
+  <aside class="dashboard-sidebar" *ngIf="!isMobile" aria-label="Menu do painel">
+    <div class="sidebar-brand">
+      <i class="fas fa-warehouse"></i>
+      <span>Painel ERP</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a
+        *ngFor="let item of desktopMenu"
+        [routerLink]="navLink(item)"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: item.path === 'inicio' }"
+        class="sidebar-link"
+      >
+        <i class="fas" [ngClass]="item.icon"></i>
+        <span>{{ item.label }}</span>
       </a>
+    </nav>
+  </aside>
+
+  <div class="dashboard-main">
+    <!-- Cabeçalho compacto no mobile (telas de módulo) -->
+    <header class="mobile-page-header" *ngIf="isMobile && !isHubRoute">
+      <a routerLink="/dashboard/inicio" class="mobile-back" aria-label="Voltar ao início">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+      <h1 class="mobile-page-title">{{ pageTitle }}</h1>
+      <button type="button" class="mobile-more-btn" (click)="toggleMoreMenu()" aria-label="Mais opções">
+        <i class="fas fa-ellipsis-v"></i>
+      </button>
     </header>
 
-    <section class="dashboard-resumo">
-      <div class="resumo-card">
-        <i class="fas fa-box"></i>
-        <div>
-          <span class="resumo-valor">{{ totalProdutos }}</span>
-          <span class="resumo-label">Produtos</span>
-        </div>
-      </div>
-      <div class="resumo-card">
-        <i class="fas fa-users"></i>
-        <div>
-          <span class="resumo-valor">{{ totalConsumidores }}</span>
-          <span class="resumo-label">Consumidores</span>
-        </div>
-      </div>
-      <div class="resumo-card">
-        <i class="fas fa-truck"></i>
-        <div>
-          <span class="resumo-valor">{{ totalEntregas }}</span>
-          <span class="resumo-label">Entregas</span>
-        </div>
-      </div>
-      <div class="resumo-card">
-        <i class="fas fa-list-alt"></i>
-        <div>
-          <span class="resumo-valor">{{ totalCategorias }}</span>
-          <span class="resumo-label">Categorias</span>
-        </div>
-      </div>
-      <div class="resumo-card">
-        <i class="fas fa-exchange-alt"></i>
-        <div>
-          <span class="resumo-valor">{{ totalMovimentacoes }}</span>
-          <span class="resumo-label">Movimentações</span>
-        </div>
-      </div>
-    </section>
+    <!-- Hub mobile: só título leve (KPIs ficam no router-outlet / inicio) -->
+    <header class="mobile-hub-header" *ngIf="isMobile && isHubRoute">
+      <h1>Painel</h1>
+      <p>Escolha uma opção abaixo ou use o menu</p>
+    </header>
 
-    <nav class="dashboard-menu">
-      <a routerLink="inicio" routerLinkActive="active">
-        <i class="fas fa-chart-pie"></i>
-        <span>Início</span>
+    <!-- Atalhos rápidos só na tela inicial (mobile) -->
+    <nav class="mobile-quick-grid" *ngIf="isMobile && isHubRoute" aria-label="Acesso rápido">
+      <a
+        *ngFor="let item of primaryMobile"
+        [routerLink]="navLink(item)"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: item.path === 'inicio' }"
+        class="quick-tile"
+      >
+        <i class="fas" [ngClass]="item.icon"></i>
+        <span>{{ item.label }}</span>
       </a>
-      <a routerLink="produtos" routerLinkActive="active">
-        <i class="fas fa-box"></i>
-        <span>Produtos</span>
-      </a>
-      <a routerLink="consumidores" routerLinkActive="active">
-        <i class="fas fa-users"></i>
-        <span>Clientes</span>
-      </a>
-      <a routerLink="pedidos-venda" routerLinkActive="active">
-        <i class="fas fa-file-invoice-dollar"></i>
-        <span>Vendas</span>
-      </a>
-      <a routerLink="categorias" routerLinkActive="active">
-        <i class="fas fa-list-alt"></i>
-        <span>Categorias</span>
-      </a>
-      <a routerLink="movimentacoes" routerLinkActive="active">
-        <i class="fas fa-exchange-alt"></i>
-        <span>Movimentações</span>
-      </a>
-      <a routerLink="relatorios" routerLinkActive="active">
-        <i class="fas fa-chart-bar"></i>
-        <span>Relatórios</span>
-      </a>
-      <a routerLink="fornecedores" routerLinkActive="active">
-        <i class="fas fa-truck-loading"></i>
-        <span>Fornecedores</span>
-      </a>
-      <a routerLink="depositos" routerLinkActive="active">
-        <i class="fas fa-warehouse"></i>
-        <span>Depósitos</span>
-      </a>
-      <a routerLink="pedidos-compra" routerLinkActive="active">
-        <i class="fas fa-shopping-cart"></i>
-        <span>Compras</span>
-      </a>
-      <a routerLink="inventario" routerLinkActive="active">
-        <i class="fas fa-clipboard-check"></i>
-        <span>Inventário</span>
-      </a>
-      <a routerLink="auditoria" routerLinkActive="active">
-        <i class="fas fa-history"></i>
-        <span>Auditoria</span>
-      </a>
-      <a routerLink="usuarios" routerLinkActive="active">
-        <i class="fas fa-user-cog"></i>
-        <span>Usuários</span>
-      </a>
-      <a routerLink="/assinatura" routerLinkActive="active">
-        <i class="fas fa-credit-card"></i>
-        <span>Assinatura</span>
-      </a>
-      <a routerLink="ajuda" routerLinkActive="active" class="menu-ajuda">
-        <i class="fas fa-life-ring"></i>
-        <span>Ajuda</span>
-      </a>
+      <button type="button" class="quick-tile quick-tile-more" (click)="toggleMoreMenu()">
+        <i class="fas fa-th"></i>
+        <span>Mais</span>
+      </button>
     </nav>
 
     <div class="dashboard-content">
       <router-outlet></router-outlet>
     </div>
   </div>
+
+  <!-- Barra inferior fixa (mobile) -->
+  <nav class="mobile-bottom-nav" *ngIf="isMobile" aria-label="Navegação principal">
+    <a
+      *ngFor="let item of primaryMobile"
+      [routerLink]="navLink(item)"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: item.path === 'inicio' }"
+      class="bottom-nav-item"
+    >
+      <i class="fas" [ngClass]="item.icon"></i>
+      <span>{{ item.label }}</span>
+    </a>
+    <button
+      type="button"
+      class="bottom-nav-item"
+      [class.active]="moreMenuOpen"
+      (click)="toggleMoreMenu()"
+    >
+      <i class="fas fa-bars"></i>
+      <span>Mais</span>
+    </button>
+  </nav>
+
+  <!-- Drawer "Mais opções" (mobile) -->
+  <div
+    class="mobile-more-overlay"
+    *ngIf="isMobile && moreMenuOpen"
+    (click)="closeMoreMenu()"
+    role="presentation"
+  ></div>
+  <aside
+    class="mobile-more-drawer"
+    *ngIf="isMobile && moreMenuOpen"
+    aria-label="Mais módulos"
+  >
+    <header class="drawer-header">
+      <h2>Mais opções</h2>
+      <button type="button" (click)="closeMoreMenu()" aria-label="Fechar">
+        <i class="fas fa-times"></i>
+      </button>
+    </header>
+    <nav class="drawer-links">
+      <a
+        *ngFor="let item of secondaryMenu"
+        [routerLink]="navLink(item)"
+        routerLinkActive="active"
+        class="drawer-link"
+        (click)="closeMoreMenu()"
+      >
+        <i class="fas" [ngClass]="item.icon"></i>
+        <span>{{ item.label }}</span>
+      </a>
+    </nav>
+  </aside>
 </div>

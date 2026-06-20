@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -15,7 +16,7 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api/cache")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('SUPER_ADMIN')")
 public class CacheController {
 
     private final Optional<CacheMonitoringService> cacheMonitoringService;
@@ -30,9 +31,14 @@ public class CacheController {
     @GetMapping("/info")
     public ResponseEntity<Map<String, Object>> getCacheInfo() {
         if (cacheMonitoringService.isPresent()) {
-            return ResponseEntity.ok(cacheMonitoringService.get().getCacheInfo());
+            Map<String, Object> info = new HashMap<>(cacheMonitoringService.get().getCacheInfo());
+            info.put("backend", "memory");
+            return ResponseEntity.ok(info);
         }
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(Map.of(
+                "backend", "none",
+                "message", "Monitoramento de cache indisponível neste ambiente."
+        ));
     }
 
     /**
@@ -41,9 +47,16 @@ public class CacheController {
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getCacheStatistics() {
         if (cacheMonitoringService.isPresent()) {
-            return ResponseEntity.ok(cacheMonitoringService.get().getCacheStatistics());
+            Map<String, Object> stats = new HashMap<>(cacheMonitoringService.get().getCacheStatistics());
+            stats.put("backend", "memory");
+            return ResponseEntity.ok(stats);
         }
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(Map.of(
+                "totalCaches", 0,
+                "cacheNames", java.util.List.of(),
+                "backend", "none",
+                "message", "Monitoramento de cache indisponível neste ambiente."
+        ));
     }
 
     /**

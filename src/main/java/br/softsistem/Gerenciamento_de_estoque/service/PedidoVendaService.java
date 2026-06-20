@@ -1,6 +1,7 @@
 package br.softsistem.Gerenciamento_de_estoque.service;
 
 import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
+import br.softsistem.Gerenciamento_de_estoque.dto.erp.PedidoVendaDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.erp.PedidoVendaItemRequest;
 import br.softsistem.Gerenciamento_de_estoque.dto.erp.PedidoVendaRequest;
 import br.softsistem.Gerenciamento_de_estoque.enumeracao.AcaoAuditoria;
@@ -58,6 +59,17 @@ public class PedidoVendaService {
 
     public Page<PedidoVenda> listar(Pageable pageable) {
         return pedidoRepository.findByOrgIdOrderByDataHoraDesc(requireOrgId(), pageable);
+    }
+
+    /** Mapeia para DTO dentro da transação — evita LazyInitializationException nos itens. */
+    @Transactional(readOnly = true)
+    public Page<PedidoVendaDto> listarDto(Pageable pageable) {
+        return listar(pageable).map(PedidoVendaDto::new);
+    }
+
+    @Transactional(readOnly = true)
+    public PedidoVendaDto buscarDto(Long id) {
+        return new PedidoVendaDto(buscarPorId(id));
     }
 
     public PedidoVenda buscarPorId(Long id) {

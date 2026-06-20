@@ -1,6 +1,7 @@
 package br.softsistem.Gerenciamento_de_estoque.service;
 
 import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
+import br.softsistem.Gerenciamento_de_estoque.dto.erp.ContagemInventarioDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.erp.ContagemInventarioRequest;
 import br.softsistem.Gerenciamento_de_estoque.dto.erp.ContagemItemUpdateRequest;
 import br.softsistem.Gerenciamento_de_estoque.enumeracao.AcaoAuditoria;
@@ -55,6 +56,16 @@ public class ContagemInventarioService {
 
     public Page<ContagemInventario> listar(Pageable pageable) {
         return contagemRepository.findByOrgIdOrderByCriadoEmDesc(requireOrgId(), pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ContagemInventarioDto> listarDto(Pageable pageable) {
+        return listar(pageable).map(ContagemInventarioDto::new);
+    }
+
+    @Transactional(readOnly = true)
+    public ContagemInventarioDto buscarDto(Long id) {
+        return new ContagemInventarioDto(buscarPorId(id));
     }
 
     public ContagemInventario buscarPorId(Long id) {

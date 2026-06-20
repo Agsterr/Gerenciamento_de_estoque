@@ -22,12 +22,12 @@ public class PedidoVendaController {
 
     @GetMapping
     public Page<PedidoVendaDto> listar(Pageable pageable) {
-        return service.listar(pageable).map(PedidoVendaDto::new);
+        return service.listarDto(pageable);
     }
 
     @GetMapping("/{id}")
     public PedidoVendaDto buscar(@PathVariable Long id) {
-        return new PedidoVendaDto(service.buscarPorId(id));
+        return service.buscarDto(id);
     }
 
     @PostMapping

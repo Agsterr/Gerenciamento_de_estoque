@@ -14,7 +14,43 @@
 
 <div class="main-content">
   <div class="card-lista" *ngIf="showList">
-    <table class="data-table">
+    <h3 class="titulo-form"><i class="fas fa-boxes"></i> Estoque atual ({{ totalProdutos }} produtos)</h3>
+    <p class="subtitulo" *ngIf="depositos.length === 0">
+      Nenhum depósito cadastrado.
+      <a routerLink="/dashboard/depositos">Cadastre um depósito</a>
+      para iniciar contagens físicas e ajustar quantidades.
+    </p>
+    <table class="data-table" *ngIf="produtos.length > 0">
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>Categoria</th>
+          <th>SKU</th>
+          <th>Quantidade</th>
+          <th>Mínimo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of produtos">
+          <td data-label="Produto">{{ p.nome }}</td>
+          <td data-label="Categoria">{{ p.categoriaNome || '—' }}</td>
+          <td data-label="SKU">{{ p.sku || '—' }}</td>
+          <td data-label="Quantidade">{{ p.quantidade }}</td>
+          <td data-label="Mínimo">{{ p.quantidadeMinima ?? '—' }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="empty-state" *ngIf="produtos.length === 0">
+      <i class="fas fa-box-open"></i>
+      <p>Nenhum produto cadastrado.</p>
+      <a routerLink="/dashboard/produtos" class="link-btn">Ir para Produtos</a>
+    </div>
+
+    <h3 class="titulo-form" style="margin-top: 2rem;"><i class="fas fa-clipboard-list"></i> Contagens de inventário</h3>
+    <p class="subtitulo" *ngIf="contagens.length === 0">
+      Nenhuma contagem iniciada ainda. Use <strong>Nova Contagem</strong> para conferir o estoque fisicamente e aplicar ajustes.
+    </p>
+    <table class="data-table" *ngIf="contagens.length > 0">
       <thead>
         <tr>
           <th><i class="fas fa-hashtag"></i> ID</th>
@@ -43,7 +79,7 @@
         </tr>
       </tbody>
     </table>
-    <div class="pagination-bar" *ngIf="totalPages > 0">
+    <div class="pagination-bar" *ngIf="contagens.length > 0 && totalPages > 0">
       <div class="pagination-info-left">Página {{ currentPage + 1 }} de {{ totalPages }} ({{ totalElements }} contagens)</div>
       <div class="pagination-row">
         <button class="btn-pag" (click)="paginaAnterior()" [disabled]="currentPage === 0"><i class="fas fa-chevron-left"></i></button>
@@ -64,6 +100,12 @@
 
   <div class="card-form" *ngIf="showNova">
     <h3 class="titulo-form"><i class="fas fa-play-circle"></i> Iniciar Nova Contagem</h3>
+    <div class="alerta-info" *ngIf="depositos.length === 0">
+      <i class="fas fa-info-circle"></i>
+      Cadastre um depósito em
+      <a routerLink="/dashboard/depositos">Depósitos</a>
+      antes de iniciar.
+    </div>
     <form (ngSubmit)="iniciarContagem()" class="form-adicionar">
       <div class="form-group">
         <label for="deposito">Depósito *</label>
