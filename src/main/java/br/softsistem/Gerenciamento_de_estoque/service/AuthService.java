@@ -14,7 +14,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.softsistem.Gerenciamento_de_estoque.config.RegistrationProperties;
 import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
+import br.softsistem.Gerenciamento_de_estoque.exception.RegistrationDisabledException;
 import br.softsistem.Gerenciamento_de_estoque.dto.login.LoginRequestDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.login.LoginResponseDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioDto;
@@ -42,6 +44,10 @@ public class AuthService {
     private final TrialSubscriptionService trialSubscriptionService;
     private final SubscriptionService subscriptionService;
     private final LoginAuditoriaService loginAuditoriaService;
+    private final RegistrationProperties registrationProperties;
+    private final DispositivoUsuarioService dispositivoUsuarioService;
+    private final DemoDataService demoDataService;
+    private final DemoOrgPurgeService demoOrgPurgeService;
 
     public AuthService(UsuarioRepository usuarioRepository,
                        OrgRepository orgRepository,
@@ -50,7 +56,11 @@ public class AuthService {
                        RoleRepository roleRepository,
                        TrialSubscriptionService trialSubscriptionService,
                        SubscriptionService subscriptionService,
-                       LoginAuditoriaService loginAuditoriaService) {
+                       LoginAuditoriaService loginAuditoriaService,
+                       RegistrationProperties registrationProperties,
+                       DispositivoUsuarioService dispositivoUsuarioService,
+                       DemoDataService demoDataService,
+                       DemoOrgPurgeService demoOrgPurgeService) {
         this.usuarioRepository = usuarioRepository;
         this.orgRepository = orgRepository;
         this.jwtService = jwtService;
@@ -59,6 +69,10 @@ public class AuthService {
         this.trialSubscriptionService = trialSubscriptionService;
         this.subscriptionService = subscriptionService;
         this.loginAuditoriaService = loginAuditoriaService;
+        this.registrationProperties = registrationProperties;
+        this.dispositivoUsuarioService = dispositivoUsuarioService;
+        this.demoDataService = demoDataService;
+        this.demoOrgPurgeService = demoOrgPurgeService;
     }
 
     @Transactional
@@ -72,8 +86,17 @@ public class AuthService {
             throw new UsuarioDesativadoException("Usuário foi desativado");
         }
 
+        dispositivoUsuarioService.registrarOuValidarNoLogin(usuario, request.deviceFingerprint(), httpRequest);
+
         Long userId = usuario.getId();
         Long orgId  = usuario.getOrg() != null ? usuario.getOrg().getId() : null;
+        boolean ephemeral = usuario.getOrg() != null && usuario.getOrg().isEphemeralOrg();
+        boolean demo = ephemeral;
+
+        if (ephemeral && orgId != null) {
+            demoDataService.prepareDemoSession(orgId);
+        }
+
         List<String> roleNames = usuario.getRoles().stream()
                 .map(Role::getNome)
                 .toList();
@@ -82,12 +105,28 @@ public class AuthService {
                 (UserDetails) usuario,
                 userId,
                 orgId,
-                roleNames
+                roleNames,
+                usuario.hasSubscriptionBypass()
         );
 
         loginAuditoriaService.registrarSucesso(usuario, httpRequest);
 
-        return new LoginResponseDto(token);
+        return new LoginResponseDto(token, demo, ephemeral);
+    }
+
+    @Transactional
+    public void logout(Long userId) {
+        if (userId == null) {
+            return;
+        }
+        usuarioRepository.findById(userId).ifPresent(user -> {
+            Org org = user.getOrg();
+            if (org != null && org.isEphemeralOrg()) {
+                demoOrgPurgeService.purgeOperationalData(org.getId());
+                org.setDemoLastAccess(null);
+                orgRepository.save(org);
+            }
+        });
     }
 
     private String normalizeLoginIdentifier(String raw) {
@@ -183,6 +222,10 @@ public class AuthService {
 
     @Transactional
     public UsuarioDto register(UsuarioRequestDto dto) {
+        if (!registrationProperties.enabled()) {
+            throw new RegistrationDisabledException(
+                    "Cadastro público está desabilitado. Solicite acesso ao administrador da plataforma.");
+        }
         String emailNormalizado = dto.email() != null ? dto.email().trim().toLowerCase(Locale.ROOT) : "";
         if (!emailNormalizado.isEmpty()) {
             usuarioRepository.findByEmailIgnoreCase(emailNormalizado)

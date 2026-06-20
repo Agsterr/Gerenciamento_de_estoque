@@ -1,0 +1,33 @@
+<header class="header-page">
+  <h2><i class="fas fa-poll"></i> Pesquisa de preço</h2>
+  <p class="subtitulo">Ajude-nos a definir um valor justo para o sistema. Quanto você pagaria por mês?</p>
+</header>
+
+<div class="main-content">
+  <div *ngIf="mensagem" class="mensagem-feedback sucesso">{{ mensagem }}</div>
+  <div *ngIf="mensagemErro" class="mensagem-feedback erro">{{ mensagemErro }}</div>
+
+  <div class="card-form">
+    <p class="hint" *ngIf="minhaResposta">Você já respondeu — pode atualizar os valores abaixo.</p>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="valorMin">Mínimo (R$/mês)</label>
+        <input id="valorMin" type="number" min="0" step="1" [(ngModel)]="valorMin" />
+      </div>
+      <div class="form-group">
+        <label for="valorMax">Máximo (R$/mês)</label>
+        <input id="valorMax" type="number" min="0" step="1" [(ngModel)]="valorMax" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="comentario">Comentário (opcional)</label>
+      <textarea id="comentario" rows="3" [(ngModel)]="comentario" placeholder="Ex.: dependeria de relatórios avançados..."></textarea>
+    </div>
+
+    <button class="btn btn-primary" [disabled]="loading" (click)="enviar()">
+      <i class="fas fa-paper-plane"></i> {{ minhaResposta ? 'Atualizar resposta' : 'Enviar resposta' }}
+    </button>
+  </div>
+</div>

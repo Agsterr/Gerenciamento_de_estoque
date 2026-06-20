@@ -48,9 +48,11 @@ services:
       ASAAS_PROD_API_KEY_FILE: ${ASAAS_PROD_API_KEY_FILE:-/run/secrets/asaas_prod_api_key}
       # Mercado Pago legado: sempre teste no Docker enquanto APP_PAYMENT_PROVIDER=asaas
       MERCADOPAGO_ENVIRONMENT: test
+      LOGIN_LOG_EXPORT_DIR: /app/data/log-exports
     volumes:
       - ./docker/secrets/asaas_sandbox_api_key.txt:/run/secrets/asaas_sandbox_api_key:ro
       - ./docker/secrets/asaas_prod_api_key.txt:/run/secrets/asaas_prod_api_key:ro
+      - ./data/log-exports:/app/data/log-exports
     expose:
       - "8080"
     networks:
@@ -87,6 +89,28 @@ services:
     env_file:
       - .env
     network_mode: host
+    restart: unless-stopped
+
+  db-backup:
+    profiles: ["backup"]
+    build:
+      context: .
+      dockerfile: docker/backup/Dockerfile
+    container_name: gerenciamento-db-backup
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_NAME: gerenciamento_estoque
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      BACKUP_DIR: /backups
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    volumes:
+      - ./backups:/backups
+    networks:
+      - app-network
     restart: unless-stopped
 
 volumes:

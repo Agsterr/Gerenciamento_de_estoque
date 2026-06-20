@@ -45,6 +45,14 @@ export class AppComponent {
     return this.authService.isMasterAdmin();
   }
 
+  get isDemoSession(): boolean {
+    return this.authService.isDemoSession();
+  }
+
+  get hideSubscriptionUi(): boolean {
+    return this.authService.hasSubscriptionBypass();
+  }
+
   // Faz logout
   logout(): void {
     this.authService.logout();

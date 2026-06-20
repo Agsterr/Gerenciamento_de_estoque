@@ -106,6 +106,40 @@ cd Gerenciamento_de_estoque_front; npm run build; cd ..
 
 Path no servidor: `/opt/gerenciamento-estoque`
 
+### Fluxo recomendado (CI/CD)
+
+**Push em `main`** dispara `.github/workflows/deploy-hetzner.yml` → SSH no Hetzner → `scripts/deploy-hetzner.sh` (`git pull` + `docker compose up -d --build`).
+
+Detalhes e secrets: `docs/CICD.md`.
+
+### Cloud Agent (`cursor.com/agents`)
+
+O agente na nuvem **não** tem o `ssh hetzner` nem as chaves do PC do desenvolvedor. Para publicar em produção:
+
+1. Alterar código e testar no ambiente na nuvem (Maven, npm, Docker).
+2. **Commit + push na `main`** (ou abrir PR e mergear na `main`).
+3. O GitHub Actions faz o deploy automaticamente — não é necessário `scp` nem SSH manual.
+
+| Situação | Deploy em produção? |
+|----------|---------------------|
+| Só alterou código, sem push | Não |
+| Push (ou merge) na `main` | Sim, via Actions |
+| Tarball + `scp` do PC local | Só no IDE local com SSH configurado |
+
+**Pré-requisitos:** GitHub conectado ao Cursor (code storage), repo `Agsterr/Gerenciamento_de_estoque` acessível, secrets `HETZNER_*` no GitHub Actions.
+
+**Alternativa (opcional):** secret `HETZNER_SSH_KEY` no dashboard do Cursor → agente pode rodar `ssh … bash /opt/gerenciamento-estoque/scripts/deploy-hetzner.sh` direto. O fluxo via **commit + push** continua sendo o preferido.
+
+Quando o usuário pedir deploy: confirme se pode commitar/pushar; sem isso o código não chega ao servidor via CI.
+
+### Fallback manual (IDE local com SSH)
+
+```powershell
+ssh hetzner "bash /opt/gerenciamento-estoque/scripts/deploy-hetzner.sh"
+```
+
+Ou tarball (sem git no servidor):
+
 ```powershell
 $archive = "$env:TEMP\gerenciamento-deploy.tgz"
 tar -czf $archive `
@@ -119,6 +153,8 @@ scp $archive hetzner:/root/gerenciamento-deploy.tgz
 ssh hetzner "mkdir -p /opt/gerenciamento-estoque && cd /opt/gerenciamento-estoque && tar xzf /root/gerenciamento-deploy.tgz"
 ssh hetzner "cd /opt/gerenciamento-estoque && docker compose up -d --build"
 ```
+
+**Evitar** tarball após CI estar ativo: `git reset --hard origin/main` no próximo deploy sobrescreve arquivos não commitados.
 
 Smoke test produção:
 
@@ -162,8 +198,8 @@ Ocorria quando não havia `CacheManager` (Redis off e sem `SimpleCacheConfig`). 
 ## Após alterar código
 
 1. Build backend + frontend
-2. Testar com Docker local
-3. Deploy Hetzner (se pedido ou mudança de runtime/nginx/Docker)
+2. Testar com Docker local (ou no ambiente Cloud Agent)
+3. Se o usuário pedir deploy: **commit + push na `main`** (Cloud Agent e CI) ou SSH manual (IDE local)
 4. Smoke test em https://focodev.com.br
 
 Não commitar `.env` ou secrets. Só criar commit quando o usuário pedir explicitamente.

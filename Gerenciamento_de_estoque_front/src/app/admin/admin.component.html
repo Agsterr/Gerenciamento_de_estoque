@@ -27,6 +27,15 @@
         <button class="tab-btn" [class.ativa]="abaAtiva === 'assinaturas'" (click)="trocarAba('assinaturas')">
           <i class="fas fa-credit-card"></i> Planos e trial
         </button>
+        <button class="tab-btn" [class.ativa]="abaAtiva === 'sugestoes'" (click)="trocarAba('sugestoes')">
+          <i class="fas fa-lightbulb"></i> Sugestões
+        </button>
+        <button class="tab-btn" [class.ativa]="abaAtiva === 'usuarios'" (click)="trocarAba('usuarios')">
+          <i class="fas fa-users-cog"></i> Usuários
+        </button>
+        <button class="tab-btn" [class.ativa]="abaAtiva === 'pesquisa-preco'" (click)="trocarAba('pesquisa-preco')">
+          <i class="fas fa-poll"></i> Pesquisa de preço
+        </button>
       </div>
 
       <!-- Aba Webhooks -->
@@ -94,45 +103,88 @@
       </div>
 
       <!-- Aba Acessos (login audit) -->
-      <div *ngIf="abaAtiva === 'acessos'">
-        <div class="form-row" style="margin-bottom: 16px; align-items: center;">
-          <button class="botao-listar" (click)="carregarLoginLogs(loginLogsPage)"><i class="fas fa-sync"></i> Atualizar</button>
-          <span class="paginacao-info" *ngIf="loginLogsTotal > 0">
-            {{ loginLogsTotal }} registro(s) — página {{ loginLogsPage + 1 }} de {{ loginLogsTotalPages || 1 }}
-          </span>
+      <div *ngIf="abaAtiva === 'acessos'" class="aba-acessos">
+        <div class="filtro-periodo">
+          <div class="filtro-header">
+            <span class="breadcrumb-periodo"><i class="fas fa-calendar-alt"></i> {{ breadcrumbLogin() }}</span>
+            <button class="botao-listar btn-sm-inline" (click)="limparFiltrosLogin()" *ngIf="filtroLoginAno">
+              <i class="fas fa-times"></i> Limpar
+            </button>
+            <button class="botao-listar btn-sm-inline" (click)="carregarLoginLogs(loginLogsPage)">
+              <i class="fas fa-sync"></i> Atualizar
+            </button>
+          </div>
+          <div class="acoes-periodo-login" *ngIf="filtroLoginAno">
+            <button class="btn btn-sm btn-info" (click)="exportarLoginLogs()">
+              <i class="fas fa-file-archive"></i> Exportar período
+            </button>
+            <button class="btn btn-sm btn-warning" (click)="compactarLoginLogs()">
+              <i class="fas fa-compress-arrows-alt"></i> Compactar
+            </button>
+            <button class="btn btn-sm btn-danger" (click)="apagarLoginLogs()">
+              <i class="fas fa-trash"></i> Apagar período
+            </button>
+          </div>
+          <p class="hint-periodo" *ngIf="!filtroLoginAno">Selecione um ano para exportar, compactar ou apagar logs.</p>
+          <div class="hierarquia-data" *ngIf="loginLogAnos.length > 0">
+            <div class="nivel-filtro" *ngIf="!filtroLoginAno">
+              <span class="nivel-label">Ano</span>
+              <div class="chips">
+                <button *ngFor="let a of loginLogAnos" class="chip" (click)="selecionarAnoLogin(a)">{{ a }}</button>
+              </div>
+            </div>
+            <div class="nivel-filtro" *ngIf="filtroLoginAno && !filtroLoginMes && loginLogMeses.length > 0">
+              <span class="nivel-label">Mês</span>
+              <div class="chips">
+                <button *ngFor="let m of loginLogMeses" class="chip" (click)="selecionarMesLogin(m)">{{ mesesNomes[m] }}</button>
+              </div>
+            </div>
+            <div class="nivel-filtro" *ngIf="filtroLoginAno && filtroLoginMes && !filtroLoginDia && loginLogDias.length > 0">
+              <span class="nivel-label">Dia</span>
+              <div class="chips">
+                <button *ngFor="let d of loginLogDias" class="chip" (click)="selecionarDiaLogin(d)">{{ d }}</button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <table class="data-table" *ngIf="loginLogs.length > 0">
-          <thead>
-            <tr>
-              <th>Data/Hora</th>
-              <th>Usuário</th>
-              <th>Organização</th>
-              <th>IP</th>
-              <th>Sucesso</th>
-              <th>Detalhes</th>
-              <th>User-Agent</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let log of loginLogs" [class.linha-falha]="!log.sucesso">
-              <td data-label="Data/Hora">{{ log.dataHora | date:'dd/MM/yyyy HH:mm:ss' }}</td>
-              <td data-label="Usuário">{{ log.username }}</td>
-              <td data-label="Organização">{{ log.orgNome || log.orgId || '-' }}</td>
-              <td data-label="IP">{{ log.ip || '-' }}</td>
-              <td data-label="Sucesso">
-                <span [class.badge-ok]="log.sucesso" [class.badge-erro]="!log.sucesso">
-                  {{ log.sucesso ? 'Sim' : 'Não' }}
-                </span>
-              </td>
-              <td data-label="Detalhes">{{ log.detalhes || '-' }}</td>
-              <td data-label="User-Agent" class="col-user-agent" [title]="log.userAgent || ''">
-                {{ log.userAgent || '-' }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <p *ngIf="loginLogs.length === 0 && !loading">Nenhum acesso registrado ainda.</p>
+        <p class="paginacao-info" *ngIf="loginLogsTotal > 0">
+          {{ loginLogsTotal }} registro(s) — página {{ loginLogsPage + 1 }} de {{ loginLogsTotalPages || 1 }}
+        </p>
+
+        <div class="table-scroll-wrapper login-logs-table-wrap" *ngIf="loginLogs.length > 0">
+          <table class="data-table login-logs-table">
+            <thead>
+              <tr>
+                <th>Data/Hora</th>
+                <th>Usuário</th>
+                <th>Organização</th>
+                <th>IP</th>
+                <th>Sucesso</th>
+                <th>Detalhes</th>
+                <th>User-Agent</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let log of loginLogs" [class.linha-falha]="!log.sucesso">
+                <td data-label="Data/Hora">{{ log.dataHora | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+                <td data-label="Usuário">{{ log.username }}</td>
+                <td data-label="Organização">{{ log.orgNome || log.orgId || '-' }}</td>
+                <td data-label="IP">{{ log.ip || '-' }}</td>
+                <td data-label="Sucesso">
+                  <span [class.badge-ok]="log.sucesso" [class.badge-erro]="!log.sucesso">
+                    {{ log.sucesso ? 'Sim' : 'Não' }}
+                  </span>
+                </td>
+                <td data-label="Detalhes" class="col-detalhes">{{ log.detalhes || '-' }}</td>
+                <td data-label="User-Agent" class="col-user-agent" [title]="log.userAgent || ''">
+                  {{ log.userAgent || '-' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p *ngIf="loginLogs.length === 0 && !loading">Nenhum acesso registrado para o período selecionado.</p>
 
         <div class="paginacao" *ngIf="loginLogsTotalPages > 1">
           <button class="btn btn-sm" [disabled]="loginLogsPage === 0" (click)="paginaAnteriorLoginLogs()">
@@ -141,6 +193,66 @@
           <button class="btn btn-sm" [disabled]="loginLogsPage + 1 >= loginLogsTotalPages" (click)="proximaPaginaLoginLogs()">
             Próxima <i class="fas fa-chevron-right"></i>
           </button>
+        </div>
+
+        <div class="arquivos-exportados" *ngIf="loginLogArquivos.length > 0">
+          <h4><i class="fas fa-folder-open"></i> Arquivos exportados</h4>
+          <div class="table-scroll-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Arquivo</th>
+                  <th>Período</th>
+                  <th>Org</th>
+                  <th>Tamanho</th>
+                  <th>Criado em</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let arq of loginLogArquivos">
+                  <td data-label="Arquivo" class="col-filename">{{ arq.filename }}</td>
+                  <td data-label="Período">{{ arq.periodoLabel }}</td>
+                  <td data-label="Org">{{ arq.orgId || 'Global' }}</td>
+                  <td data-label="Tamanho">{{ formatBytes(arq.sizeBytes) }}</td>
+                  <td data-label="Criado em">{{ arq.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                  <td data-label="Ações" class="acoes-tabela">
+                    <button class="btn btn-sm btn-info" (click)="baixarArquivoLoginLog(arq.filename)">
+                      <i class="fas fa-download"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" (click)="apagarArquivoLoginLog(arq.filename)">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aba Sugestões (global) -->
+      <div *ngIf="abaAtiva === 'sugestoes'">
+        <div class="form-row" style="margin-bottom: 16px;">
+          <button class="botao-listar" (click)="carregarSugestoes(sugestoesPage)"><i class="fas fa-sync"></i> Atualizar</button>
+        </div>
+        <div class="sugestao-card" *ngFor="let s of sugestoes">
+          <div class="sugestao-meta">
+            <strong>{{ s.username }}</strong>
+            <span>{{ s.orgNome || s.orgId }}</span>
+            <span>{{ s.criadoEm | date:'dd/MM/yyyy HH:mm' }}</span>
+            <span class="badge-status" [class.nova]="s.status === 'NOVA'">{{ s.status }}</span>
+          </div>
+          <p class="sugestao-texto">{{ s.texto }}</p>
+          <div class="acoes-tabela">
+            <button class="btn btn-sm btn-info" *ngIf="s.status === 'NOVA'" (click)="marcarSugestaoLida(s.id)">Marcar lida</button>
+            <button class="btn btn-sm btn-secondary" *ngIf="s.status !== 'ARQUIVADA'" (click)="arquivarSugestao(s.id)">Arquivar</button>
+          </div>
+        </div>
+        <p *ngIf="sugestoes.length === 0 && !loading">Nenhuma sugestão recebida.</p>
+        <div class="paginacao" *ngIf="sugestoesTotalPages > 1">
+          <button class="btn btn-sm" [disabled]="sugestoesPage === 0" (click)="paginaAnteriorSugestoes()">Anterior</button>
+          <button class="btn btn-sm" [disabled]="sugestoesPage + 1 >= sugestoesTotalPages" (click)="proximaPaginaSugestoes()">Próxima</button>
         </div>
       </div>
 
@@ -235,6 +347,154 @@
           </tbody>
         </table>
         <p *ngIf="orgsAssinatura.length === 0 && !loading">Nenhuma organização encontrada.</p>
+      </div>
+
+      <!-- Aba Usuários -->
+      <div *ngIf="abaAtiva === 'usuarios'">
+        <div class="sub-card">
+          <h4><i class="fas fa-user-plus"></i> Criar usuário (SUPER_ADMIN)</h4>
+          <p class="hint">Cadastro público desabilitado — crie contas aqui. A senha temporária é exibida uma vez.</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Usuário</label>
+              <input type="text" [(ngModel)]="novoUsuario.username" placeholder="login" />
+            </div>
+            <div class="form-group">
+              <label>E-mail (opcional)</label>
+              <input type="email" [(ngModel)]="novoUsuario.email" placeholder="email@empresa.com" />
+            </div>
+            <div class="form-group">
+              <label>Organização</label>
+              <select [(ngModel)]="novoUsuario.orgId">
+                <option *ngFor="let o of adminOrgs" [ngValue]="o.orgId" [disabled]="o.ephemeral">
+                  {{ o.orgNome }}{{ o.ephemeral ? ' (demo)' : '' }}
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Perfil</label>
+              <select [(ngModel)]="novoUsuario.roles">
+                <option value="ROLE_USER">Usuário</option>
+                <option value="ROLE_ADMIN">Admin da org</option>
+              </select>
+            </div>
+            <label class="checkbox-inline">
+              <input type="checkbox" [(ngModel)]="novoUsuario.bypassSubscription" /> Isento de assinatura
+            </label>
+            <button class="btn btn-success" (click)="criarUsuarioAdmin()"><i class="fas fa-plus"></i> Criar</button>
+          </div>
+          <p *ngIf="senhaTemporaria" class="senha-temp"><strong>Senha temporária:</strong> {{ senhaTemporaria }}</p>
+        </div>
+
+        <div class="sub-card">
+          <h4><i class="fas fa-mobile-alt"></i> Limite de dispositivos por organização</h4>
+          <table class="data-table" *ngIf="adminOrgs.length">
+            <thead>
+              <tr>
+                <th>Organização</th>
+                <th>Usuários</th>
+                <th>Dispositivos aprovados</th>
+                <th>Máx. por conta</th>
+                <th>Ação</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let o of adminOrgs">
+                <td>{{ o.orgNome }} <span *ngIf="o.ephemeral" class="badge-demo">demo</span></td>
+                <td>{{ o.totalUsuarios }}</td>
+                <td>{{ o.dispositivosAprovados }}</td>
+                <td>
+                  <input type="number" min="0" [(ngModel)]="orgLimites[o.orgId]" class="input-limite" />
+                  <small *ngIf="orgLimites[o.orgId] === 0">0 = ilimitado</small>
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-info" (click)="salvarLimiteDispositivos(o)">Salvar</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <table class="data-table" *ngIf="adminUsers.length">
+          <thead>
+            <tr>
+              <th>Usuário</th>
+              <th>E-mail</th>
+              <th>Organização</th>
+              <th>Roles</th>
+              <th>Isento</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of adminUsers">
+              <td>{{ u.username }}</td>
+              <td>{{ u.email || '—' }}</td>
+              <td>{{ u.orgNome }}</td>
+              <td>{{ u.roles?.join(', ') }}</td>
+              <td>
+                <button class="btn btn-sm" [class.btn-success]="u.bypassSubscription" [class.btn-secondary]="!u.bypassSubscription"
+                  (click)="toggleBypassUsuario(u)" [disabled]="u.roles?.includes('ROLE_SUPER_ADMIN')">
+                  {{ u.bypassSubscription ? 'Sim' : 'Não' }}
+                </button>
+              </td>
+              <td>{{ u.ativo ? 'Ativo' : 'Inativo' }}</td>
+              <td>
+                <button class="btn btn-sm" [class.btn-warning]="u.ativo" [class.btn-success]="!u.ativo"
+                  (click)="toggleUsuarioAtivo(u)" [disabled]="u.roles?.includes('ROLE_SUPER_ADMIN')">
+                  {{ u.ativo ? 'Desativar' : 'Ativar' }}
+                </button>
+                <button class="btn btn-sm btn-info" (click)="resetSenhaUsuario(u)" title="Nova senha temporária">
+                  <i class="fas fa-key"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <button class="botao-listar" (click)="carregarAdminUsuarios()" style="margin-top: 12px;">
+          <i class="fas fa-sync"></i> Atualizar
+        </button>
+      </div>
+
+      <!-- Aba Pesquisa de preço -->
+      <div *ngIf="abaAtiva === 'pesquisa-preco'">
+        <button class="botao-listar" (click)="carregarPesquisaPreco()" style="margin-bottom: 16px;">
+          <i class="fas fa-sync"></i> Atualizar
+        </button>
+
+        <div class="sub-card" *ngIf="pesquisaStats">
+          <h4><i class="fas fa-chart-line"></i> Análise</h4>
+          <p>{{ pesquisaStats.analiseTexto }}</p>
+          <div class="stats-grid" *ngIf="pesquisaStats.totalRespostas > 0">
+            <div><strong>Respostas:</strong> {{ pesquisaStats.totalRespostas }}</div>
+            <div><strong>Média min–max:</strong> R$ {{ pesquisaStats.mediaValorMin }} – R$ {{ pesquisaStats.mediaValorMax }}</div>
+            <div><strong>Mediana min–max:</strong> R$ {{ pesquisaStats.medianaValorMin }} – R$ {{ pesquisaStats.medianaValorMax }}</div>
+            <div><strong>Preço sugerido:</strong> R$ {{ pesquisaStats.precoJustoSugerido }}</div>
+          </div>
+        </div>
+
+        <table class="data-table" *ngIf="pesquisaStats?.respostas?.length">
+          <thead>
+            <tr>
+              <th>Usuário</th>
+              <th>Organização</th>
+              <th>Faixa (R$/mês)</th>
+              <th>Comentário</th>
+              <th>Data</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of pesquisaStats!.respostas">
+              <td>{{ r.username }}</td>
+              <td>{{ r.orgNome || '—' }}</td>
+              <td>{{ r.valorMin }} – {{ r.valorMax }}</td>
+              <td>{{ r.comentario || '—' }}</td>
+              <td>{{ r.criadoEm | date:'dd/MM/yyyy HH:mm' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p *ngIf="pesquisaStats && pesquisaStats.totalRespostas === 0 && !loading">Nenhuma resposta ainda.</p>
       </div>
     </div>
   </div>

@@ -1,4 +1,3 @@
-// src/app/login/login.component.ts
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -26,9 +25,13 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 })
 export class LoginComponent implements OnInit {
   loginForm: FormGroup;
-  errorMessage: string = '';
-  hidePassword: boolean = true;
-  isSubmitting: boolean = false;
+  errorMessage = '';
+  hidePassword = true;
+  isSubmitting = false;
+  isDemoSubmitting = false;
+  registrationEnabled = false;
+  demoEnabled = true;
+  demoUsername = 'demo';
 
   constructor(
     private fb: FormBuilder,
@@ -39,7 +42,7 @@ export class LoginComponent implements OnInit {
     this.loginForm = this.fb.group({
       username: ['', Validators.required],
       senha: ['', Validators.required],
-      lembrarCredenciais: [false]
+      lembrarCredenciais: [false],
     });
 
     const savedUsername = localStorage.getItem('savedUsername');
@@ -49,7 +52,7 @@ export class LoginComponent implements OnInit {
       this.loginForm.patchValue({
         username: savedUsername,
         senha: savedPassword,
-        lembrarCredenciais: true
+        lembrarCredenciais: true,
       });
     }
   }
@@ -59,45 +62,75 @@ export class LoginComponent implements OnInit {
     if (this.authService.isTokenValid()) {
       this.router.navigate(['/dashboard'], { replaceUrl: true });
     }
+    this.authService.getPublicConfig().subscribe({
+      next: (cfg) => {
+        this.registrationEnabled = cfg.registrationEnabled;
+        this.demoEnabled = cfg.demoEnabled;
+        this.demoUsername = cfg.demoUsername || 'demo';
+      },
+      error: () => {},
+    });
   }
 
   onSubmit(): void {
-    if (this.loginForm.valid) {
-      this.isSubmitting = true;
-      const { username, senha } = this.loginForm.value;
-      const loginData: LoginRequest = { username, senha };
-
-      // Salvar ou remover credenciais do localStorage
-      if (this.loginForm.get('lembrarCredenciais')?.value) {
-        localStorage.setItem('savedUsername', loginData.username);
-        localStorage.setItem('savedPassword', loginData.senha);
-      } else {
-        localStorage.removeItem('savedUsername');
-        localStorage.removeItem('savedPassword');
-        localStorage.removeItem('savedOrgId');
-      }
-
-      this.authService.login(loginData).subscribe({
-        next: (response) => {
-          this.isSubmitting = false;
-          if (!environment.production) {
-            console.log('Resposta do login:', response);
-          }
-          if (!response.token) {
-            this.errorMessage = 'Credenciais inválidas.';
-            this.snackBar.open(this.errorMessage, 'OK', { duration: 3500 });
-          }
-        },
-        error: (err) => {
-          this.isSubmitting = false;
-          this.errorMessage = 'Erro ao fazer login. Tente novamente.';
-          console.error('Erro de login:', err);
-          this.snackBar.open(this.errorMessage, 'OK', { duration: 4000 });
-        },
-      });
-    } else {
+    if (!this.loginForm.valid) {
       this.errorMessage = 'Preencha todos os campos obrigatórios.';
       this.snackBar.open(this.errorMessage, 'OK', { duration: 3000 });
+      return;
     }
+    this.submitLogin(this.loginForm.value.username, this.loginForm.value.senha, true);
+  }
+
+  experimentarDemo(): void {
+    this.isDemoSubmitting = true;
+    this.errorMessage = '';
+    this.authService.loginDemo(this.demoUsername).subscribe({
+      next: (response) => {
+        this.isDemoSubmitting = false;
+        if (response?.token) {
+          this.snackBar.open(
+            'Modo demonstração: seus dados serão apagados ao sair. Credenciais: demo / demo123',
+            'OK',
+            { duration: 6000 }
+          );
+        }
+      },
+      error: () => {
+        this.isDemoSubmitting = false;
+        this.errorMessage = 'Não foi possível entrar no modo demo.';
+      },
+    });
+  }
+
+  private submitLogin(username: string, senha: string, remember: boolean): void {
+    this.isSubmitting = true;
+    const loginData: LoginRequest = { username, senha };
+
+    if (remember) {
+      localStorage.setItem('savedUsername', username);
+      localStorage.setItem('savedPassword', senha);
+    } else {
+      localStorage.removeItem('savedUsername');
+      localStorage.removeItem('savedPassword');
+      localStorage.removeItem('savedOrgId');
+    }
+
+    this.authService.login(loginData).subscribe({
+      next: (response) => {
+        this.isSubmitting = false;
+        if (!environment.production) {
+          console.log('Resposta do login:', response);
+        }
+        if (!response.token) {
+          this.errorMessage = 'Credenciais inválidas.';
+          this.snackBar.open(this.errorMessage, 'OK', { duration: 3500 });
+        }
+      },
+      error: () => {
+        this.isSubmitting = false;
+        this.errorMessage = 'Erro ao fazer login. Tente novamente.';
+        this.snackBar.open(this.errorMessage, 'OK', { duration: 4000 });
+      },
+    });
   }
 }

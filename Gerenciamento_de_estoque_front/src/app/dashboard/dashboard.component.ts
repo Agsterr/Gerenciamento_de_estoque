@@ -2,6 +2,7 @@ import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { filter, Subscription } from 'rxjs';
+import { AuthService } from '../services/auth.service';
 
 export interface DashboardNavItem {
   path: string;
@@ -9,6 +10,7 @@ export interface DashboardNavItem {
   label: string;
   external?: boolean;
   adminOnly?: boolean;
+  hideIfBypass?: boolean;
 }
 
 @Component({
@@ -40,16 +42,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { path: 'pedidos-compra', icon: 'fa-shopping-cart', label: 'Compras' },
     { path: 'inventario', icon: 'fa-clipboard-check', label: 'Inventário' },
     { path: 'auditoria', icon: 'fa-history', label: 'Auditoria' },
+    { path: 'acessos-login', icon: 'fa-sign-in-alt', label: 'Acessos', adminOnly: true },
+    { path: 'sugestao', icon: 'fa-lightbulb', label: 'Sugestões' },
+    { path: 'pesquisa-preco', icon: 'fa-poll', label: 'Pesquisa de preço' },
     { path: 'usuarios', icon: 'fa-user-cog', label: 'Usuários', adminOnly: true },
-    { path: '/assinatura', icon: 'fa-credit-card', label: 'Assinatura', external: true },
+    { path: '/assinatura', icon: 'fa-credit-card', label: 'Assinatura', external: true, hideIfBypass: true },
     { path: 'ajuda', icon: 'fa-life-ring', label: 'Ajuda' },
   ];
 
-  readonly desktopMenu: DashboardNavItem[] = [
-    { path: 'inicio', icon: 'fa-chart-pie', label: 'Início' },
-    ...this.primaryMobile.filter((i) => i.path !== 'inicio'),
-    ...this.secondaryMenu,
-  ];
+  desktopMenu: DashboardNavItem[] = [];
 
   private readonly titleByPath: Record<string, string> = {
     inicio: 'Início',
@@ -64,15 +65,34 @@ export class DashboardComponent implements OnInit, OnDestroy {
     'pedidos-compra': 'Compras',
     inventario: 'Inventário',
     auditoria: 'Auditoria',
+    'acessos-login': 'Logs de Acesso',
+    sugestao: 'Sugestões',
+    'pesquisa-preco': 'Pesquisa de preço',
     usuarios: 'Usuários',
     ajuda: 'Ajuda',
   };
 
   private routerSub?: Subscription;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authService: AuthService) {}
+
+  get visibleSecondaryMenu(): DashboardNavItem[] {
+    const bypass = this.authService.hasSubscriptionBypass();
+    return this.secondaryMenu.filter((i) => !(bypass && i.hideIfBypass));
+  }
+
+  private buildMenus(): void {
+    const bypass = this.authService.hasSubscriptionBypass();
+    const filterItem = (item: DashboardNavItem) => !(bypass && item.hideIfBypass);
+    this.desktopMenu = [
+      { path: 'inicio', icon: 'fa-chart-pie', label: 'Início' },
+      ...this.primaryMobile.filter((i) => i.path !== 'inicio'),
+      ...this.secondaryMenu.filter(filterItem),
+    ];
+  }
 
   ngOnInit(): void {
+    this.buildMenus();
     this.onResize();
     this.updateLayoutFlags(this.router.url);
     this.routerSub = this.router.events

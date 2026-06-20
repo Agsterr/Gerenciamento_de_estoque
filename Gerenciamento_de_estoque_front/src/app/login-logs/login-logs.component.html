@@ -1,0 +1,123 @@
+<header class="header-page">
+  <h2><i class="fas fa-sign-in-alt"></i> Logs de Acesso</h2>
+</header>
+
+<div *ngIf="mensagemErro" class="mensagem-feedback erro"><i class="fas fa-exclamation-circle"></i> {{ mensagemErro }}</div>
+<div *ngIf="loading" class="spinner-overlay"><div class="spinner"></div></div>
+
+<div class="main-content">
+  <div class="card-lista">
+    <div class="filtro-periodo">
+      <div class="filtro-header">
+        <span class="breadcrumb-periodo"><i class="fas fa-calendar-alt"></i> {{ breadcrumb() }}</span>
+        <button class="botao-listar btn-sm-inline" (click)="limparFiltros()" *ngIf="filtroAno">
+          <i class="fas fa-times"></i> Limpar
+        </button>
+        <button class="botao-listar btn-sm-inline" (click)="carregarLogs(currentPage)">
+          <i class="fas fa-sync"></i> Atualizar
+        </button>
+      </div>
+      <div class="acoes-periodo-login" *ngIf="filtroAno">
+        <button class="btn btn-sm btn-info" (click)="exportarPeriodo()"><i class="fas fa-file-archive"></i> Exportar</button>
+        <button class="btn btn-sm btn-warning" (click)="compactarPeriodo()"><i class="fas fa-compress-arrows-alt"></i> Compactar</button>
+        <button class="btn btn-sm btn-danger" (click)="apagarPeriodo()"><i class="fas fa-trash"></i> Apagar</button>
+      </div>
+      <p class="hint-periodo" *ngIf="!filtroAno">Selecione um ano para exportar, compactar ou apagar.</p>
+
+      <div class="hierarquia-data" *ngIf="anos.length > 0">
+        <div class="nivel-filtro" *ngIf="!filtroAno">
+          <span class="nivel-label">Ano</span>
+          <div class="chips">
+            <button *ngFor="let a of anos" class="chip" (click)="selecionarAno(a)">{{ a }}</button>
+          </div>
+        </div>
+        <div class="nivel-filtro" *ngIf="filtroAno && !filtroMes && meses.length > 0">
+          <span class="nivel-label">Mês</span>
+          <div class="chips">
+            <button *ngFor="let m of meses" class="chip" (click)="selecionarMes(m)">{{ mesesNomes[m] }}</button>
+          </div>
+        </div>
+        <div class="nivel-filtro" *ngIf="filtroAno && filtroMes && !filtroDia && dias.length > 0">
+          <span class="nivel-label">Dia</span>
+          <div class="chips">
+            <button *ngFor="let d of dias" class="chip" (click)="selecionarDia(d)">{{ d }}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="paginacao-info" *ngIf="totalElements > 0">
+      {{ totalElements }} registro(s) — página {{ currentPage + 1 }} de {{ totalPages || 1 }}
+    </p>
+
+    <div class="table-scroll-wrapper login-logs-table-wrap" *ngIf="logs.length > 0">
+      <table class="data-table login-logs-table">
+        <thead>
+          <tr>
+            <th>Data/Hora</th>
+            <th>Usuário</th>
+            <th>IP</th>
+            <th>Sucesso</th>
+            <th>Detalhes</th>
+            <th>User-Agent</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let log of logs" [class.linha-falha]="!log.sucesso">
+            <td data-label="Data/Hora">{{ log.dataHora | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+            <td data-label="Usuário">{{ log.username }}</td>
+            <td data-label="IP">{{ log.ip || '-' }}</td>
+            <td data-label="Sucesso">
+              <span [class.badge-ok]="log.sucesso" [class.badge-erro]="!log.sucesso">
+                {{ log.sucesso ? 'Sim' : 'Não' }}
+              </span>
+            </td>
+            <td data-label="Detalhes" class="col-detalhes">{{ log.detalhes || '-' }}</td>
+            <td data-label="User-Agent" class="col-user-agent" [title]="log.userAgent || ''">
+              {{ log.userAgent || '-' }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p *ngIf="logs.length === 0 && !loading">Nenhum acesso registrado para o período selecionado.</p>
+
+    <div class="paginacao" *ngIf="totalPages > 1">
+      <button class="btn btn-sm" [disabled]="currentPage === 0" (click)="paginaAnterior()">
+        <i class="fas fa-chevron-left"></i> Anterior
+      </button>
+      <button class="btn btn-sm" [disabled]="currentPage + 1 >= totalPages" (click)="proximaPagina()">
+        Próxima <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <div class="arquivos-exportados" *ngIf="arquivos.length > 0">
+      <h4><i class="fas fa-folder-open"></i> Arquivos exportados</h4>
+      <div class="table-scroll-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Arquivo</th>
+              <th>Período</th>
+              <th>Tamanho</th>
+              <th>Criado em</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let arq of arquivos">
+              <td data-label="Arquivo">{{ arq.filename }}</td>
+              <td data-label="Período">{{ arq.periodoLabel }}</td>
+              <td data-label="Tamanho">{{ formatBytes(arq.sizeBytes) }}</td>
+              <td data-label="Criado em">{{ arq.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td data-label="Ações" class="acoes-tabela">
+                <button class="btn btn-sm btn-info" (click)="baixarArquivo(arq.filename)"><i class="fas fa-download"></i></button>
+                <button class="btn btn-sm btn-danger" (click)="apagarArquivo(arq.filename)"><i class="fas fa-trash"></i></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

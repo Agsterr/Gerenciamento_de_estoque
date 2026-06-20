@@ -282,6 +282,40 @@
   --mdc-circular-progress-active-indicator-color: #fff;
 }
 
+.btn-demo {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 14px 20px;
+  border: 2px dashed #0ea5e9;
+  border-radius: 10px;
+  background: #f0f9ff;
+  color: #0369a1;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: #e0f2fe;
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+}
+
+.demo-hint {
+  margin: 12px 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.45;
+  text-align: center;
+}
+
 /* Alertas */
 .alert {
   padding: 16px;

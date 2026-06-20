@@ -4,96 +4,111 @@ import { Observable, of, tap, catchError } from 'rxjs';
 import { ApiService } from './api.service';
 import { LoginRequest } from '../models/login-request.model';
 import { LoginResponse } from '../models/login-response.model';
-import { jwtDecode } from 'jwt-decode';  // Importando jwt-decode corretamente
+import { jwtDecode } from 'jwt-decode';
 import { environment } from '../../environments/environment';
+
+export interface AuthPublicConfig {
+  registrationEnabled: boolean;
+  demoEnabled: boolean;
+  demoUsername: string;
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   private readonly visitedKey = 'hasVisitedBefore';
+  private readonly deviceFingerprintKey = 'deviceFingerprint';
 
   constructor(private apiService: ApiService, private router: Router) {}
 
-  /**
-   * Realiza o login e armazena os dados recebidos (token, usuário e roles).
-   */
+  getDeviceFingerprint(): string {
+    let fp = localStorage.getItem(this.deviceFingerprintKey);
+    if (!fp) {
+      fp = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `dev-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      localStorage.setItem(this.deviceFingerprintKey, fp);
+    }
+    return fp;
+  }
+
+  getPublicConfig(): Observable<AuthPublicConfig> {
+    return this.apiService.get<AuthPublicConfig>('/auth/config');
+  }
+
   login(data: LoginRequest): Observable<LoginResponse> {
-    return this.apiService.post<LoginResponse>('/auth/login', data).pipe(
+    const payload: LoginRequest = {
+      ...data,
+      deviceFingerprint: data.deviceFingerprint ?? this.getDeviceFingerprint(),
+    };
+    return this.apiService.post<LoginResponse>('/auth/login', payload).pipe(
       tap((response: LoginResponse) => {
-        if (response && response.token) {
-          // Armazena o token JWT
-          localStorage.setItem('jwtToken', response.token);
-
-          // Decodificar o token JWT
-          const decodedToken: any = jwtDecode(response.token);
-          
-          // Log apenas em desenvolvimento
-          if (!environment.production) {
-            console.log('Token Decodificado:', decodedToken);
-          }
-          
-          const userInfo = {
-            username: decodedToken.sub,
-            userId: decodedToken.user_id,
-            orgId: decodedToken.org_id,
-            roles: decodedToken.roles || []
-          };
-
-          // Log apenas em desenvolvimento
-          if (!environment.production) {
-            console.log('Informações do Usuário:', userInfo);
-          }
-
-          // Armazenando o usuário no localStorage
-          localStorage.setItem('loggedUser', JSON.stringify(userInfo));
-
-          // Redireciona para a home
-          this.router.navigate(['/home']);
+        if (response?.token) {
+          this.storeSession(response);
         }
       }),
       catchError((err) => {
         console.error('Erro ao fazer login:', err);
-        window.alert('Erro ao tentar fazer login. Verifique suas credenciais.');
+        const msg = err?.error?.error || 'Erro ao tentar fazer login. Verifique suas credenciais.';
+        window.alert(msg);
         this.router.navigate(['/login']);
-        return of({ token: '', roles: [] });
+        return of({ token: '' });
       })
     );
   }
 
-  /**
-   * Realiza o registro de um novo usuário.
-   */
+  loginDemo(demoUsername: string, demoPassword = 'demo123'): Observable<LoginResponse> {
+    return this.login({ username: demoUsername, senha: demoPassword });
+  }
+
+  private storeSession(response: LoginResponse): void {
+    localStorage.setItem('jwtToken', response.token);
+    const decodedToken: any = jwtDecode(response.token);
+    const userInfo = {
+      username: decodedToken.sub,
+      userId: decodedToken.user_id,
+      orgId: decodedToken.org_id,
+      roles: decodedToken.roles || [],
+      demo: !!response.demo,
+      ephemeral: !!response.ephemeral,
+    };
+    localStorage.setItem('loggedUser', JSON.stringify(userInfo));
+    this.router.navigate(['/home']);
+  }
+
   register(data: any): Observable<any> {
     return this.apiService.post('/auth/register', data);
   }
 
-  /**
-   * Retorna os dados do usuário logado a partir do localStorage.
-   */
   getLoggedUser(): any {
     const userData = localStorage.getItem('loggedUser');
-    
-    // Remover log verboso - só loggar em caso de debug específico
-    // if (!environment.production) {
-    //   console.log('Dados do Usuário Recuperados do localStorage:', userData);
-    // }
-
     return userData ? JSON.parse(userData) : null;
   }
 
-  /**
-   * Remove os dados de autenticação e redireciona para a tela de login.
-   */
+  isDemoSession(): boolean {
+    const user = this.getLoggedUser();
+    return !!user?.demo || !!user?.ephemeral;
+  }
+
   logout(): void {
+    const token = localStorage.getItem('jwtToken');
+    if (token) {
+      this.apiService.post<void>('/auth/logout', {}).subscribe({
+        complete: () => this.clearLocalSession(),
+        error: () => this.clearLocalSession(),
+      });
+    } else {
+      this.clearLocalSession();
+    }
+  }
+
+  private clearLocalSession(): void {
     localStorage.removeItem('jwtToken');
     localStorage.removeItem('loggedUser');
     this.router.navigate(['/login']);
   }
 
-  /**
-   * Verifica se o usuário está autenticado.
-   */
   isLoggedIn(): boolean {
     return this.isTokenValid();
   }
@@ -128,16 +143,12 @@ export class AuthService {
     }
   }
 
-  /** Rota de entrada para visitantes não autenticados ou com sessão ativa. */
   resolveEntryRoute(): string {
     if (this.isTokenValid()) {
       return '/dashboard';
     }
     if (this.hasSavedCredentials()) {
       return '/login';
-    }
-    if (!this.hasVisitedBefore()) {
-      return '/register';
     }
     return '/login';
   }
@@ -154,13 +165,28 @@ export class AuthService {
     });
   }
 
-  /** Admin da organização (gerencia usuários da própria org). */
   isAdmin(): boolean {
     return this.hasRole('ROLE_ADMIN') || this.isMasterAdmin();
   }
 
-  /** Admin master da plataforma (organizações, painel SaaS). */
   isMasterAdmin(): boolean {
     return this.hasRole('ROLE_SUPER_ADMIN');
+  }
+
+  /** Isento de gate de assinatura (bypass no JWT ou sessão demo). */
+  hasSubscriptionBypass(): boolean {
+    if (this.isDemoSession()) {
+      return true;
+    }
+    const token = localStorage.getItem('jwtToken');
+    if (!token) {
+      return false;
+    }
+    try {
+      const decoded: any = jwtDecode(token);
+      return decoded.bypass_subscription === true || decoded.bypassSubscription === true;
+    } catch {
+      return false;
+    }
   }
 }

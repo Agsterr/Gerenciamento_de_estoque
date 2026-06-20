@@ -11,9 +11,11 @@ export interface Role {
 }
 
 export interface LoginResponse {
-  token: string; // Token JWT retornado pelo backend
-  roles: Role[]; // Roles do usuário
-  userId?: number; // ID do usuário autenticado (opcional)
-  username?: string; // Nome do usuário (opcional)
+  token: string;
+  demo?: boolean;
+  ephemeral?: boolean;
+  roles?: Role[];
+  userId?: number;
+  username?: string;
 }
  

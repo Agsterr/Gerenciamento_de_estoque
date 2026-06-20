@@ -82,7 +82,7 @@
       <!-- Botão -->
       <button 
         type="submit" 
-        [disabled]="loginForm.invalid || isSubmitting" 
+        [disabled]="loginForm.invalid || isSubmitting || isDemoSubmitting" 
         class="btn btn-primary"
       >
         <mat-progress-spinner *ngIf="isSubmitting" mode="indeterminate" diameter="18" strokeWidth="3"></mat-progress-spinner>
@@ -90,13 +90,28 @@
         <span>{{ isSubmitting ? 'Entrando...' : 'Entrar' }}</span>
       </button>
 
+      <button
+        *ngIf="demoEnabled"
+        type="button"
+        class="btn btn-demo"
+        [disabled]="isSubmitting || isDemoSubmitting"
+        (click)="experimentarDemo()"
+      >
+        <mat-progress-spinner *ngIf="isDemoSubmitting" mode="indeterminate" diameter="18" strokeWidth="3"></mat-progress-spinner>
+        <mat-icon *ngIf="!isDemoSubmitting" aria-hidden="true">science</mat-icon>
+        <span>{{ isDemoSubmitting ? 'Abrindo demo...' : 'Experimentar grátis' }}</span>
+      </button>
+      <p *ngIf="demoEnabled" class="demo-hint">
+        Modo demonstração: explore todas as funções. Ao sair, os dados de teste são apagados (usuário <strong>demo</strong> / senha <strong>demo123</strong>).
+      </p>
+
       <!-- Erro geral -->
       <div *ngIf="errorMessage" class="alert alert-danger" aria-live="assertive">
         <mat-icon aria-hidden="true">error</mat-icon>
         <span>{{ errorMessage }}</span>
       </div>
 
-      <div class="login-link">
+      <div *ngIf="registrationEnabled" class="login-link">
         <span>Não tem conta?</span>
         <a routerLink="/register" class="link">Criar conta</a>
       </div>

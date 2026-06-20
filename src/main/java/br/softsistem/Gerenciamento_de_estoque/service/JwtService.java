@@ -85,11 +85,30 @@ public class JwtService {
                                 Long userId,
                                 Long orgId,
                                 List<String> roles) {
+        return generateToken(userDetails, userId, orgId, roles, false);
+    }
+
+    public String generateToken(UserDetails userDetails,
+                                Long userId,
+                                Long orgId,
+                                List<String> roles,
+                                boolean bypassSubscription) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("user_id", userId);
         claims.put("org_id", orgId);
         claims.put("roles", roles);
+        claims.put("bypass_subscription", bypassSubscription);
         return createToken(claims, userDetails.getUsername());
+    }
+
+    public boolean extractBypassSubscription(String token) {
+        return Boolean.TRUE.equals(extractClaim(token, claims -> {
+            Object raw = claims.get("bypass_subscription");
+            if (raw instanceof Boolean b) {
+                return b;
+            }
+            return false;
+        }));
     }
 
     private String createToken(Map<String, Object> extraClaims, String subject) {

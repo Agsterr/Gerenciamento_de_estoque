@@ -3,6 +3,8 @@ package br.softsistem.Gerenciamento_de_estoque.repository;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -67,4 +69,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     long countAtivosByOrgId(@Param("orgId") Long orgId);
 
     List<Usuario> findByOrg_Id(Long orgId);
+
+    Page<Usuario> findByOrg_Id(Long orgId, Pageable pageable);
+
+    Page<Usuario> findAllByOrderByUsernameAsc(Pageable pageable);
 }

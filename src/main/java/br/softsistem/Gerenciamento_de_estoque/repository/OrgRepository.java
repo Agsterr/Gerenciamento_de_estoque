@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -20,4 +21,9 @@ public interface OrgRepository extends JpaRepository<Org, Long> {
 
     // Buscar várias organizações com o mesmo nome (paginado)
     Page<Org> findAllByNomeContaining(String nome, Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Query(
+            "SELECT o.id FROM Org o WHERE o.ephemeral = true AND o.demoLastAccess IS NOT NULL AND o.demoLastAccess < :cutoff")
+    List<Long> findEphemeralOrgIdsWithLastAccessBefore(
+            @org.springframework.data.repository.query.Param("cutoff") java.time.LocalDateTime cutoff);
 }

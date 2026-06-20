@@ -1,0 +1,42 @@
+<header class="header-page">
+  <h2><i class="fas fa-lightbulb"></i> Caixa de Sugestões</h2>
+</header>
+
+<div *ngIf="mensagem" class="mensagem-feedback sucesso"><i class="fas fa-check-circle"></i> {{ mensagem }}</div>
+<div *ngIf="mensagemErro" class="mensagem-feedback erro"><i class="fas fa-exclamation-circle"></i> {{ mensagemErro }}</div>
+<div *ngIf="loading" class="spinner-overlay"><div class="spinner"></div></div>
+
+<div class="main-content">
+  <div class="card-lista">
+    <div class="form-adicionar">
+      <h3 class="titulo-form"><i class="fas fa-pen"></i> Enviar sugestão</h3>
+      <p class="hint">Sua mensagem será vinculada à sua organização.</p>
+      <div class="form-group">
+        <label for="texto">Sugestão</label>
+        <textarea id="texto" rows="4" [(ngModel)]="texto" placeholder="Descreva sua ideia ou melhoria..."></textarea>
+      </div>
+      <div class="botoes-form">
+        <button class="botao-salvar" (click)="enviar()" [disabled]="loading">
+          <i class="fas fa-paper-plane"></i> Enviar
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="isAdmin" class="lista-admin">
+      <h3 class="titulo-form"><i class="fas fa-inbox"></i> Sugestões da organização</h3>
+      <div class="sugestao-card" *ngFor="let s of sugestoes">
+        <div class="sugestao-meta">
+          <strong>{{ s.username }}</strong>
+          <span>{{ s.criadoEm | date:'dd/MM/yyyy HH:mm' }}</span>
+          <span class="badge-status" [class.nova]="s.status === 'NOVA'">{{ s.status }}</span>
+        </div>
+        <p class="sugestao-texto">{{ s.texto }}</p>
+      </div>
+      <p *ngIf="sugestoes.length === 0 && !loading">Nenhuma sugestão recebida ainda.</p>
+      <div class="paginacao" *ngIf="totalPages > 1">
+        <button class="btn btn-sm" [disabled]="currentPage === 0" (click)="paginaAnterior()">Anterior</button>
+        <button class="btn btn-sm" [disabled]="currentPage + 1 >= totalPages" (click)="proximaPagina()">Próxima</button>
+      </div>
+    </div>
+  </div>
+</div>

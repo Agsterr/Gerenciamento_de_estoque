@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './login/login.component';
-import { RegisterComponent } from './register/register.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { ProdutoComponent } from './produto/produto.component';
 import { ConsumersComponent } from './consumidor/consumidor.component';
@@ -25,12 +24,15 @@ import { InventarioComponent } from './inventario/inventario.component';
 import { AuditoriaComponent } from './auditoria/auditoria.component';
 import { AdminComponent } from './admin/admin.component';
 import { AjudaComponent } from './ajuda/ajuda.component';
+import { LoginLogsComponent } from './login-logs/login-logs.component';
+import { SugestaoComponent } from './sugestao/sugestao.component';
+import { PesquisaPrecoComponent } from './pesquisa-preco/pesquisa-preco.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   { path: 'home', component: HomeComponent },
   { path: 'login', component: LoginComponent },
-  { path: 'register', component: RegisterComponent },
+  { path: 'register', redirectTo: 'login', pathMatch: 'full' },
   { path: 'orgs', component: OrgComponent, canActivate: [MasterAdminGuard] },
   { path: 'assinatura', component: AssinaturaComponent, canActivate: [AuthGuard] },
   { path: 'subscription/blocked', component: SubscriptionBlockedComponent, canActivate: [AuthGuard] },
@@ -58,6 +60,9 @@ export const routes: Routes = [
       { path: 'pedidos-compra', component: PedidoCompraComponent },
       { path: 'inventario', component: InventarioComponent },
       { path: 'auditoria', component: AuditoriaComponent },
+      { path: 'acessos-login', component: LoginLogsComponent, canActivate: [AdminGuard] },
+      { path: 'sugestao', component: SugestaoComponent },
+      { path: 'pesquisa-preco', component: PesquisaPrecoComponent },
       { path: 'ajuda', component: AjudaComponent },
     ],
   },

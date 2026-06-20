@@ -133,6 +133,7 @@ public class SubscriptionAccessFilter extends OncePerRequestFilter {
         if (path.startsWith("/api/mercadopago/public-key")) return true;
         if (path.startsWith("/api/subscription/customer-portal")) return true;
         if (path.startsWith("/api/subscription/cancel")) return true;
+        if (path.startsWith("/api/pesquisa-preco")) return true;
         return false;
     }
 

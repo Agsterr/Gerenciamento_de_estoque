@@ -1,0 +1,158 @@
+@import '../shared/erp-page';
+
+.acoes-periodo-login {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.hint-periodo {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0 0 12px;
+}
+
+.arquivos-exportados {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.arquivos-exportados h4 {
+  margin: 0 0 12px;
+  color: #334155;
+}
+
+.linha-falha { background: #fef2f2; }
+.badge-ok { color: #15803d; font-weight: 600; }
+.badge-erro { color: #b91c1c; font-weight: 600; }
+
+.filtro-periodo {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.filtro-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.breadcrumb-periodo {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  color: #334155;
+  word-break: break-word;
+}
+
+.btn-sm-inline {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+
+.hierarquia-data .nivel-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  border: 1px solid #cbd5e1;
+  background: white;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  &:hover { background: #eff6ff; border-color: #3b82f6; }
+}
+
+.col-user-agent {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+}
+
+.col-detalhes {
+  max-width: 180px;
+  word-break: break-word;
+}
+
+.paginacao {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.paginacao-info {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 768px) {
+  .login-logs-table-wrap .login-logs-table thead {
+    display: none;
+  }
+
+  .login-logs-table-wrap .login-logs-table tbody tr {
+    display: block;
+    margin-bottom: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    background: white;
+  }
+
+  .login-logs-table-wrap .login-logs-table tbody tr.linha-falha {
+    background: #fef2f2;
+  }
+
+  .login-logs-table-wrap .login-logs-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+    border: none;
+    max-width: none;
+    white-space: normal;
+  }
+
+  .login-logs-table-wrap .login-logs-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #64748b;
+    flex-shrink: 0;
+    min-width: 90px;
+  }
+
+  .col-user-agent {
+    max-width: none;
+    white-space: normal;
+    text-align: right;
+    word-break: break-word;
+  }
+
+  .chip {
+    min-height: 36px;
+  }
+}

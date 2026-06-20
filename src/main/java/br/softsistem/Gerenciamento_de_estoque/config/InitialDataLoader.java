@@ -38,7 +38,6 @@ public class InitialDataLoader {
     @Bean
     public CommandLineRunner initDatabase() {
         return args -> {
-            // Lógica de inicialização do banco de dados
             final Org defaultOrg;
 
             Optional<Org> existingOrg = orgRepository.findByNome("SoftSistem Principal");
@@ -89,27 +88,93 @@ public class InitialDataLoader {
                 System.out.println("Usuário 'admin' para Org '" + defaultOrg.getNome() + "' atualizado como SUPER_ADMIN com bypass.");
             }
 
-            Optional<Usuario> existingWilliam = usuarioRepository.findByUsernameAndOrgId("William", defaultOrg.getId());
-            if (existingWilliam.isEmpty()) {
-                Usuario william = new Usuario();
-                william.setUsername("William");
-                william.setSenha(passwordEncoder.encode("William@2026"));
-                william.setEmail("william.test@softsistem.com");
-                william.setOrg(defaultOrg);
-                william.setAtivo(true);
-                william.setRoles(List.of(userRole));
-                william.setBypassSubscription(true);
-                usuarioRepository.save(william);
-                System.out.println("Usuário de teste 'William' criado (ROLE_USER, bypass assinatura). Senha: William@2026");
-            } else {
-                Usuario william = existingWilliam.get();
-                william.setBypassSubscription(true);
-                if (william.getRoles() == null || william.getRoles().stream().noneMatch(r -> "ROLE_USER".equals(r.getNome()))) {
-                    william.setRoles(List.of(userRole));
-                }
-                usuarioRepository.save(william);
-                System.out.println("Usuário de teste 'William' atualizado (ROLE_USER, bypass assinatura).");
-            }
+            seedExemptUser("William", "william.test@softsistem.com", "William@2026", defaultOrg, false);
+            seedExemptUser("Samuel", "samuel@softsistem.com", "Samuel@2026", "Samuel", true);
+            seedExemptUser("Talison", "talison@softsistem.com", "Talison@2026", "Talison", true);
+            seedExemptUser("PauloEduardo", "paulo.eduardo@softsistem.com", "PauloEduardo@2026", "Paulo Eduardo", true);
+            ensureDemoOrgAndUser();
         };
+    }
+
+    private void ensureDemoOrgAndUser() {
+        Org demoOrg = orgRepository.findByNome("org_demo")
+                .orElseGet(() -> {
+                    Org o = new Org("org_demo");
+                    o.setEphemeral(true);
+                    o.setMaxDispositivos(999);
+                    return orgRepository.save(o);
+                });
+        demoOrg.setEphemeral(true);
+        demoOrg.setMaxDispositivos(999);
+        orgRepository.save(demoOrg);
+
+        Role userRole = roleRepository.findByNomeAndOrgId("ROLE_USER", demoOrg.getId())
+                .orElseGet(() -> roleRepository.save(new Role("ROLE_USER", demoOrg)));
+        roleRepository.findByNomeAndOrgId("ROLE_ADMIN", demoOrg.getId())
+                .orElseGet(() -> roleRepository.save(new Role("ROLE_ADMIN", demoOrg)));
+
+        Optional<Usuario> existingDemo = usuarioRepository.findByUsernameAndOrgId("demo", demoOrg.getId());
+        if (existingDemo.isEmpty()) {
+            Usuario demo = new Usuario();
+            demo.setUsername("demo");
+            demo.setSenha(passwordEncoder.encode("demo123"));
+            demo.setEmail("demo@focodev.local");
+            demo.setOrg(demoOrg);
+            demo.setAtivo(true);
+            demo.setRoles(List.of(userRole));
+            demo.setBypassSubscription(true);
+            usuarioRepository.save(demo);
+            System.out.println("Usuário demo criado (demo/demo123) — org efêmera, sem painel admin.");
+        } else {
+            Usuario demo = existingDemo.get();
+            demo.setBypassSubscription(true);
+            demo.setAtivo(true);
+            usuarioRepository.save(demo);
+        }
+    }
+
+    /**
+     * Cria ou atualiza usuário isento de assinatura (bypass).
+     * Senha em texto plano só é aplicada na criação; em atualização mantém a senha existente.
+     */
+    private void seedExemptUser(String username, String email, String plainPassword, Org org, boolean adminDaOrg) {
+        seedExemptUser(username, email, plainPassword, org.getNome(), adminDaOrg, org);
+    }
+
+    private void seedExemptUser(String username, String email, String plainPassword, String orgNome, boolean adminDaOrg) {
+        Org org = orgRepository.findByNome(orgNome)
+                .orElseGet(() -> orgRepository.save(new Org(orgNome)));
+        seedExemptUser(username, email, plainPassword, orgNome, adminDaOrg, org);
+    }
+
+    private void seedExemptUser(String username, String email, String plainPassword, String orgNome,
+                                boolean adminDaOrg, Org org) {
+        Role userRole = roleRepository.findByNomeAndOrgId("ROLE_USER", org.getId())
+                .orElseGet(() -> roleRepository.save(new Role("ROLE_USER", org)));
+        Role orgAdminRole = roleRepository.findByNomeAndOrgId("ROLE_ADMIN", org.getId())
+                .orElseGet(() -> roleRepository.save(new Role("ROLE_ADMIN", org)));
+
+        Optional<Usuario> existing = usuarioRepository.findByUsernameAndOrgId(username, org.getId());
+        if (existing.isEmpty()) {
+            Usuario user = new Usuario();
+            user.setUsername(username);
+            user.setSenha(passwordEncoder.encode(plainPassword));
+            user.setEmail(email);
+            user.setOrg(org);
+            user.setAtivo(true);
+            user.setRoles(adminDaOrg ? List.of(orgAdminRole, userRole) : List.of(userRole));
+            user.setBypassSubscription(true);
+            usuarioRepository.save(user);
+            System.out.printf("Usuário '%s' criado (org '%s', bypass). Senha: %s%n", username, orgNome, plainPassword);
+        } else {
+            Usuario user = existing.get();
+            user.setBypassSubscription(true);
+            user.setAtivo(true);
+            if (user.getRoles() == null || user.getRoles().isEmpty()) {
+                user.setRoles(adminDaOrg ? List.of(orgAdminRole, userRole) : List.of(userRole));
+            }
+            usuarioRepository.save(user);
+            System.out.printf("Usuário '%s' atualizado (org '%s', bypass assinatura).%n", username, orgNome);
+        }
     }
 }

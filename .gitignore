@@ -47,3 +47,7 @@ docker/cloudflared/cert.pem
 # Chave Asaas local (Docker monta este arquivo no container)
 docker/secrets/asaas_sandbox_api_key.txt
 docker/secrets/asaas_prod_api_key.txt
+
+# Backups de banco (gerados localmente ou no servidor)
+backups/
+data/log-exports/

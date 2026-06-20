@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
 
+import { AuthService } from '../../services/auth.service';
 import { SubscriptionService } from '../../services/subscription.service';
 
 import { Subscription } from '../../models/subscription.model';
@@ -36,7 +37,10 @@ export class TrialBannerComponent implements OnInit, OnDestroy {
 
 
 
-  constructor(private subscriptionService: SubscriptionService) {}
+  constructor(
+    private subscriptionService: SubscriptionService,
+    private authService: AuthService
+  ) {}
 
 
 
@@ -71,9 +75,10 @@ export class TrialBannerComponent implements OnInit, OnDestroy {
 
 
   get showBanner(): boolean {
-
+    if (this.authService.hasSubscriptionBypass()) {
+      return false;
+    }
     return this.isTrialActive(this.subscription);
-
   }
 
 

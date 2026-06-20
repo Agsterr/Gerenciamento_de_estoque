@@ -11,4 +11,6 @@ import java.util.Optional;
 public interface DispositivoUsuarioRepository extends JpaRepository<DispositivoUsuario, Long> {
     Optional<DispositivoUsuario> findByUsuarioIdAndFingerprint(Long usuarioId, String fingerprint);
     Page<DispositivoUsuario> findByStatusOrderBySolicitadoEmDesc(StatusDispositivo status, Pageable pageable);
+    long countByUsuarioIdAndStatus(Long usuarioId, StatusDispositivo status);
+    long countByOrgIdAndStatus(Long orgId, StatusDispositivo status);
 }

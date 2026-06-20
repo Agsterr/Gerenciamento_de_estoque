@@ -22,6 +22,15 @@ public class Org {
     @Column(nullable = false)
     private Boolean ativo = true;
 
+    @Column(name = "max_dispositivos", nullable = false)
+    private Integer maxDispositivos = 3;
+
+    @Column(nullable = false)
+    private Boolean ephemeral = false;
+
+    @Column(name = "demo_last_access")
+    private java.time.LocalDateTime demoLastAccess;
+
     public Org() {}
 
     public Org(String nome) {
@@ -56,6 +65,39 @@ public class Org {
 
     public void setAtivo(Boolean ativo) {
         this.ativo = ativo;
+    }
+
+    public Integer getMaxDispositivos() {
+        return maxDispositivos;
+    }
+
+    public void setMaxDispositivos(Integer maxDispositivos) {
+        this.maxDispositivos = maxDispositivos;
+    }
+
+    public Boolean getEphemeral() {
+        return ephemeral;
+    }
+
+    public void setEphemeral(Boolean ephemeral) {
+        this.ephemeral = ephemeral;
+    }
+
+    public java.time.LocalDateTime getDemoLastAccess() {
+        return demoLastAccess;
+    }
+
+    public void setDemoLastAccess(java.time.LocalDateTime demoLastAccess) {
+        this.demoLastAccess = demoLastAccess;
+    }
+
+    public boolean isEphemeralOrg() {
+        return Boolean.TRUE.equals(ephemeral);
+    }
+
+    /** 0 ou null tratado como ilimitado. */
+    public boolean hasUnlimitedDevices() {
+        return maxDispositivos == null || maxDispositivos <= 0;
     }
 
     // equals, hashCode e toString

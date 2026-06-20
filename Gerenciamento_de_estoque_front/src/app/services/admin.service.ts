@@ -16,15 +16,75 @@ export interface LoginLog {
   detalhes?: string;
 }
 
+export interface LoginLogPeriodo {
+  ano: number;
+  mes: number;
+  dia: number;
+  total: number;
+}
+
+export interface LoginLogExportFile {
+  filename: string;
+  sizeBytes: number;
+  createdAt: string;
+  orgId?: number;
+  periodoLabel: string;
+  registros: number;
+}
+
+export interface LoginLogActionResult {
+  filename?: string;
+  registrosExportados: number;
+  registrosApagados: number;
+  message: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AdminLoginLogsService {
   private url = `${environment.apiUrl}/admin/login-logs`;
   constructor(private http: HttpClient) {}
 
-  listar(page = 0, size = 30): Observable<{ content: LoginLog[]; totalElements: number; totalPages: number }> {
-    return this.http.get<{ content: LoginLog[]; totalElements: number; totalPages: number }>(
-      `${this.url}?page=${page}&size=${size}&sort=dataHora,desc`
-    );
+  listar(page = 0, size = 30, ano?: number, mes?: number, dia?: number, orgId?: number): Observable<{ content: LoginLog[]; totalElements: number; totalPages: number }> {
+    const params = new URLSearchParams({ page: String(page), size: String(size), sort: 'dataHora,desc' });
+    if (ano != null) params.set('ano', String(ano));
+    if (mes != null) params.set('mes', String(mes));
+    if (dia != null) params.set('dia', String(dia));
+    if (orgId != null) params.set('orgId', String(orgId));
+    return this.http.get<{ content: LoginLog[]; totalElements: number; totalPages: number }>(`${this.url}?${params}`);
+  }
+
+  periodos(orgId?: number): Observable<LoginLogPeriodo[]> {
+    const q = orgId != null ? `?orgId=${orgId}` : '';
+    return this.http.get<LoginLogPeriodo[]>(`${this.url}/periodos${q}`);
+  }
+
+  exportar(ano: number, mes?: number, dia?: number, orgId?: number): Observable<Blob> {
+    const params = new URLSearchParams({ ano: String(ano) });
+    if (mes != null) params.set('mes', String(mes));
+    if (dia != null) params.set('dia', String(dia));
+    if (orgId != null) params.set('orgId', String(orgId));
+    return this.http.get(`${this.url}/export?${params}`, { responseType: 'blob' });
+  }
+
+  compactar(body: { ano: number; mes?: number; dia?: number; orgId?: number }): Observable<LoginLogActionResult> {
+    return this.http.post<LoginLogActionResult>(`${this.url}/compact`, body);
+  }
+
+  apagar(body: { ano: number; mes?: number; dia?: number; orgId?: number; confirm: boolean }): Observable<LoginLogActionResult> {
+    return this.http.post<LoginLogActionResult>(`${this.url}/delete`, body);
+  }
+
+  listarArquivos(orgId?: number): Observable<LoginLogExportFile[]> {
+    const q = orgId != null ? `?orgId=${orgId}` : '';
+    return this.http.get<LoginLogExportFile[]>(`${this.url}/arquivos${q}`);
+  }
+
+  baixarArquivo(filename: string): Observable<Blob> {
+    return this.http.get(`${this.url}/arquivos/${encodeURIComponent(filename)}`, { responseType: 'blob' });
+  }
+
+  apagarArquivo(filename: string): Observable<void> {
+    return this.http.delete<void>(`${this.url}/arquivos/${encodeURIComponent(filename)}`);
   }
 }
 
@@ -115,5 +175,105 @@ export class AdminSubscriptionAdminService {
 
   desativarOrg(orgId: number): Observable<void> {
     return this.http.put<void>(`${this.orgUrl}/${orgId}/desativar`, {});
+  }
+}
+
+export interface AdminUser {
+  id: number;
+  username: string;
+  email?: string;
+  ativo?: boolean;
+  orgId: number;
+  orgNome: string;
+  bypassSubscription?: boolean;
+  roles: string[];
+}
+
+export interface AdminOrgSummary {
+  orgId: number;
+  orgNome: string;
+  orgAtivo?: boolean;
+  ephemeral?: boolean;
+  maxDispositivos: number;
+  totalUsuarios: number;
+  dispositivosAprovados: number;
+}
+
+export interface AdminUserCreated {
+  user: AdminUser;
+  temporaryPassword: string;
+}
+
+@Injectable({ providedIn: 'root' })
+export class AdminUsersService {
+  private url = `${environment.apiUrl}/admin/users`;
+  constructor(private http: HttpClient) {}
+
+  listar(page = 0, size = 30, orgId?: number): Observable<{ content: AdminUser[]; totalElements: number; totalPages: number }> {
+    const params = new URLSearchParams({ page: String(page), size: String(size), sort: 'username,asc' });
+    if (orgId != null) params.set('orgId', String(orgId));
+    return this.http.get<{ content: AdminUser[]; totalElements: number; totalPages: number }>(`${this.url}?${params}`);
+  }
+
+  listarOrgs(): Observable<AdminOrgSummary[]> {
+    return this.http.get<AdminOrgSummary[]>(`${this.url}/orgs`);
+  }
+
+  criar(body: { username: string; email?: string; orgId: number; roles?: string[]; bypassSubscription?: boolean }): Observable<AdminUserCreated> {
+    return this.http.post<AdminUserCreated>(this.url, body);
+  }
+
+  ativar(userId: number): Observable<AdminUser> {
+    return this.http.patch<AdminUser>(`${this.url}/${userId}/ativar`, {});
+  }
+
+  desativar(userId: number): Observable<AdminUser> {
+    return this.http.patch<AdminUser>(`${this.url}/${userId}/desativar`, {});
+  }
+
+  setMaxDispositivos(orgId: number, maxDispositivos: number): Observable<{ id: number; maxDispositivos: number }> {
+    return this.http.patch<{ id: number; maxDispositivos: number }>(`${this.url}/orgs/${orgId}/max-dispositivos`, { maxDispositivos });
+  }
+
+  resetSenha(userId: number): Observable<AdminUserCreated> {
+    return this.http.post<AdminUserCreated>(`${this.url}/${userId}/reset-password`, {});
+  }
+
+  setBypass(userId: number, bypass: boolean): Observable<AdminUser> {
+    return this.http.patch<AdminUser>(`${this.url}/${userId}/bypass`, { bypass });
+  }
+}
+
+export interface PesquisaPrecoResposta {
+  id: number;
+  usuarioId?: number;
+  orgId?: number;
+  orgNome?: string;
+  username: string;
+  valorMin: number;
+  valorMax: number;
+  comentario?: string;
+  criadoEm?: string;
+  atualizadoEm?: string;
+}
+
+export interface PesquisaPrecoStats {
+  totalRespostas: number;
+  mediaValorMin?: number;
+  mediaValorMax?: number;
+  medianaValorMin?: number;
+  medianaValorMax?: number;
+  precoJustoSugerido?: number;
+  analiseTexto?: string;
+  respostas: PesquisaPrecoResposta[];
+}
+
+@Injectable({ providedIn: 'root' })
+export class AdminPesquisaPrecoService {
+  private url = `${environment.apiUrl}/admin/pesquisa-preco`;
+  constructor(private http: HttpClient) {}
+
+  stats(): Observable<PesquisaPrecoStats> {
+    return this.http.get<PesquisaPrecoStats>(`${this.url}/stats`);
   }
 }

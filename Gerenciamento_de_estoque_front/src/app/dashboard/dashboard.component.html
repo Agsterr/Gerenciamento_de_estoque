@@ -107,7 +107,7 @@
     </header>
     <nav class="drawer-links">
       <a
-        *ngFor="let item of secondaryMenu"
+        *ngFor="let item of visibleSecondaryMenu"
         [routerLink]="navLink(item)"
         routerLinkActive="active"
         class="drawer-link"
