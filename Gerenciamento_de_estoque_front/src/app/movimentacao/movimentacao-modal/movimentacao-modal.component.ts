@@ -21,6 +21,11 @@ export interface MovimentacaoModalData {
   tipoMovimentacao?: TipoMovimentacao | null;
   produtoId?: number;
   nomeProduto?: string;
+  /** Oculta o seletor de tipo (ex.: entrada de estoque a partir da lista de produtos). */
+  bloquearTipo?: boolean;
+  tituloCustomizado?: string;
+  /** Impede trocar o produto quando aberto a partir de um item específico. */
+  produtoSomenteLeitura?: boolean;
 }
 
 @Component({
@@ -48,6 +53,8 @@ export class MovimentacaoModalComponent implements OnInit {
   loading = false;
   isEdicao: boolean;
   tituloModal: string;
+  bloquearTipo: boolean;
+  produtoSomenteLeitura: boolean;
   produtos: Produto[] = [];
   consumidores: Consumer[] = [];
   readonly TipoMovimentacao = TipoMovimentacao;
@@ -60,7 +67,10 @@ export class MovimentacaoModalComponent implements OnInit {
     private consumidorService: ConsumidorService
   ) {
     this.isEdicao = data.modo === 'editar';
-    this.tituloModal = this.isEdicao ? 'Editar Movimentação' : 'Nova Movimentação';
+    this.bloquearTipo = data.bloquearTipo ?? false;
+    this.produtoSomenteLeitura = data.produtoSomenteLeitura ?? false;
+    this.tituloModal = data.tituloCustomizado
+      ?? (this.isEdicao ? 'Editar Movimentação' : 'Nova Movimentação');
     const mov = data.movimentacao;
 
     this.movimentacaoForm = this.fb.group({
@@ -96,6 +106,9 @@ export class MovimentacaoModalComponent implements OnInit {
     });
     this.movimentacaoForm.get('tipo')?.valueChanges.subscribe(() => this.atualizarValidacaoConsumidor());
     this.atualizarValidacaoConsumidor();
+    if (this.produtoSomenteLeitura) {
+      this.movimentacaoForm.get('produtoId')?.disable();
+    }
   }
 
   private atualizarValidacaoConsumidor(): void {
@@ -115,7 +128,7 @@ export class MovimentacaoModalComponent implements OnInit {
       return;
     }
     this.loading = true;
-    const formValue = this.movimentacaoForm.value;
+    const formValue = this.movimentacaoForm.getRawValue();
     const produto = this.produtos.find(p => p.id === formValue.produtoId);
     const movimentacao: MovimentacaoProduto = {
       id: this.isEdicao ? this.data.movimentacao!.id : 0,

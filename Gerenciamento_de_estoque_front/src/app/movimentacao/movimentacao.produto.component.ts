@@ -13,6 +13,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MovimentacaoProdutoService } from '../services/movimentacao-produto.service';
 import { MovimentacaoProduto, TipoMovimentacao, PageResponse } from '../models/movimentacao-produto.model';
 import { MovimentacaoModalComponent, MovimentacaoModalData } from './movimentacao-modal/movimentacao-modal.component';
+import { CorrecaoMovimentacaoModalComponent } from './correcao-movimentacao-modal/correcao-movimentacao-modal.component';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Observable } from 'rxjs';
 import { PageHintComponent } from '../shared/page-hint/page-hint.component';
@@ -530,8 +531,11 @@ export class MovimentacaoProdutoComponent implements OnInit {
     // Aguarda o resultado do modal
     dialogRef.afterClosed().subscribe(result => {
       if (result && result.success) {
-        // Registra a movimentação
-        this.movimentacaoService.registrarMovimentacao(result.data).subscribe({
+        const payload = { ...result.data };
+        if (result.observacoes?.trim()) {
+          payload.observacao = result.observacoes.trim();
+        }
+        this.movimentacaoService.registrarMovimentacao(payload).subscribe({
           next: (response) => {
             console.log('Movimentação registrada com sucesso!', response);
             this.buscarMovimentacoes(); // Atualiza a lista
@@ -544,35 +548,34 @@ export class MovimentacaoProdutoComponent implements OnInit {
     });
   }
 
-  editarMovimentacao(mov: MovimentacaoProduto): void {
-    const modalData: MovimentacaoModalData = {
-      modo: 'editar',
-      movimentacao: mov,
-      tipoMovimentacao: mov.tipo,
-      produtoId: mov.produtoId,
-      nomeProduto: mov.nomeProduto
-    };
+  podeCorrigir(mov: MovimentacaoProduto): boolean {
+    return !mov.entregaId && !mov.pedidoVendaId && !mov.movimentacaoOrigemId;
+  }
 
-    const dialogRef = this.dialog.open(MovimentacaoModalComponent, {
-      width: '600px',
+  corrigirMovimentacao(mov: MovimentacaoProduto): void {
+    const dialogRef = this.dialog.open(CorrecaoMovimentacaoModalComponent, {
+      width: '520px',
       maxWidth: '90vw',
-      data: modalData,
+      data: { movimentacao: mov },
       disableClose: false,
-      autoFocus: true
+      autoFocus: true,
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result && result.success) {
-        this.movimentacaoService.editarMovimentacao(mov.id, result.data).subscribe({
-          next: () => {
-            console.log('Movimentação editada com sucesso!');
-            this.buscarMovimentacoes();
-          },
-          error: (err) => {
-            console.error('Erro ao editar movimentação:', err);
-          }
-        });
-      }
+      if (!result?.success) return;
+      this.movimentacaoService.corrigirMovimentacao(mov.id, {
+        quantidadeCorreta: result.quantidadeCorreta,
+        motivo: result.motivo,
+      }).subscribe({
+        next: (resp) => {
+          console.log('Correção registrada:', resp);
+          this.buscarMovimentacoes();
+        },
+        error: (err) => {
+          console.error('Erro ao corrigir movimentação:', err);
+          alert(err.error?.message || err.error?.error || 'Erro ao corrigir movimentação.');
+        },
+      });
     });
   }
 
@@ -614,6 +617,9 @@ export class MovimentacaoProdutoComponent implements OnInit {
   }
 
   getOrigem(mov: MovimentacaoProduto): string {
+    if (mov.movimentacaoOrigemId) {
+      return `Correção da mov. #${mov.movimentacaoOrigemId}`;
+    }
     if (mov.pedidoVendaId) {
       return `Pedido venda #${mov.pedidoVendaId}`;
     }

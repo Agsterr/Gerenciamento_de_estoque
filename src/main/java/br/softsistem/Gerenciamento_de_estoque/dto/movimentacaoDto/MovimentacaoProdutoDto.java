@@ -20,8 +20,9 @@ public class MovimentacaoProdutoDto {
     private String nomeUsuario;
     private Long entregaId;
     private Long pedidoVendaId;
-    // novo campo para relatório
     private String nomeEntregador;
+    private String observacao;
+    private Long movimentacaoOrigemId;
 
     public MovimentacaoProdutoDto() {}
 
@@ -60,6 +61,10 @@ public class MovimentacaoProdutoDto {
         if (movimentacao.getUsuario() != null) {
             this.usuarioId = movimentacao.getUsuario().getId();
             this.nomeUsuario = movimentacao.getUsuario().getUsername();
+        }
+        this.observacao = movimentacao.getObservacao();
+        if (movimentacao.getMovimentacaoOrigem() != null) {
+            this.movimentacaoOrigemId = movimentacao.getMovimentacaoOrigem().getId();
         }
     }
 
@@ -161,4 +166,10 @@ public class MovimentacaoProdutoDto {
 
     public String getNomeEntregador() { return nomeEntregador; }
     public void setNomeEntregador(String nomeEntregador) { this.nomeEntregador = nomeEntregador; }
+
+    public String getObservacao() { return observacao; }
+    public void setObservacao(String observacao) { this.observacao = observacao; }
+
+    public Long getMovimentacaoOrigemId() { return movimentacaoOrigemId; }
+    public void setMovimentacaoOrigemId(Long movimentacaoOrigemId) { this.movimentacaoOrigemId = movimentacaoOrigemId; }
 }

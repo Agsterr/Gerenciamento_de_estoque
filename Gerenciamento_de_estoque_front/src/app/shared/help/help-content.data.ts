@@ -300,7 +300,7 @@ export const PAGE_HINTS: Record<string, { message: string; prerequisites: HelpPr
     prerequisites: [],
   },
   produtos: {
-    message: 'Cadastre o produto (nome, preço, categoria). Estoque inicial é opcional na criação. Depois, repor via Pedidos de Compra ou Movimentações; sair via Entregas ou Movimentações.',
+    message: 'Cadastre o produto (nome, preço, categoria). Estoque inicial é opcional na criação. Para repor depois, use o botão verde de entrada na lista ou o menu Movimentações.',
     prerequisites: [{ label: 'Categorias', route: '/dashboard/categorias' }],
   },
   consumidores: {

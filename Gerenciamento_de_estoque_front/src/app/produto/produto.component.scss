@@ -17,6 +17,21 @@
   white-space: nowrap;
 }
 
+.acoes-produto {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.estoque-atual .botao-entrada-estoque {
+  margin: 8px 0;
+}
+
+.estoque-atual .campo-dica {
+  display: block;
+}
+
 .header-produto {
   display: flex;
   justify-content: space-between;

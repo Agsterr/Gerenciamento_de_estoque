@@ -48,7 +48,14 @@ public class MovimentacaoProduto {
 
     @ManyToOne
     @JoinColumn(name = "consumidor_id")
-    private Consumidor consumidor; // Novo campo opcional
+    private Consumidor consumidor;
+
+    @Column(columnDefinition = "TEXT")
+    private String observacao;
+
+    @ManyToOne
+    @JoinColumn(name = "movimentacao_origem_id")
+    private MovimentacaoProduto movimentacaoOrigem;
 
     public Long getId() {
         return id;
@@ -128,5 +135,21 @@ public class MovimentacaoProduto {
 
     public void setConsumidor(Consumidor consumidor) {
         this.consumidor = consumidor;
+    }
+
+    public String getObservacao() {
+        return observacao;
+    }
+
+    public void setObservacao(String observacao) {
+        this.observacao = observacao;
+    }
+
+    public MovimentacaoProduto getMovimentacaoOrigem() {
+        return movimentacaoOrigem;
+    }
+
+    public void setMovimentacaoOrigem(MovimentacaoProduto movimentacaoOrigem) {
+        this.movimentacaoOrigem = movimentacaoOrigem;
     }
 }

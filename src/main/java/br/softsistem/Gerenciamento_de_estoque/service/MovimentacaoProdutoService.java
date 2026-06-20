@@ -1,8 +1,10 @@
 package br.softsistem.Gerenciamento_de_estoque.service;
 
 import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
+import br.softsistem.Gerenciamento_de_estoque.enumeracao.AcaoAuditoria;
 import br.softsistem.Gerenciamento_de_estoque.enumeracao.TipoMovimentacao;
 import br.softsistem.Gerenciamento_de_estoque.exception.ResourceNotFoundException;
+import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
 import br.softsistem.Gerenciamento_de_estoque.model.MovimentacaoProduto;
 import br.softsistem.Gerenciamento_de_estoque.model.Produto;
 import br.softsistem.Gerenciamento_de_estoque.model.Entrega;
@@ -10,7 +12,10 @@ import br.softsistem.Gerenciamento_de_estoque.repository.MovimentacaoProdutoRepo
 import br.softsistem.Gerenciamento_de_estoque.repository.ProdutoRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.EntregaRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.ConsumidorRepository;
+import br.softsistem.Gerenciamento_de_estoque.repository.UsuarioRepository;
 import br.softsistem.Gerenciamento_de_estoque.model.Consumidor;
+import br.softsistem.Gerenciamento_de_estoque.dto.movimentacaoDto.CorrecaoMovimentacaoRequest;
+import br.softsistem.Gerenciamento_de_estoque.dto.movimentacaoDto.CorrecaoMovimentacaoResultado;
 import br.softsistem.Gerenciamento_de_estoque.dto.movimentacaoDto.MovimentacaoProdutoDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,25 +34,32 @@ public class MovimentacaoProdutoService {
     private final ProdutoRepository produtoRepository;
     private final EntregaRepository entregaRepository;
     private final ConsumidorRepository consumidorRepository;
+    private final UsuarioRepository usuarioRepository;
     private final EstoqueDepositoService estoqueDepositoService;
+    private final AuditoriaService auditoriaService;
 
     public MovimentacaoProdutoService(MovimentacaoProdutoRepository movimentacaoRepository,
                                       ProdutoRepository produtoRepository,
                                       EntregaRepository entregaRepository,
                                       ConsumidorRepository consumidorRepository,
-                                      EstoqueDepositoService estoqueDepositoService) {
+                                      UsuarioRepository usuarioRepository,
+                                      EstoqueDepositoService estoqueDepositoService,
+                                      AuditoriaService auditoriaService) {
         this.movimentacaoRepository = movimentacaoRepository;
         this.produtoRepository = produtoRepository;
         this.entregaRepository = entregaRepository;
         this.consumidorRepository = consumidorRepository;
+        this.usuarioRepository = usuarioRepository;
         this.estoqueDepositoService = estoqueDepositoService;
+        this.auditoriaService = auditoriaService;
     }
 
     @Transactional
     public MovimentacaoProdutoDto registrarMovimentacao(MovimentacaoProdutoDto dto) {
         Long orgId = SecurityUtils.getCurrentOrgId();
-        // Validação: SAIDA precisa de consumidor, entrega ou pedido de venda
+        // Validação: SAIDA precisa de consumidor, entrega ou pedido de venda (exceto correção de estoque)
         if (dto.getTipo() == TipoMovimentacao.SAIDA
+                && dto.getMovimentacaoOrigemId() == null
                 && dto.getConsumidorId() == null
                 && dto.getEntregaId() == null
                 && dto.getPedidoVendaId() == null) {
@@ -61,6 +73,15 @@ public class MovimentacaoProdutoService {
         mov.setTipo(dto.getTipo());
         mov.setDataHora(LocalDateTime.now());
         mov.setOrg(produto.getOrg());
+        atribuirUsuarioAtual(mov, orgId);
+        if (dto.getObservacao() != null && !dto.getObservacao().isBlank()) {
+            mov.setObservacao(dto.getObservacao().trim());
+        }
+        if (dto.getMovimentacaoOrigemId() != null) {
+            movimentacaoRepository.findById(dto.getMovimentacaoOrigemId())
+                    .filter(m -> m.getOrg().getId().equals(orgId))
+                    .ifPresent(mov::setMovimentacaoOrigem);
+        }
         if (dto.getEntregaId() != null) {
             entregaRepository.findById(dto.getEntregaId())
                     .filter(e -> e.getOrg().getId().equals(orgId))
@@ -85,7 +106,118 @@ public class MovimentacaoProdutoService {
 
         produtoRepository.save(produto);
         MovimentacaoProduto salvo = movimentacaoRepository.save(mov);
+        registrarAuditoriaMovimentacao(salvo, produto);
         return new MovimentacaoProdutoDto(salvo);
+    }
+
+    private void atribuirUsuarioAtual(MovimentacaoProduto mov, Long orgId) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) {
+            return;
+        }
+        usuarioRepository.findByIdAndOrgId(userId, orgId).ifPresent(mov::setUsuario);
+    }
+
+    private void registrarAuditoriaMovimentacao(MovimentacaoProduto salvo, Produto produto) {
+        String tipoLabel = salvo.getTipo() == TipoMovimentacao.ENTRADA ? "Entrada" : "Saída";
+        String detalhes = tipoLabel + " de " + salvo.getQuantidade() + " un. do produto " + produto.getNome();
+        if (salvo.getObservacao() != null && !salvo.getObservacao().isBlank()) {
+            detalhes += ". Obs: " + salvo.getObservacao();
+        }
+        auditoriaService.registrar(
+                "MovimentacaoProduto",
+                salvo.getId(),
+                AcaoAuditoria.CREATE,
+                detalhes
+        );
+    }
+
+    @Transactional
+    public CorrecaoMovimentacaoResultado corrigirMovimentacao(Long movimentacaoId, CorrecaoMovimentacaoRequest request) {
+        Long orgId = SecurityUtils.getCurrentOrgId();
+        String motivo = request.motivo().trim();
+
+        MovimentacaoProduto original = movimentacaoRepository.findById(movimentacaoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Movimentação não encontrada"));
+        if (!original.getOrg().getId().equals(orgId)) {
+            throw new ResourceNotFoundException("Movimentação não pertence à organização");
+        }
+        if (original.getMovimentacaoOrigem() != null) {
+            throw new IllegalArgumentException("Não é possível corrigir uma movimentação que já é uma correção.");
+        }
+        if (original.getEntrega() != null || original.getPedidoVenda() != null) {
+            throw new IllegalArgumentException("Correção disponível apenas para movimentações manuais (sem entrega ou pedido de venda).");
+        }
+
+        int quantidadeOriginal = original.getQuantidade();
+        int quantidadeCorreta = request.quantidadeCorreta();
+        if (quantidadeCorreta == quantidadeOriginal) {
+            throw new IllegalArgumentException("A quantidade correta é igual à registrada; nenhuma correção necessária.");
+        }
+
+        int ajuste = original.getTipo() == TipoMovimentacao.ENTRADA
+                ? quantidadeCorreta - quantidadeOriginal
+                : quantidadeOriginal - quantidadeCorreta;
+
+        TipoMovimentacao tipoCorrecao = ajuste > 0 ? TipoMovimentacao.ENTRADA : TipoMovimentacao.SAIDA;
+        int quantidadeCorrecao = Math.abs(ajuste);
+
+        Produto produto = original.getProduto();
+        String observacaoCorrecao = String.format(
+                "Correção da mov. #%d (%s %d un.). Quantidade correta: %d. Motivo: %s",
+                original.getId(),
+                original.getTipo() == TipoMovimentacao.ENTRADA ? "ENTRADA" : "SAIDA",
+                quantidadeOriginal,
+                quantidadeCorreta,
+                motivo
+        );
+
+        MovimentacaoProduto correcao = new MovimentacaoProduto();
+        correcao.setProduto(produto);
+        correcao.setQuantidade(quantidadeCorrecao);
+        correcao.setTipo(tipoCorrecao);
+        correcao.setDataHora(LocalDateTime.now());
+        correcao.setOrg(produto.getOrg());
+        correcao.setObservacao(observacaoCorrecao);
+        correcao.setMovimentacaoOrigem(original);
+        atribuirUsuarioAtual(correcao, orgId);
+
+        if (tipoCorrecao == TipoMovimentacao.ENTRADA) {
+            produto.setQuantidade(produto.getQuantidade() + quantidadeCorrecao);
+            estoqueDepositoService.ajustarNoDepositoPadrao(produto, produto.getOrg(), quantidadeCorrecao);
+        } else {
+            if (produto.getQuantidade() < quantidadeCorrecao) {
+                throw new IllegalArgumentException("Estoque insuficiente para aplicar a correção (saída de " + quantidadeCorrecao + " un.).");
+            }
+            produto.setQuantidade(produto.getQuantidade() - quantidadeCorrecao);
+            estoqueDepositoService.ajustarNoDepositoPadrao(produto, produto.getOrg(), -quantidadeCorrecao);
+        }
+
+        produtoRepository.save(produto);
+        MovimentacaoProduto correcaoSalva = movimentacaoRepository.save(correcao);
+
+        String tipoCorrecaoLabel = tipoCorrecao == TipoMovimentacao.ENTRADA ? "Entrada" : "Saída";
+        auditoriaService.registrar(
+                "MovimentacaoProduto",
+                original.getId(),
+                AcaoAuditoria.CORRECAO,
+                String.format(
+                        "Correção da mov. #%d (%s %d un. → %d un.) por %s de %d un. Motivo: %s",
+                        original.getId(),
+                        original.getTipo() == TipoMovimentacao.ENTRADA ? "ENTRADA" : "SAIDA",
+                        quantidadeOriginal,
+                        quantidadeCorreta,
+                        tipoCorrecaoLabel,
+                        quantidadeCorrecao,
+                        motivo
+                )
+        );
+        registrarAuditoriaMovimentacao(correcaoSalva, produto);
+
+        return new CorrecaoMovimentacaoResultado(
+                new MovimentacaoProdutoDto(original),
+                new MovimentacaoProdutoDto(correcaoSalva)
+        );
     }
 
     @Transactional

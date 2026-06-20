@@ -207,7 +207,9 @@
                 <th><i class="fas fa-sort-numeric-up"></i> Quantidade</th>
                 <th><i class="fas fa-calendar-alt"></i> Data</th>
                 <th><i class="fas fa-link"></i> Origem</th>
+                <th><i class="fas fa-user"></i> Registrado por</th>
                 <th><i class="fas fa-user-tie"></i> Consumidor</th>
+                <th><i class="fas fa-cog"></i> Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -224,6 +226,18 @@
                 <td>{{ movimentacao.dataHora | date:'dd/MM/yyyy HH:mm' }}</td>
                 <td><span class="origem-badge">{{ getOrigem(movimentacao) }}</span></td>
                 <td>
+                  <span *ngIf="movimentacao.nomeUsuario; else semUsuario" class="user-info">
+                    <i class="fas fa-user"></i>
+                    {{ movimentacao.nomeUsuario }}
+                  </span>
+                  <ng-template #semUsuario>
+                    <span class="no-user">
+                      <i class="fas fa-user-slash"></i>
+                      N/A
+                    </span>
+                  </ng-template>
+                </td>
+                <td>
                   <span *ngIf="movimentacao.nomeConsumidor; else semConsumidor" class="consumer-info">
                     <i class="fas fa-user-tie"></i>
                     {{ movimentacao.nomeConsumidor }}
@@ -234,6 +248,19 @@
                       N/A
                     </span>
                   </ng-template>
+                </td>
+                <td>
+                  <button *ngIf="podeCorrigir(movimentacao)"
+                          mat-icon-button
+                          color="warn"
+                          (click)="corrigirMovimentacao(movimentacao)"
+                          matTooltip="Corrigir quantidade (gera movimento compensatório)"
+                          aria-label="Corrigir movimentação">
+                    <mat-icon>build</mat-icon>
+                  </button>
+                  <span *ngIf="movimentacao.observacao" class="obs-hint" [matTooltip]="movimentacao.observacao">
+                    <mat-icon>info</mat-icon>
+                  </span>
                 </td>
               </tr>
             </tbody>

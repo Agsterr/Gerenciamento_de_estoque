@@ -12,7 +12,7 @@
   <form [formGroup]="movimentacaoForm" (ngSubmit)="onSubmit()">
     <div mat-dialog-content class="modal-content">
 
-      <div class="form-row">
+      <div class="form-row" *ngIf="!bloquearTipo">
         <mat-form-field appearance="fill" class="full-width">
           <mat-label>Tipo de Movimentação</mat-label>
           <mat-select formControlName="tipo">
@@ -81,7 +81,7 @@
     <div mat-dialog-actions class="modal-actions">
       <button mat-button type="button" (click)="onCancel()" [disabled]="loading">Cancelar</button>
       <button mat-raised-button color="primary" type="submit" [disabled]="movimentacaoForm.invalid || loading">
-        {{ isEdicao ? 'Atualizar' : 'Registrar' }}
+        {{ isEdicao ? 'Atualizar' : (bloquearTipo ? 'Confirmar entrada' : 'Registrar') }}
       </button>
     </div>
   </form>

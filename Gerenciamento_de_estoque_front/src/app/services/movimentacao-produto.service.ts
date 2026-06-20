@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { MovimentacaoProduto, PageResponse, TipoMovimentacao } from '../models/movimentacao-produto.model';
+import { MovimentacaoProduto, PageResponse, TipoMovimentacao, CorrecaoMovimentacaoRequest, CorrecaoMovimentacaoResultado } from '../models/movimentacao-produto.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -28,6 +28,12 @@ export class MovimentacaoProdutoService {
   editarMovimentacao(id: number, dto: MovimentacaoProduto): Observable<MovimentacaoProduto> {
     const headers = this.getAuthHeaders();
     return this.http.put<MovimentacaoProduto>(`${this.apiUrl}/${id}`, dto, { headers });
+  }
+
+  // Corrigir movimentação manual (movimento compensatório + auditoria)
+  corrigirMovimentacao(id: number, request: CorrecaoMovimentacaoRequest): Observable<CorrecaoMovimentacaoResultado> {
+    const headers = this.getAuthHeaders();
+    return this.http.post<CorrecaoMovimentacaoResultado>(`${this.apiUrl}/${id}/corrigir`, request, { headers });
   }
 
   // Listar todas as movimentações de um produto específico (sem paginação)

@@ -61,7 +61,7 @@
         <col style="width: 10%">
         <col style="width: 10%">
         <col style="width: 10%">
-        <col style="width: 120px">
+        <col style="width: 160px">
       </colgroup>
       <thead>
         <tr>
@@ -91,7 +91,10 @@
           <td data-label="SKU">{{ produto.sku || '—' }}</td>
           <td data-label="Preço">{{ produto.preco | currency:'BRL' }}</td>
           <td data-label="Custo Médio">{{ produto.custoMedio | currency:'BRL' }}</td>
-          <td data-label="Ações">
+          <td data-label="Ações" class="acoes-produto">
+            <button (click)="entradaEstoque(produto)" class="btn btn-success btn-sm" title="Entrada de estoque">
+              <i class="fas fa-arrow-down"></i>
+            </button>
             <button (click)="editProduto(produto)" class="btn btn-primary btn-sm" title="Editar">
               <i class="fas fa-edit"></i>
             </button>
@@ -191,7 +194,10 @@
         <div class="form-group estoque-atual" *ngIf="editingProduto">
           <label><i class="fas fa-boxes"></i> Estoque atual</label>
           <p class="estoque-readonly">{{ produtoEditando?.quantidade ?? 0 }} un.</p>
-          <small class="campo-dica">Altere o estoque em Movimentações, Pedidos de Compra ou Entregas — não pelo cadastro do produto.</small>
+          <button type="button" class="btn btn-success btn-sm botao-entrada-estoque" (click)="entradaEstoque(produtoEditando!)">
+            <i class="fas fa-arrow-down"></i> Entrada de estoque
+          </button>
+          <small class="campo-dica">Para repor quantidade, use o botão acima ou o menu <strong>Movimentações</strong>.</small>
         </div>
       </div>
       <div class="form-row">

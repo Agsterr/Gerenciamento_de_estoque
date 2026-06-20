@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { ProdutoService } from '../services/produto.service';
 import { CategoriaService } from '../services/categoria.service';
+import { MovimentacaoProdutoService } from '../services/movimentacao-produto.service';
 import { Produto } from '../models/produto.model';
 import { Categoria } from '../models/categoria.model';
+import { TipoMovimentacao } from '../models/movimentacao-produto.model';
 import {
   FormBuilder,
   FormGroup,
@@ -11,8 +13,10 @@ import {
   FormsModule,
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
 import { PageHintComponent } from '../shared/page-hint/page-hint.component';
 import { PAGE_HINTS } from '../shared/help/help-content.data';
+import { MovimentacaoModalComponent, MovimentacaoModalData } from '../movimentacao/movimentacao-modal/movimentacao-modal.component';
 
 @Component({
   selector: 'app-produto',
@@ -47,6 +51,8 @@ export class ProdutoComponent implements OnInit {
   constructor(
     private produtoService: ProdutoService,
     private categoriaService: CategoriaService,
+    private movimentacaoService: MovimentacaoProdutoService,
+    private dialog: MatDialog,
     private fb: FormBuilder
   ) {
     this.produtoForm = this.fb.group({
@@ -321,5 +327,46 @@ export class ProdutoComponent implements OnInit {
     if (this.currentPage + 1 < this.totalPages) {
       this.fetchProdutos(this.currentPage + 1);
     }
+  }
+
+  entradaEstoque(produto: Produto): void {
+    const modalData: MovimentacaoModalData = {
+      modo: 'criar',
+      tipoMovimentacao: TipoMovimentacao.ENTRADA,
+      produtoId: produto.id,
+      nomeProduto: produto.nome,
+      bloquearTipo: true,
+      tituloCustomizado: 'Entrada de Estoque',
+      produtoSomenteLeitura: true,
+    };
+
+    const dialogRef = this.dialog.open(MovimentacaoModalComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      data: modalData,
+      disableClose: false,
+      autoFocus: true,
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (!result?.success) return;
+
+      this.movimentacaoService.registrarMovimentacao({
+        ...result.data,
+        observacao: result.observacoes?.trim() || undefined,
+      }).subscribe({
+        next: () => {
+          this.mensagem = `Entrada registrada: +${result.data.quantidade} un. em "${produto.nome}".`;
+          this.mensagemErro = '';
+          if (this.produtoEditando?.id === produto.id) {
+            this.produtoEditando = { ...this.produtoEditando, quantidade: (produto.quantidade ?? 0) + result.data.quantidade };
+          }
+          this.fetchProdutos(this.currentPage);
+        },
+        error: (err) => {
+          this.mensagemErro = err.error?.message || err.error?.error || 'Erro ao registrar entrada de estoque.';
+        },
+      });
+    });
   }
 }

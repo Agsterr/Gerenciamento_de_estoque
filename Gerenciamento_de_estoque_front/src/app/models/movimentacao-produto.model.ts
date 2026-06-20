@@ -12,6 +12,8 @@ export interface MovimentacaoProduto {
   consumidorId?: number;
   entregaId?: number;
   pedidoVendaId?: number;
+  observacao?: string;
+  movimentacaoOrigemId?: number;
 }
 
 export interface PageResponse<T> {
@@ -36,6 +38,16 @@ export interface PageResponse<T> {
     sorted: boolean;
     unsorted: boolean;
   };
+}
+
+export interface CorrecaoMovimentacaoRequest {
+  quantidadeCorreta: number;
+  motivo: string;
+}
+
+export interface CorrecaoMovimentacaoResultado {
+  movimentacaoOriginal: MovimentacaoProduto;
+  movimentacaoCorrecao: MovimentacaoProduto;
 }
 
 export enum TipoMovimentacao {

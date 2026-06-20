@@ -343,7 +343,8 @@ p, span, div, td, th {
 }
 
 /* Estilos para informações de consumidor */
-.consumer-info {
+.consumer-info,
+.user-info {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -361,7 +362,8 @@ p, span, div, td, th {
   }
 }
 
-.no-consumer {
+.no-consumer,
+.no-user {
   display: flex;
   align-items: center;
   justify-content: center;

@@ -1,5 +1,7 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
+import br.softsistem.Gerenciamento_de_estoque.dto.movimentacaoDto.CorrecaoMovimentacaoRequest;
+import br.softsistem.Gerenciamento_de_estoque.dto.movimentacaoDto.CorrecaoMovimentacaoResultado;
 import br.softsistem.Gerenciamento_de_estoque.dto.movimentacaoDto.MovimentacaoProdutoDto;
 import br.softsistem.Gerenciamento_de_estoque.enumeracao.TipoMovimentacao;
 import br.softsistem.Gerenciamento_de_estoque.service.MovimentacaoProdutoService;
@@ -192,6 +194,17 @@ public class MovimentacaoProdutoController {
     ) {
         Page<MovimentacaoProdutoDto> dtoPage = service.buscarPorNomeConsumidor(nomeConsumidor, pageable);
         return ResponseEntity.ok(dtoPage);
+    }
+
+    /**
+     * Corrige uma movimentação manual criando movimento compensatório (sem alterar o original).
+     * Exemplo: POST /movimentacoes/1/corrigir { "quantidadeCorreta": 10, "motivo": "Digitei errado" }
+     */
+    @PostMapping("/{id}/corrigir")
+    public ResponseEntity<CorrecaoMovimentacaoResultado> corrigir(
+            @PathVariable Long id,
+            @RequestBody @Valid CorrecaoMovimentacaoRequest request) {
+        return ResponseEntity.ok(service.corrigirMovimentacao(id, request));
     }
 
     /**
