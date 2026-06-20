@@ -58,3 +58,16 @@
   background: #ffebee;
   color: #c62828;
 }
+
+@media (max-width: 768px) {
+  .card-form {
+    max-width: 100%;
+    padding: 1rem;
+  }
+
+  .btn.btn-primary {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+}

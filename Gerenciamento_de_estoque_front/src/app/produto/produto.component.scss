@@ -625,6 +625,27 @@ input.invalido, select.invalido {
     color: #2563eb;
     content: attr(data-label);
   }
+
+  .acoes-produto {
+    justify-content: flex-end;
+    gap: 8px;
+
+    .btn {
+      min-width: 44px;
+      min-height: 44px;
+      justify-content: center;
+    }
+  }
+
+  .estoque-atual .botao-entrada-estoque {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .barcode-search .btn {
+    min-height: 44px;
+  }
 }
 @media (max-width: 700px) {
   .card-form {

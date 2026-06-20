@@ -301,6 +301,60 @@ pre {
     width: 100%;
     justify-content: center;
     margin: 4px 0;
+    min-height: 44px;
+  }
+
+  .stats-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .chip {
+    min-height: 44px;
+    padding: 10px 14px;
+  }
+
+  .btn-sm-inline {
+    min-height: 44px;
+  }
+
+  .sub-tabela-wrap .sub-tabela {
+    min-width: 0;
+  }
+
+  .sub-tabela-wrap .sub-tabela thead {
+    display: none;
+  }
+
+  .sub-tabela-wrap .sub-tabela tbody tr {
+    display: block;
+    margin-bottom: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 10px;
+    background: white;
+  }
+
+  .sub-tabela-wrap .sub-tabela td {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 0;
+    border: none;
+    max-width: none;
+  }
+
+  .sub-tabela-wrap .sub-tabela td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #64748b;
+    flex-shrink: 0;
+    min-width: 80px;
+  }
+
+  .sub-tabela-wrap .sub-tabela td:not([data-label])::before {
+    content: none;
   }
 }
 

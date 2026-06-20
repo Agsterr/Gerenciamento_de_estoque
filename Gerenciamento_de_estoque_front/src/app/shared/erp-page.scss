@@ -367,10 +367,84 @@ $danger: #ef4444;
     overflow-x: auto;
     flex-wrap: nowrap;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    margin-left: -4px;
+    margin-right: -4px;
+    padding-bottom: 2px;
   }
 
   .tab-btn {
     flex-shrink: 0;
     white-space: nowrap;
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+
+  .table-scroll-wrapper .data-table {
+    min-width: 0;
+  }
+
+  .table-scroll-wrapper .data-table thead {
+    display: none;
+  }
+
+  .table-scroll-wrapper .data-table tbody tr {
+    display: block;
+    margin-bottom: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    background: white;
+  }
+
+  .table-scroll-wrapper .data-table tbody tr:nth-child(even),
+  .table-scroll-wrapper .data-table tbody tr:hover {
+    background: white;
+  }
+
+  .table-scroll-wrapper .data-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+    border: none;
+    max-width: none;
+    white-space: normal;
+  }
+
+  .table-scroll-wrapper .data-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #64748b;
+    flex-shrink: 0;
+    min-width: 90px;
+  }
+
+  .table-scroll-wrapper .data-table td:not([data-label])::before {
+    content: none;
+  }
+
+  .table-scroll-wrapper .data-table td[colspan] {
+    display: block;
+    padding: 0;
+  }
+
+  .table-scroll-wrapper .data-table .acoes-tabela {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+
+    .btn,
+    .btn-sm {
+      min-height: 44px;
+      min-width: 44px;
+      justify-content: center;
+    }
+  }
+
+  .btn,
+  .botao-listar,
+  .botao-adicionar {
+    min-height: 44px;
   }
 }

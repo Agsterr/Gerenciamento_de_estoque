@@ -23,3 +23,21 @@
 .flex-2 { flex: 2; }
 .add-item-btn { margin-bottom: 16px; }
 .checkbox-row { margin: 12px 0; }
+
+@media (max-width: 768px) {
+  .item-row select {
+    font-size: 0.9rem;
+  }
+
+  .add-item-btn {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .item-row .btn-danger {
+    min-width: 44px;
+    min-height: 44px;
+    align-self: flex-end;
+  }
+}

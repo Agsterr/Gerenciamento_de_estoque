@@ -32,12 +32,30 @@
     color: #166534;
     font-size: 0.9rem;
     cursor: pointer;
-    padding: 0.25rem 0.5rem;
+    padding: 0.5rem 0.75rem;
     border-radius: 4px;
     font-family: inherit;
+    min-height: 44px;
 
     &:hover {
       background: rgba(22, 101, 52, 0.08);
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .pesquisa-preco-banner {
+    &__content {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    &__cta {
+      margin-left: 0;
+      white-space: normal;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
     }
   }
 }

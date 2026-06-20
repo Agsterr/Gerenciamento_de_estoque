@@ -420,6 +420,71 @@ mat-paginator {
   .filters-panel, .results-panel {
     padding: 16px;
   }
+
+  .table-wrapper {
+    overflow-x: visible;
+  }
+
+  .table {
+    table-layout: auto;
+
+    thead {
+      display: none;
+    }
+
+    tbody tr {
+      display: block;
+      margin-bottom: 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 8px 12px;
+      background: white;
+    }
+
+    tbody tr td {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 8px 0;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: unset;
+      text-align: right !important;
+      border: none;
+    }
+
+    tbody tr td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: #64748b;
+      flex-shrink: 0;
+      min-width: 100px;
+      text-align: left;
+    }
+
+    tbody tr td:not([data-label])::before {
+      content: none;
+    }
+
+    .user-info,
+    .no-user,
+    .consumer-info,
+    .no-consumer {
+      justify-content: flex-end;
+    }
+
+    .acoes-movimentacao {
+      justify-content: flex-end;
+      align-items: center;
+    }
+  }
+
+  .btn-corrigir {
+    width: 44px !important;
+    height: 44px !important;
+    padding: 0 !important;
+  }
   
   .table {
     font-size: 0.9rem;

@@ -261,6 +261,16 @@
   }
 
   .chip {
-    min-height: 36px;
+    min-height: 44px;
+    padding: 10px 14px;
+  }
+
+  .acoes-periodo-login .btn-sm {
+    min-height: 44px;
+  }
+
+  .paginacao-botoes .btn-sm {
+    min-height: 44px;
+    min-width: 44px;
   }
 }

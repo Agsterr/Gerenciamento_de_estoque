@@ -49,7 +49,8 @@
           <button class="botao-listar" (click)="carregarWebhooks()"><i class="fas fa-sync"></i> Atualizar</button>
         </div>
 
-        <table class="data-table" *ngIf="webhooks.length > 0">
+        <div class="table-scroll-wrapper" *ngIf="webhooks.length > 0">
+        <table class="data-table">
           <thead>
             <tr>
               <th>Event ID</th>
@@ -75,6 +76,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
         <p *ngIf="webhooks.length === 0 && !loading">Nenhum evento com falha encontrado.</p>
       </div>
 
@@ -89,7 +91,8 @@
             <span *ngIf="cacheStats.totalCaches != null"> · <strong>Total:</strong> {{ cacheStats.totalCaches }}</span>
           </p>
           <p *ngIf="cacheStats.message" class="cache-hint">{{ cacheStats.message }}</p>
-          <table class="tabela-admin" *ngIf="cacheNomes.length">
+          <div class="table-scroll-wrapper" *ngIf="cacheNomes.length">
+          <table class="data-table tabela-admin">
             <thead>
               <tr>
                 <th>Nome</th>
@@ -98,11 +101,12 @@
             </thead>
             <tbody>
               <tr *ngFor="let nome of cacheNomes">
-                <td><code>{{ nome }}</code></td>
-                <td>{{ cacheInfo?.[nome]?.nativeCache || '—' }}</td>
+                <td data-label="Nome"><code>{{ nome }}</code></td>
+                <td data-label="Implementação">{{ cacheInfo?.[nome]?.nativeCache || '—' }}</td>
               </tr>
             </tbody>
           </table>
+          </div>
           <p *ngIf="!cacheNomes.length && !cacheStats.message">Nenhum cache registrado.</p>
         </div>
 
@@ -319,7 +323,8 @@
           <button class="botao-listar" (click)="carregarAssinaturas()"><i class="fas fa-sync"></i> Atualizar</button>
         </div>
 
-        <table class="data-table" *ngIf="orgsAssinatura.length > 0">
+        <div class="table-scroll-wrapper" *ngIf="orgsAssinatura.length > 0">
+        <table class="data-table">
           <thead>
             <tr>
               <th></th>
@@ -334,7 +339,7 @@
           <tbody>
             <ng-container *ngFor="let org of orgsAssinatura">
               <tr>
-                <td>
+                <td data-label="">
                   <button class="btn btn-sm" (click)="toggleOrg(org.orgId)" title="Expandir">
                     <i class="fas" [class.fa-chevron-down]="orgExpandidaId === org.orgId" [class.fa-chevron-right]="orgExpandidaId !== org.orgId"></i>
                   </button>
@@ -403,6 +408,7 @@
             </ng-container>
           </tbody>
         </table>
+        </div>
         <p *ngIf="orgsAssinatura.length === 0 && !loading">Nenhuma organização encontrada.</p>
       </div>
 
@@ -445,7 +451,8 @@
 
         <div class="sub-card">
           <h4><i class="fas fa-mobile-alt"></i> Limite de dispositivos por organização</h4>
-          <table class="data-table" *ngIf="adminOrgs.length">
+          <div class="table-scroll-wrapper" *ngIf="adminOrgs.length">
+          <table class="data-table">
             <thead>
               <tr>
                 <th>Organização</th>
@@ -457,22 +464,24 @@
             </thead>
             <tbody>
               <tr *ngFor="let o of adminOrgs">
-                <td>{{ o.orgNome }} <span *ngIf="o.ephemeral" class="badge-demo">demo</span></td>
-                <td>{{ o.totalUsuarios }}</td>
-                <td>{{ o.dispositivosAprovados }}</td>
-                <td>
+                <td data-label="Organização">{{ o.orgNome }} <span *ngIf="o.ephemeral" class="badge-demo">demo</span></td>
+                <td data-label="Usuários">{{ o.totalUsuarios }}</td>
+                <td data-label="Dispositivos aprovados">{{ o.dispositivosAprovados }}</td>
+                <td data-label="Máx. por conta">
                   <input type="number" min="0" [(ngModel)]="orgLimites[o.orgId]" class="input-limite" />
                   <small *ngIf="orgLimites[o.orgId] === 0">0 = ilimitado</small>
                 </td>
-                <td>
+                <td data-label="Ação" class="acoes-tabela">
                   <button class="btn btn-sm btn-info" (click)="salvarLimiteDispositivos(o)">Salvar</button>
                 </td>
               </tr>
             </tbody>
           </table>
+          </div>
         </div>
 
-        <table class="data-table" *ngIf="adminUsers.length">
+        <div class="table-scroll-wrapper" *ngIf="adminUsers.length">
+        <table class="data-table">
           <thead>
             <tr>
               <th>Usuário</th>
@@ -486,18 +495,18 @@
           </thead>
           <tbody>
             <tr *ngFor="let u of adminUsers">
-              <td>{{ u.username }}</td>
-              <td>{{ u.email || '—' }}</td>
-              <td>{{ u.orgNome }}</td>
-              <td>{{ u.roles?.join(', ') }}</td>
-              <td>
+              <td data-label="Usuário">{{ u.username }}</td>
+              <td data-label="E-mail">{{ u.email || '—' }}</td>
+              <td data-label="Organização">{{ u.orgNome }}</td>
+              <td data-label="Roles">{{ u.roles?.join(', ') }}</td>
+              <td data-label="Isento">
                 <button class="btn btn-sm" [class.btn-success]="u.bypassSubscription" [class.btn-secondary]="!u.bypassSubscription"
                   (click)="toggleBypassUsuario(u)" [disabled]="u.roles?.includes('ROLE_SUPER_ADMIN')">
                   {{ u.bypassSubscription ? 'Sim' : 'Não' }}
                 </button>
               </td>
-              <td>{{ u.ativo ? 'Ativo' : 'Inativo' }}</td>
-              <td>
+              <td data-label="Status">{{ u.ativo ? 'Ativo' : 'Inativo' }}</td>
+              <td data-label="Ações" class="acoes-tabela">
                 <button class="btn btn-sm" [class.btn-warning]="u.ativo" [class.btn-success]="!u.ativo"
                   (click)="toggleUsuarioAtivo(u)" [disabled]="u.roles?.includes('ROLE_SUPER_ADMIN')">
                   {{ u.ativo ? 'Desativar' : 'Ativar' }}
@@ -509,6 +518,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
         <button class="botao-listar" (click)="carregarAdminUsuarios()" style="margin-top: 12px;">
           <i class="fas fa-sync"></i> Atualizar
         </button>
@@ -531,7 +541,8 @@
           </div>
         </div>
 
-        <table class="data-table" *ngIf="pesquisaStats?.respostas?.length">
+        <div class="table-scroll-wrapper" *ngIf="pesquisaStats?.respostas?.length">
+        <table class="data-table">
           <thead>
             <tr>
               <th>Usuário</th>
@@ -543,14 +554,15 @@
           </thead>
           <tbody>
             <tr *ngFor="let r of pesquisaStats!.respostas">
-              <td>{{ r.username }}</td>
-              <td>{{ r.orgNome || '—' }}</td>
-              <td>{{ r.valorMin }} – {{ r.valorMax }}</td>
-              <td>{{ r.comentario || '—' }}</td>
-              <td>{{ r.criadoEm | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td data-label="Usuário">{{ r.username }}</td>
+              <td data-label="Organização">{{ r.orgNome || '—' }}</td>
+              <td data-label="Faixa (R$/mês)">{{ r.valorMin }} – {{ r.valorMax }}</td>
+              <td data-label="Comentário">{{ r.comentario || '—' }}</td>
+              <td data-label="Data">{{ r.criadoEm | date:'dd/MM/yyyy HH:mm' }}</td>
             </tr>
           </tbody>
         </table>
+        </div>
         <p *ngIf="pesquisaStats && pesquisaStats.totalRespostas === 0 && !loading">Nenhuma resposta ainda.</p>
       </div>
     </div>

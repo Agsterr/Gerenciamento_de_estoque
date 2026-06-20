@@ -214,18 +214,18 @@
             </thead>
             <tbody>
               <tr *ngFor="let movimentacao of movimentacoes; let i = index" [ngClass]="{'entrada': movimentacao.tipo === TIPO_MOVIMENTACAO_ENTRADA, 'saida': movimentacao.tipo === TIPO_MOVIMENTACAO_SAIDA}">
-                <td>{{ movimentacao.id }}</td>
-                <td>{{ movimentacao.nomeProduto }}</td>
-                <td>
+                <td data-label="ID">{{ movimentacao.id }}</td>
+                <td data-label="Produto">{{ movimentacao.nomeProduto }}</td>
+                <td data-label="Tipo">
                   <span class="badge" [ngClass]="{'badge-entrada': movimentacao.tipo === TIPO_MOVIMENTACAO_ENTRADA, 'badge-saida': movimentacao.tipo === TIPO_MOVIMENTACAO_SAIDA}">
                     <i class="fas" [ngClass]="{'fa-arrow-down': movimentacao.tipo === TIPO_MOVIMENTACAO_ENTRADA, 'fa-arrow-up': movimentacao.tipo === TIPO_MOVIMENTACAO_SAIDA}"></i>
                     {{ movimentacao.tipo === TIPO_MOVIMENTACAO_ENTRADA ? 'Entrada' : 'Saída' }}
                   </span>
                 </td>
-                <td>{{ movimentacao.quantidade }}</td>
-                <td>{{ movimentacao.dataHora | date:'dd/MM/yyyy HH:mm' }}</td>
-                <td><span class="origem-badge">{{ getOrigem(movimentacao) }}</span></td>
-                <td>
+                <td data-label="Quantidade">{{ movimentacao.quantidade }}</td>
+                <td data-label="Data">{{ movimentacao.dataHora | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td data-label="Origem"><span class="origem-badge">{{ getOrigem(movimentacao) }}</span></td>
+                <td data-label="Registrado por">
                   <span *ngIf="movimentacao.nomeUsuario; else semUsuario" class="user-info">
                     <i class="fas fa-user"></i>
                     {{ movimentacao.nomeUsuario }}
@@ -237,7 +237,7 @@
                     </span>
                   </ng-template>
                 </td>
-                <td>
+                <td data-label="Consumidor">
                   <span *ngIf="movimentacao.nomeConsumidor; else semConsumidor" class="consumer-info">
                     <i class="fas fa-user-tie"></i>
                     {{ movimentacao.nomeConsumidor }}
@@ -249,10 +249,11 @@
                     </span>
                   </ng-template>
                 </td>
-                <td>
+                <td data-label="Ações" class="acoes-movimentacao">
                   <button *ngIf="podeCorrigir(movimentacao)"
                           mat-icon-button
                           color="warn"
+                          class="btn-corrigir"
                           (click)="corrigirMovimentacao(movimentacao)"
                           matTooltip="Corrigir quantidade (gera movimento compensatório)"
                           aria-label="Corrigir movimentação">

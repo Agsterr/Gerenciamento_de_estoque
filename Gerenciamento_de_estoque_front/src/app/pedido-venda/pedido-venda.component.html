@@ -65,17 +65,17 @@
 
         <tr *ngFor="let p of pedidos">
 
-          <td>{{ p.numero }}</td>
+          <td data-label="Número">{{ p.numero }}</td>
 
-          <td><span class="badge" [class.interno]="isPedidoInterno(p)">{{ isPedidoInterno(p) ? 'Interno' : 'Venda' }}</span></td>
+          <td data-label="Tipo"><span class="badge" [class.interno]="isPedidoInterno(p)">{{ isPedidoInterno(p) ? 'Interno' : 'Venda' }}</span></td>
 
-          <td>{{ destinatarioLabel(p) }}</td>
+          <td data-label="Cliente / Funcionário">{{ destinatarioLabel(p) }}</td>
 
-          <td>{{ p.vendedorNome || p.vendedorId }}</td>
+          <td data-label="Registrado por">{{ p.vendedorNome || p.vendedorId }}</td>
 
-          <td>{{ p.dataHora | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td data-label="Data/Hora">{{ p.dataHora | date:'dd/MM/yyyy HH:mm' }}</td>
 
-          <td>
+          <td data-label="Pagamento">
 
             <ng-container *ngIf="!isPedidoInterno(p)">
 
@@ -87,11 +87,11 @@
 
           </td>
 
-          <td><span class="badge" [ngClass]="statusClass(p.status)">{{ p.status }}</span></td>
+          <td data-label="Status"><span class="badge" [ngClass]="statusClass(p.status)">{{ p.status }}</span></td>
 
-          <td>{{ p.valorTotal | currency:'BRL' }}</td>
+          <td data-label="Total">{{ p.valorTotal | currency:'BRL' }}</td>
 
-          <td class="acoes-tabela">
+          <td data-label="Ações" class="acoes-tabela">
 
             <button *ngIf="podeConfirmar(p)" (click)="confirmar(p.id)" class="btn btn-success btn-sm" title="Confirmar"><i class="fas fa-check"></i></button>
 
