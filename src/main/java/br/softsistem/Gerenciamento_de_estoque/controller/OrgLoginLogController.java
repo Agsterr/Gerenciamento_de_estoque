@@ -42,13 +42,23 @@ public class OrgLoginLogController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar logs de login da organização")
+    @Operation(summary = "Listar logs de login da organização", description = "Paginado por dia (ano/mês/dia obrigatórios)")
     public ResponseEntity<Page<AcessoLoginDto>> listar(
-            @PageableDefault(size = 30, sort = "dataHora") Pageable pageable,
-            @RequestParam(required = false) Integer ano,
-            @RequestParam(required = false) Integer mes,
-            @RequestParam(required = false) Integer dia) {
-        return ResponseEntity.ok(loginAuditoriaService.listarPorOrg(pageable, ano, mes, dia));
+            @PageableDefault(size = 20, sort = "dataHora") Pageable pageable,
+            @RequestParam Integer ano,
+            @RequestParam Integer mes,
+            @RequestParam Integer dia,
+            @RequestParam(required = false) String ip) {
+        return ResponseEntity.ok(loginAuditoriaService.listarPorOrg(pageable, ano, mes, dia, ip));
+    }
+
+    @GetMapping("/ips")
+    @Operation(summary = "Listar IPs distintos do dia da organização")
+    public ResponseEntity<List<String>> listarIps(
+            @RequestParam Integer ano,
+            @RequestParam Integer mes,
+            @RequestParam Integer dia) {
+        return ResponseEntity.ok(loginAuditoriaService.listarIpsOrg(ano, mes, dia));
     }
 
     @GetMapping("/periodos")

@@ -89,7 +89,7 @@
 
           <td><span class="badge" [ngClass]="statusClass(p.status)">{{ p.status }}</span></td>
 
-          <td>{{ isPedidoInterno(p) ? '—' : (p.valorTotal | currency:'BRL') }}</td>
+          <td>{{ p.valorTotal | currency:'BRL' }}</td>
 
           <td class="acoes-tabela">
 
@@ -230,7 +230,7 @@
 
 
 
-      <p *ngIf="isInterno" class="hint-interno"><i class="fas fa-info-circle"></i> Retirada interna não gera cobrança — informe produtos e quantidades.</p>
+      <p *ngIf="isInterno" class="hint-interno"><i class="fas fa-info-circle"></i> Retirada interna não gera cobrança — estoque baixado do {{ depositoRetiradaNome }}.</p>
 
 
 
@@ -256,7 +256,7 @@
 
             <option [ngValue]="null">Selecione...</option>
 
-            <option *ngFor="let pr of produtos" [ngValue]="pr.id">{{ pr.nome }} (est: {{ pr.quantidade }})</option>
+            <option *ngFor="let pr of produtos" [ngValue]="pr.id">{{ estoqueProdutoLabel(pr.id, pr.nome, pr.quantidade) }}</option>
 
           </select>
 

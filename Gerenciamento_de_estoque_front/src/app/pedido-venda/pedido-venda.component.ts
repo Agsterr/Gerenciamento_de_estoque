@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
-  PedidoVendaService, PedidoVenda, PedidoVendaItem,
+  PedidoVendaService, PedidoVenda, PedidoVendaItem, EstoqueRetirada,
   FORMAS_PAGAMENTO, CONDICOES_PAGAMENTO, TIPOS_PEDIDO
 } from '../services/pedido-venda.service';
 import { ConsumidorService } from '../services/consumidor.service';
@@ -32,6 +32,8 @@ export class PedidoVendaComponent implements OnInit {
   pedidos: PedidoVenda[] = [];
   clientes: Consumer[] = [];
   produtos: Produto[] = [];
+  estoqueRetirada: EstoqueRetirada[] = [];
+  depositoRetiradaNome = 'Depósito Principal';
   vendedores: Usuario[] = [];
   tiposPedido = TIPOS_PEDIDO;
   formasPagamento = FORMAS_PAGAMENTO;
@@ -89,6 +91,15 @@ export class PedidoVendaComponent implements OnInit {
     this.produtoService.listarProdutos(0, 500).subscribe({
       next: (r) => (this.produtos = r.content),
       error: () => this.onError('Erro ao carregar produtos.'),
+    });
+    this.pedidoService.estoqueRetirada().subscribe({
+      next: (list) => {
+        this.estoqueRetirada = list || [];
+        if (list?.length) {
+          this.depositoRetiradaNome = list[0].depositoNome;
+        }
+      },
+      error: () => {},
     });
     this.usuarioService.listarAtivos(0, 100).subscribe({
       next: (r) => (this.vendedores = r.content || []),
@@ -198,6 +209,15 @@ export class PedidoVendaComponent implements OnInit {
   labelForma(f?: string): string {
     if (!f) return '—';
     return this.formasPagamento.find((x) => x.value === f)?.label || f;
+  }
+
+  estoqueProdutoLabel(produtoId: number, nome: string, quantidadeGlobal: number): string {
+    if (this.isInterno) {
+      const est = this.estoqueRetirada.find((e) => e.produtoId === produtoId);
+      const qtd = est?.quantidade ?? quantidadeGlobal;
+      return `${nome} (est. ${this.depositoRetiradaNome}: ${qtd})`;
+    }
+    return `${nome} (est: ${quantidadeGlobal})`;
   }
 
   labelCondicao(c?: string): string {

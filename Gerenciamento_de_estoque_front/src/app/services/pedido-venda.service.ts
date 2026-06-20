@@ -110,6 +110,15 @@ export const CONDICOES_PAGAMENTO = [
 
 
 
+export interface EstoqueRetirada {
+  produtoId: number;
+  produtoNome: string;
+  quantidade: number;
+  depositoNome: string;
+}
+
+
+
 @Injectable({ providedIn: 'root' })
 
 export class PedidoVendaService {
@@ -126,6 +135,12 @@ export class PedidoVendaService {
 
     return this.http.get<{ content: PedidoVenda[]; totalElements: number }>(`${this.url}?page=${page}&size=${size}`);
 
+  }
+
+
+
+  estoqueRetirada(): Observable<EstoqueRetirada[]> {
+    return this.http.get<EstoqueRetirada[]>(`${this.url}/estoque-retirada`);
   }
 
 

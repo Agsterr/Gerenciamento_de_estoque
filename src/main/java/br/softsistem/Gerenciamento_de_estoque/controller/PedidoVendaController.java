@@ -1,7 +1,11 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
+import br.softsistem.Gerenciamento_de_estoque.dto.erp.EstoqueRetiradaDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.erp.PedidoVendaDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.erp.PedidoVendaRequest;
+import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
+import br.softsistem.Gerenciamento_de_estoque.exception.OrganizacaoNaoEncontradaException;
+import br.softsistem.Gerenciamento_de_estoque.service.EstoqueDepositoService;
 import br.softsistem.Gerenciamento_de_estoque.service.PedidoVendaService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -10,14 +14,31 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/pedidos-venda")
 public class PedidoVendaController {
 
     private final PedidoVendaService service;
+    private final EstoqueDepositoService estoqueDepositoService;
 
-    public PedidoVendaController(PedidoVendaService service) {
+    public PedidoVendaController(PedidoVendaService service, EstoqueDepositoService estoqueDepositoService) {
         this.service = service;
+        this.estoqueDepositoService = estoqueDepositoService;
+    }
+
+    private Long requireOrgId() {
+        Long orgId = SecurityUtils.getCurrentOrgId();
+        if (orgId == null) {
+            throw new OrganizacaoNaoEncontradaException("Organização não encontrada no contexto de segurança");
+        }
+        return orgId;
+    }
+
+    @GetMapping("/estoque-retirada")
+    public List<EstoqueRetiradaDto> estoqueRetirada() {
+        return estoqueDepositoService.listarDisponibilidadeRetirada(requireOrgId());
     }
 
     @GetMapping

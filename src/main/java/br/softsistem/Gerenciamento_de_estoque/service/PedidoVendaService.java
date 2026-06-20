@@ -151,12 +151,12 @@ public class PedidoVendaService {
         for (PedidoVendaItem item : pedido.getItens()) {
             Produto produto = item.getProduto();
             int qtd = item.getQuantidade();
-            if (produto.getQuantidade() < qtd) {
+            int disponivel = estoqueDepositoService.quantidadeDisponivelNoDepositoPadrao(produto, pedido.getOrg());
+            if (disponivel < qtd) {
                 throw new IllegalArgumentException(
-                        "Estoque insuficiente para '" + produto.getNome() + "'. Disponível: " + produto.getQuantidade());
+                        "Estoque insuficiente para '" + produto.getNome() + "'. Disponível no depósito padrão: "
+                                + disponivel + ".");
             }
-            produto.setQuantidade(produto.getQuantidade() - qtd);
-            produtoRepository.save(produto);
             estoqueDepositoService.ajustarNoDepositoPadrao(produto, pedido.getOrg(), -qtd);
 
             MovimentacaoProduto mov = new MovimentacaoProduto();
@@ -193,8 +193,6 @@ public class PedidoVendaService {
             for (PedidoVendaItem item : pedido.getItens()) {
                 Produto produto = item.getProduto();
                 int qtd = item.getQuantidade();
-                produto.setQuantidade(produto.getQuantidade() + qtd);
-                produtoRepository.save(produto);
                 estoqueDepositoService.ajustarNoDepositoPadrao(produto, pedido.getOrg(), qtd);
             }
             movimentacaoRepository.deleteByPedidoVendaId(pedido.getId());

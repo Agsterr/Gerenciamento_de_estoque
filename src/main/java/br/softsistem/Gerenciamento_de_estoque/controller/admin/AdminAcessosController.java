@@ -45,14 +45,25 @@ public class AdminAcessosController {
     }
 
     @GetMapping("/login-logs")
-    @Operation(summary = "Listar logs de login globais", description = "Histórico paginado de todos os tenants")
+    @Operation(summary = "Listar logs de login globais", description = "Histórico paginado por dia (ano/mês/dia obrigatórios)")
     public ResponseEntity<Page<AcessoLoginDto>> listarLoginLogs(
-            @PageableDefault(size = 30, sort = "dataHora") Pageable pageable,
-            @RequestParam(required = false) Integer ano,
-            @RequestParam(required = false) Integer mes,
-            @RequestParam(required = false) Integer dia,
+            @PageableDefault(size = 20, sort = "dataHora") Pageable pageable,
+            @RequestParam Integer ano,
+            @RequestParam Integer mes,
+            @RequestParam Integer dia,
+            @RequestParam(required = false) Long orgId,
+            @RequestParam(required = false) String ip) {
+        return ResponseEntity.ok(loginAuditoriaService.listarGlobal(pageable, ano, mes, dia, orgId, ip));
+    }
+
+    @GetMapping("/login-logs/ips")
+    @Operation(summary = "Listar IPs distintos do dia", description = "IPs únicos no dia selecionado para filtro")
+    public ResponseEntity<List<String>> listarIpsLoginLogs(
+            @RequestParam Integer ano,
+            @RequestParam Integer mes,
+            @RequestParam Integer dia,
             @RequestParam(required = false) Long orgId) {
-        return ResponseEntity.ok(loginAuditoriaService.listarGlobal(pageable, ano, mes, dia, orgId));
+        return ResponseEntity.ok(loginAuditoriaService.listarIpsGlobal(ano, mes, dia, orgId));
     }
 
     @GetMapping("/login-logs/periodos")

@@ -19,10 +19,13 @@ export class LoginLogsComponent implements OnInit {
   filtroAno?: number;
   filtroMes?: number;
   filtroDia?: number;
+  filtroIp = '';
+  ipsDisponiveis: string[] = [];
   loading = false;
   mensagemErro = '';
   currentPage = 0;
-  pageSize = 30;
+  pageSize = 20;
+  readonly pageSizeOptions = [10, 20, 50];
   totalElements = 0;
   totalPages = 0;
   arquivos: LoginLogExportFile[] = [];
@@ -33,8 +36,11 @@ export class LoginLogsComponent implements OnInit {
 
   ngOnInit(): void {
     this.carregarPeriodos();
-    this.carregarLogs();
     this.carregarArquivos();
+  }
+
+  get diaSelecionado(): boolean {
+    return this.filtroAno != null && this.filtroMes != null && this.filtroDia != null;
   }
 
   carregarPeriodos(): void {
@@ -49,9 +55,22 @@ export class LoginLogsComponent implements OnInit {
   }
 
   carregarLogs(page = 0): void {
+    if (!this.diaSelecionado) {
+      this.logs = [];
+      this.totalElements = 0;
+      this.totalPages = 0;
+      return;
+    }
     this.loading = true;
     this.currentPage = page;
-    this.loginLogsService.listar(page, this.pageSize, this.filtroAno, this.filtroMes, this.filtroDia).subscribe({
+    this.loginLogsService.listar(
+      page,
+      this.pageSize,
+      this.filtroAno!,
+      this.filtroMes!,
+      this.filtroDia!,
+      this.filtroIp || undefined
+    ).subscribe({
       next: (data) => {
         this.logs = data.content ?? [];
         this.totalElements = data.totalElements ?? 0;
@@ -66,23 +85,51 @@ export class LoginLogsComponent implements OnInit {
     });
   }
 
+  carregarIps(): void {
+    if (!this.diaSelecionado) {
+      this.ipsDisponiveis = [];
+      return;
+    }
+    this.loginLogsService.ips(this.filtroAno!, this.filtroMes!, this.filtroDia!).subscribe({
+      next: (data) => { this.ipsDisponiveis = data ?? []; },
+      error: () => { this.ipsDisponiveis = []; },
+    });
+  }
+
   selecionarAno(ano: number): void {
     this.filtroAno = ano;
     this.filtroMes = undefined;
     this.filtroDia = undefined;
+    this.filtroIp = '';
+    this.ipsDisponiveis = [];
     this.atualizarMesesDias();
-    this.carregarLogs(0);
+    this.limparLista();
   }
 
   selecionarMes(mes: number): void {
     this.filtroMes = mes;
     this.filtroDia = undefined;
+    this.filtroIp = '';
+    this.ipsDisponiveis = [];
     this.atualizarMesesDias();
-    this.carregarLogs(0);
+    this.limparLista();
   }
 
   selecionarDia(dia: number): void {
     this.filtroDia = dia;
+    this.filtroIp = '';
+    this.carregarIps();
+    this.carregarLogs(0);
+  }
+
+  alterarFiltroIp(): void {
+    if (this.diaSelecionado) {
+      this.carregarLogs(0);
+    }
+  }
+
+  limparFiltroIp(): void {
+    this.filtroIp = '';
     this.carregarLogs(0);
   }
 
@@ -90,8 +137,16 @@ export class LoginLogsComponent implements OnInit {
     this.filtroAno = undefined;
     this.filtroMes = undefined;
     this.filtroDia = undefined;
+    this.filtroIp = '';
+    this.ipsDisponiveis = [];
     this.atualizarMesesDias();
-    this.carregarLogs(0);
+    this.limparLista();
+  }
+
+  alterarPageSize(): void {
+    if (this.diaSelecionado) {
+      this.carregarLogs(0);
+    }
   }
 
   paginaAnterior(): void {
@@ -102,12 +157,49 @@ export class LoginLogsComponent implements OnInit {
     if (this.currentPage + 1 < this.totalPages) this.carregarLogs(this.currentPage + 1);
   }
 
+  irParaPagina(page: number): void {
+    if (page >= 0 && page < this.totalPages) {
+      this.carregarLogs(page);
+    }
+  }
+
+  paginasVisiveis(): number[] {
+    const total = this.totalPages;
+    if (total <= 1) return [];
+    const atual = this.currentPage;
+    const inicio = Math.max(0, atual - 2);
+    const fim = Math.min(total - 1, inicio + 4);
+    const pages: number[] = [];
+    for (let i = inicio; i <= fim; i++) pages.push(i);
+    return pages;
+  }
+
+  totalDoDia(): number {
+    if (!this.diaSelecionado) return 0;
+    const p = this.periodos.find(
+      (x) => x.ano === this.filtroAno && x.mes === this.filtroMes && x.dia === this.filtroDia
+    );
+    return p?.total ?? 0;
+  }
+
   breadcrumb(): string {
-    if (!this.filtroAno) return 'Todos os períodos';
+    if (!this.filtroAno) return 'Selecione um período';
     let s = String(this.filtroAno);
     if (this.filtroMes) s += ` / ${this.mesesNomes[this.filtroMes]}`;
-    if (this.filtroDia) s += ` / ${this.filtroDia}`;
+    if (this.filtroDia) s += ` / ${String(this.filtroDia).padStart(2, '0')}`;
     return s;
+  }
+
+  labelDiaCompleto(): string {
+    if (!this.diaSelecionado) return '';
+    return `${String(this.filtroDia).padStart(2, '0')}/${String(this.filtroMes).padStart(2, '0')}/${this.filtroAno}`;
+  }
+
+  private limparLista(): void {
+    this.logs = [];
+    this.totalElements = 0;
+    this.totalPages = 0;
+    this.currentPage = 0;
   }
 
   private atualizarMesesDias(): void {
@@ -121,6 +213,12 @@ export class LoginLogsComponent implements OnInit {
     this.dias = this.filtroAno != null && this.filtroMes != null
       ? [...new Set(filtrados.filter((p) => p.ano === this.filtroAno && p.mes === this.filtroMes).map((p) => p.dia))].sort((a, b) => b - a)
       : [];
+  }
+
+  totalDoDiaChip(dia: number): number {
+    return this.periodos.find(
+      (p) => p.ano === this.filtroAno && p.mes === this.filtroMes && p.dia === dia
+    )?.total ?? 0;
   }
 
   private periodoBody(): { ano: number; mes?: number; dia?: number } | null {
@@ -159,7 +257,7 @@ export class LoginLogsComponent implements OnInit {
       next: () => {
         this.loading = false;
         this.carregarPeriodos();
-        this.carregarLogs(0);
+        this.limparFiltros();
       },
       error: () => {
         this.loading = false;
@@ -178,7 +276,7 @@ export class LoginLogsComponent implements OnInit {
       next: () => {
         this.loading = false;
         this.carregarPeriodos();
-        this.carregarLogs(0);
+        this.limparFiltros();
         this.carregarArquivos();
       },
       error: () => {

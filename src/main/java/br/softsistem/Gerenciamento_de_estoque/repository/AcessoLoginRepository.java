@@ -20,13 +20,29 @@ public interface AcessoLoginRepository extends JpaRepository<AcessoLogin, Long> 
             WHERE (:orgId IS NULL OR a.org.id = :orgId)
               AND a.dataHora >= :inicio
               AND a.dataHora < :fim
+              AND (:ip IS NULL OR a.ip = :ip)
             ORDER BY a.dataHora DESC
             """)
     Page<AcessoLogin> findFiltrado(
             @Param("orgId") Long orgId,
             @Param("inicio") LocalDateTime inicio,
             @Param("fim") LocalDateTime fim,
+            @Param("ip") String ip,
             Pageable pageable);
+
+    @Query("""
+            SELECT DISTINCT a.ip FROM AcessoLogin a
+            WHERE (:orgId IS NULL OR a.org.id = :orgId)
+              AND a.dataHora >= :inicio
+              AND a.dataHora < :fim
+              AND a.ip IS NOT NULL
+              AND a.ip <> ''
+            ORDER BY a.ip ASC
+            """)
+    List<String> findDistinctIps(
+            @Param("orgId") Long orgId,
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fim") LocalDateTime fim);
 
     @Query(value = """
             SELECT CAST(EXTRACT(YEAR FROM data_hora) AS INTEGER) AS ano,

@@ -51,12 +51,26 @@ export class OrgLoginLogsService {
 
   constructor(private http: HttpClient) {}
 
-  listar(page = 0, size = 30, ano?: number, mes?: number, dia?: number): Observable<PageResponse<LoginLog>> {
-    const params = new URLSearchParams({ page: String(page), size: String(size), sort: 'dataHora,desc' });
-    if (ano != null) params.set('ano', String(ano));
-    if (mes != null) params.set('mes', String(mes));
-    if (dia != null) params.set('dia', String(dia));
+  listar(page = 0, size = 20, ano: number, mes: number, dia: number, ip?: string): Observable<PageResponse<LoginLog>> {
+    const params = new URLSearchParams({
+      page: String(page),
+      size: String(size),
+      sort: 'dataHora,desc',
+      ano: String(ano),
+      mes: String(mes),
+      dia: String(dia),
+    });
+    if (ip) params.set('ip', ip);
     return this.http.get<PageResponse<LoginLog>>(`${this.url}?${params}`);
+  }
+
+  ips(ano: number, mes: number, dia: number): Observable<string[]> {
+    const params = new URLSearchParams({
+      ano: String(ano),
+      mes: String(mes),
+      dia: String(dia),
+    });
+    return this.http.get<string[]>(`${this.url}/ips?${params}`);
   }
 
   periodos(): Observable<LoginLogPeriodo[]> {

@@ -13,7 +13,7 @@
         <button class="botao-listar btn-sm-inline" (click)="limparFiltros()" *ngIf="filtroAno">
           <i class="fas fa-times"></i> Limpar
         </button>
-        <button class="botao-listar btn-sm-inline" (click)="carregarLogs(currentPage)">
+        <button class="botao-listar btn-sm-inline" (click)="carregarLogs(currentPage)" *ngIf="diaSelecionado">
           <i class="fas fa-sync"></i> Atualizar
         </button>
       </div>
@@ -22,7 +22,8 @@
         <button class="btn btn-sm btn-warning" (click)="compactarPeriodo()"><i class="fas fa-compress-arrows-alt"></i> Compactar</button>
         <button class="btn btn-sm btn-danger" (click)="apagarPeriodo()"><i class="fas fa-trash"></i> Apagar</button>
       </div>
-      <p class="hint-periodo" *ngIf="!filtroAno">Selecione um ano para exportar, compactar ou apagar.</p>
+      <p class="hint-periodo" *ngIf="!filtroAno">Navegue por Ano → Mês → Dia para ver os acessos do dia.</p>
+      <p class="hint-periodo" *ngIf="filtroAno && filtroMes && !filtroDia">Selecione o dia para listar os acessos.</p>
 
       <div class="hierarquia-data" *ngIf="anos.length > 0">
         <div class="nivel-filtro" *ngIf="!filtroAno">
@@ -40,14 +41,38 @@
         <div class="nivel-filtro" *ngIf="filtroAno && filtroMes && !filtroDia && dias.length > 0">
           <span class="nivel-label">Dia</span>
           <div class="chips">
-            <button *ngFor="let d of dias" class="chip" (click)="selecionarDia(d)">{{ d }}</button>
+            <button *ngFor="let d of dias" class="chip chip-dia" (click)="selecionarDia(d)">
+              {{ d }}
+              <span class="chip-count">{{ totalDoDiaChip(d) }}</span>
+            </button>
           </div>
         </div>
       </div>
     </div>
 
-    <p class="paginacao-info" *ngIf="totalElements > 0">
-      {{ totalElements }} registro(s) — página {{ currentPage + 1 }} de {{ totalPages || 1 }}
+    <div class="dia-selecionado-banner" *ngIf="diaSelecionado">
+      <div class="dia-banner-info">
+        <i class="fas fa-calendar-day"></i>
+        <strong>{{ labelDiaCompleto() }}</strong>
+        <span class="dia-total">{{ totalDoDia() }} acesso(s) no dia</span>
+      </div>
+      <div class="filtro-ip" *ngIf="ipsDisponiveis.length > 0">
+        <label for="filtroIp"><i class="fas fa-network-wired"></i> Filtrar por IP</label>
+        <div class="filtro-ip-row">
+          <select id="filtroIp" [(ngModel)]="filtroIp" (ngModelChange)="alterarFiltroIp()">
+            <option value="">Todos os IPs ({{ ipsDisponiveis.length }})</option>
+            <option *ngFor="let ip of ipsDisponiveis" [value]="ip">{{ ip }}</option>
+          </select>
+          <button class="btn btn-sm" *ngIf="filtroIp" (click)="limparFiltroIp()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <p class="paginacao-info" *ngIf="diaSelecionado && totalElements > 0">
+      {{ totalElements }} registro(s){{ filtroIp ? ' do IP ' + filtroIp : '' }}
+      — página {{ currentPage + 1 }} de {{ totalPages || 1 }}
     </p>
 
     <div class="table-scroll-wrapper login-logs-table-wrap" *ngIf="logs.length > 0">
@@ -80,15 +105,33 @@
         </tbody>
       </table>
     </div>
-    <p *ngIf="logs.length === 0 && !loading">Nenhum acesso registrado para o período selecionado.</p>
+    <p *ngIf="diaSelecionado && logs.length === 0 && !loading">Nenhum acesso registrado para este dia{{ filtroIp ? ' e IP' : '' }}.</p>
+    <p *ngIf="!diaSelecionado && !loading" class="hint-lista-vazia">
+      <i class="fas fa-info-circle"></i> Selecione ano, mês e dia acima para visualizar os logs.
+    </p>
 
-    <div class="paginacao" *ngIf="totalPages > 1">
-      <button class="btn btn-sm" [disabled]="currentPage === 0" (click)="paginaAnterior()">
-        <i class="fas fa-chevron-left"></i> Anterior
-      </button>
-      <button class="btn btn-sm" [disabled]="currentPage + 1 >= totalPages" (click)="proximaPagina()">
-        Próxima <i class="fas fa-chevron-right"></i>
-      </button>
+    <div class="paginacao" *ngIf="diaSelecionado">
+      <div class="paginacao-tamanho">
+        <label for="pageSize">Por página</label>
+        <select id="pageSize" [(ngModel)]="pageSize" (ngModelChange)="alterarPageSize()">
+          <option *ngFor="let s of pageSizeOptions" [ngValue]="s">{{ s }}</option>
+        </select>
+      </div>
+      <div class="paginacao-botoes" *ngIf="totalPages > 1">
+        <button class="btn btn-sm" [disabled]="currentPage === 0" (click)="paginaAnterior()">
+          <i class="fas fa-chevron-left"></i> Anterior
+        </button>
+        <button
+          *ngFor="let p of paginasVisiveis()"
+          class="btn btn-sm btn-page"
+          [class.btn-page-ativa]="p === currentPage"
+          (click)="irParaPagina(p)">
+          {{ p + 1 }}
+        </button>
+        <button class="btn btn-sm" [disabled]="currentPage + 1 >= totalPages" (click)="proximaPagina()">
+          Próxima <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
     </div>
 
     <div class="arquivos-exportados" *ngIf="arquivos.length > 0">

@@ -124,7 +124,7 @@
             <button class="botao-listar btn-sm-inline" (click)="limparFiltrosLogin()" *ngIf="filtroLoginAno">
               <i class="fas fa-times"></i> Limpar
             </button>
-            <button class="botao-listar btn-sm-inline" (click)="carregarLoginLogs(loginLogsPage)">
+            <button class="botao-listar btn-sm-inline" (click)="carregarLoginLogs(loginLogsPage)" *ngIf="diaLoginSelecionado">
               <i class="fas fa-sync"></i> Atualizar
             </button>
           </div>
@@ -139,7 +139,8 @@
               <i class="fas fa-trash"></i> Apagar período
             </button>
           </div>
-          <p class="hint-periodo" *ngIf="!filtroLoginAno">Selecione um ano para exportar, compactar ou apagar logs.</p>
+          <p class="hint-periodo" *ngIf="!filtroLoginAno">Navegue por Ano → Mês → Dia para ver os acessos do dia.</p>
+          <p class="hint-periodo" *ngIf="filtroLoginAno && filtroLoginMes && !filtroLoginDia">Selecione o dia para listar os acessos.</p>
           <div class="hierarquia-data" *ngIf="loginLogAnos.length > 0">
             <div class="nivel-filtro" *ngIf="!filtroLoginAno">
               <span class="nivel-label">Ano</span>
@@ -156,14 +157,38 @@
             <div class="nivel-filtro" *ngIf="filtroLoginAno && filtroLoginMes && !filtroLoginDia && loginLogDias.length > 0">
               <span class="nivel-label">Dia</span>
               <div class="chips">
-                <button *ngFor="let d of loginLogDias" class="chip" (click)="selecionarDiaLogin(d)">{{ d }}</button>
+                <button *ngFor="let d of loginLogDias" class="chip chip-dia" (click)="selecionarDiaLogin(d)">
+                  {{ d }}
+                  <span class="chip-count">{{ totalLoginDoDiaChip(d) }}</span>
+                </button>
               </div>
             </div>
           </div>
         </div>
 
-        <p class="paginacao-info" *ngIf="loginLogsTotal > 0">
-          {{ loginLogsTotal }} registro(s) — página {{ loginLogsPage + 1 }} de {{ loginLogsTotalPages || 1 }}
+        <div class="dia-selecionado-banner" *ngIf="diaLoginSelecionado">
+          <div class="dia-banner-info">
+            <i class="fas fa-calendar-day"></i>
+            <strong>{{ labelDiaLoginCompleto() }}</strong>
+            <span class="dia-total">{{ totalLoginDoDia() }} acesso(s) no dia</span>
+          </div>
+          <div class="filtro-ip" *ngIf="loginLogIps.length > 0">
+            <label for="filtroLoginIp"><i class="fas fa-network-wired"></i> Filtrar por IP</label>
+            <div class="filtro-ip-row">
+              <select id="filtroLoginIp" [(ngModel)]="filtroLoginIp" (ngModelChange)="alterarFiltroIpLogin()">
+                <option value="">Todos os IPs ({{ loginLogIps.length }})</option>
+                <option *ngFor="let ip of loginLogIps" [value]="ip">{{ ip }}</option>
+              </select>
+              <button class="btn btn-sm" *ngIf="filtroLoginIp" (click)="limparFiltroIpLogin()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <p class="paginacao-info" *ngIf="diaLoginSelecionado && loginLogsTotal > 0">
+          {{ loginLogsTotal }} registro(s){{ filtroLoginIp ? ' do IP ' + filtroLoginIp : '' }}
+          — página {{ loginLogsPage + 1 }} de {{ loginLogsTotalPages || 1 }}
         </p>
 
         <div class="table-scroll-wrapper login-logs-table-wrap" *ngIf="loginLogs.length > 0">
@@ -198,15 +223,33 @@
             </tbody>
           </table>
         </div>
-        <p *ngIf="loginLogs.length === 0 && !loading">Nenhum acesso registrado para o período selecionado.</p>
+        <p *ngIf="diaLoginSelecionado && loginLogs.length === 0 && !loading">Nenhum acesso registrado para este dia{{ filtroLoginIp ? ' e IP' : '' }}.</p>
+        <p *ngIf="!diaLoginSelecionado && !loading" class="hint-lista-vazia">
+          <i class="fas fa-info-circle"></i> Selecione ano, mês e dia acima para visualizar os logs.
+        </p>
 
-        <div class="paginacao" *ngIf="loginLogsTotalPages > 1">
-          <button class="btn btn-sm" [disabled]="loginLogsPage === 0" (click)="paginaAnteriorLoginLogs()">
-            <i class="fas fa-chevron-left"></i> Anterior
-          </button>
-          <button class="btn btn-sm" [disabled]="loginLogsPage + 1 >= loginLogsTotalPages" (click)="proximaPaginaLoginLogs()">
-            Próxima <i class="fas fa-chevron-right"></i>
-          </button>
+        <div class="paginacao" *ngIf="diaLoginSelecionado">
+          <div class="paginacao-tamanho">
+            <label for="loginLogsPageSize">Por página</label>
+            <select id="loginLogsPageSize" [(ngModel)]="loginLogsPageSize" (ngModelChange)="alterarLoginLogsPageSize()">
+              <option *ngFor="let s of loginLogsPageSizeOptions" [ngValue]="s">{{ s }}</option>
+            </select>
+          </div>
+          <div class="paginacao-botoes" *ngIf="loginLogsTotalPages > 1">
+            <button class="btn btn-sm" [disabled]="loginLogsPage === 0" (click)="paginaAnteriorLoginLogs()">
+              <i class="fas fa-chevron-left"></i> Anterior
+            </button>
+            <button
+              *ngFor="let p of paginasVisiveisLoginLogs()"
+              class="btn btn-sm btn-page"
+              [class.btn-page-ativa]="p === loginLogsPage"
+              (click)="irParaPaginaLoginLogs(p)">
+              {{ p + 1 }}
+            </button>
+            <button class="btn btn-sm" [disabled]="loginLogsPage + 1 >= loginLogsTotalPages" (click)="proximaPaginaLoginLogs()">
+              Próxima <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
 
         <div class="arquivos-exportados" *ngIf="loginLogArquivos.length > 0">

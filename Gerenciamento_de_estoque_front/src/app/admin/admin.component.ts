@@ -28,7 +28,7 @@ export class AdminComponent implements OnInit {
   loginLogsPage = 0;
   loginLogsTotal = 0;
   loginLogsTotalPages = 0;
-  readonly loginLogsPageSize = 30;
+  loginLogsPageSize = 20;
   loginLogPeriodos: LoginLogPeriodo[] = [];
   loginLogAnos: number[] = [];
   loginLogMeses: number[] = [];
@@ -36,9 +36,12 @@ export class AdminComponent implements OnInit {
   filtroLoginAno?: number;
   filtroLoginMes?: number;
   filtroLoginDia?: number;
+  filtroLoginIp = '';
   filtroLoginOrgId?: number;
+  loginLogIps: string[] = [];
   loginLogArquivos: LoginLogExportFile[] = [];
   readonly mesesNomes = ['', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  readonly loginLogsPageSizeOptions = [10, 20, 50];
   sugestoes: Sugestao[] = [];
   sugestoesPage = 0;
   sugestoesTotalPages = 0;
@@ -88,7 +91,6 @@ export class AdminComponent implements OnInit {
       this.carregarCache();
     } else if (aba === 'acessos') {
       this.carregarPeriodosLoginLogs();
-      this.carregarLoginLogs();
       this.carregarArquivosLoginLogs();
     } else if (aba === 'sugestoes') {
       this.carregarSugestoes();
@@ -240,6 +242,10 @@ export class AdminComponent implements OnInit {
     });
   }
 
+  get diaLoginSelecionado(): boolean {
+    return this.filtroLoginAno != null && this.filtroLoginMes != null && this.filtroLoginDia != null;
+  }
+
   carregarPeriodosLoginLogs(): void {
     this.loginLogsService.periodos(this.filtroLoginOrgId).subscribe({
       next: (data) => {
@@ -255,19 +261,36 @@ export class AdminComponent implements OnInit {
     this.filtroLoginAno = ano;
     this.filtroLoginMes = undefined;
     this.filtroLoginDia = undefined;
+    this.filtroLoginIp = '';
+    this.loginLogIps = [];
     this.atualizarMesesDiasLogin();
-    this.carregarLoginLogs(0);
+    this.limparListaLoginLogs();
   }
 
   selecionarMesLogin(mes: number): void {
     this.filtroLoginMes = mes;
     this.filtroLoginDia = undefined;
+    this.filtroLoginIp = '';
+    this.loginLogIps = [];
     this.atualizarMesesDiasLogin();
-    this.carregarLoginLogs(0);
+    this.limparListaLoginLogs();
   }
 
   selecionarDiaLogin(dia: number): void {
     this.filtroLoginDia = dia;
+    this.filtroLoginIp = '';
+    this.carregarIpsLoginLogs();
+    this.carregarLoginLogs(0);
+  }
+
+  alterarFiltroIpLogin(): void {
+    if (this.diaLoginSelecionado) {
+      this.carregarLoginLogs(0);
+    }
+  }
+
+  limparFiltroIpLogin(): void {
+    this.filtroLoginIp = '';
     this.carregarLoginLogs(0);
   }
 
@@ -275,15 +298,82 @@ export class AdminComponent implements OnInit {
     this.filtroLoginAno = undefined;
     this.filtroLoginMes = undefined;
     this.filtroLoginDia = undefined;
+    this.filtroLoginIp = '';
+    this.loginLogIps = [];
     this.atualizarMesesDiasLogin();
-    this.carregarLoginLogs(0);
+    this.limparListaLoginLogs();
+  }
+
+  alterarLoginLogsPageSize(): void {
+    if (this.diaLoginSelecionado) {
+      this.carregarLoginLogs(0);
+    }
+  }
+
+  irParaPaginaLoginLogs(page: number): void {
+    if (page >= 0 && page < this.loginLogsTotalPages) {
+      this.carregarLoginLogs(page);
+    }
+  }
+
+  paginasVisiveisLoginLogs(): number[] {
+    const total = this.loginLogsTotalPages;
+    if (total <= 1) return [];
+    const atual = this.loginLogsPage;
+    const inicio = Math.max(0, atual - 2);
+    const fim = Math.min(total - 1, inicio + 4);
+    const pages: number[] = [];
+    for (let i = inicio; i <= fim; i++) pages.push(i);
+    return pages;
+  }
+
+  totalLoginDoDia(): number {
+    if (!this.diaLoginSelecionado) return 0;
+    const p = this.loginLogPeriodos.find(
+      (x) => x.ano === this.filtroLoginAno && x.mes === this.filtroLoginMes && x.dia === this.filtroLoginDia
+    );
+    return p?.total ?? 0;
+  }
+
+  totalLoginDoDiaChip(dia: number): number {
+    return this.loginLogPeriodos.find(
+      (p) => p.ano === this.filtroLoginAno && p.mes === this.filtroLoginMes && p.dia === dia
+    )?.total ?? 0;
+  }
+
+  labelDiaLoginCompleto(): string {
+    if (!this.diaLoginSelecionado) return '';
+    return `${String(this.filtroLoginDia).padStart(2, '0')}/${String(this.filtroLoginMes).padStart(2, '0')}/${this.filtroLoginAno}`;
+  }
+
+  private limparListaLoginLogs(): void {
+    this.loginLogs = [];
+    this.loginLogsTotal = 0;
+    this.loginLogsTotalPages = 0;
+    this.loginLogsPage = 0;
+  }
+
+  carregarIpsLoginLogs(): void {
+    if (!this.diaLoginSelecionado) {
+      this.loginLogIps = [];
+      return;
+    }
+    this.loginLogsService.ips(
+      this.filtroLoginAno!,
+      this.filtroLoginMes!,
+      this.filtroLoginDia!,
+      this.filtroLoginOrgId
+    ).subscribe({
+      next: (data) => { this.loginLogIps = data ?? []; },
+      error: () => { this.loginLogIps = []; },
+    });
   }
 
   breadcrumbLogin(): string {
-    if (!this.filtroLoginAno) return 'Todos os períodos';
+    if (!this.filtroLoginAno) return 'Selecione um período';
     let s = String(this.filtroLoginAno);
     if (this.filtroLoginMes) s += ` / ${this.mesesNomes[this.filtroLoginMes]}`;
-    if (this.filtroLoginDia) s += ` / ${this.filtroLoginDia}`;
+    if (this.filtroLoginDia) s += ` / ${String(this.filtroLoginDia).padStart(2, '0')}`;
     return s;
   }
 
@@ -301,15 +391,20 @@ export class AdminComponent implements OnInit {
   }
 
   carregarLoginLogs(page = 0): void {
+    if (!this.diaLoginSelecionado) {
+      this.limparListaLoginLogs();
+      return;
+    }
     this.loading = true;
     this.loginLogsPage = page;
     this.loginLogsService.listar(
       page,
       this.loginLogsPageSize,
-      this.filtroLoginAno,
-      this.filtroLoginMes,
-      this.filtroLoginDia,
-      this.filtroLoginOrgId
+      this.filtroLoginAno!,
+      this.filtroLoginMes!,
+      this.filtroLoginDia!,
+      this.filtroLoginOrgId,
+      this.filtroLoginIp || undefined
     ).subscribe({
       next: (data) => {
         this.loginLogs = data.content ?? [];

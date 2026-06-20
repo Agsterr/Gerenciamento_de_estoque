@@ -44,13 +44,28 @@ export class AdminLoginLogsService {
   private url = `${environment.apiUrl}/admin/login-logs`;
   constructor(private http: HttpClient) {}
 
-  listar(page = 0, size = 30, ano?: number, mes?: number, dia?: number, orgId?: number): Observable<{ content: LoginLog[]; totalElements: number; totalPages: number }> {
-    const params = new URLSearchParams({ page: String(page), size: String(size), sort: 'dataHora,desc' });
-    if (ano != null) params.set('ano', String(ano));
-    if (mes != null) params.set('mes', String(mes));
-    if (dia != null) params.set('dia', String(dia));
+  listar(page = 0, size = 20, ano: number, mes: number, dia: number, orgId?: number, ip?: string): Observable<{ content: LoginLog[]; totalElements: number; totalPages: number }> {
+    const params = new URLSearchParams({
+      page: String(page),
+      size: String(size),
+      sort: 'dataHora,desc',
+      ano: String(ano),
+      mes: String(mes),
+      dia: String(dia),
+    });
     if (orgId != null) params.set('orgId', String(orgId));
+    if (ip) params.set('ip', ip);
     return this.http.get<{ content: LoginLog[]; totalElements: number; totalPages: number }>(`${this.url}?${params}`);
+  }
+
+  ips(ano: number, mes: number, dia: number, orgId?: number): Observable<string[]> {
+    const params = new URLSearchParams({
+      ano: String(ano),
+      mes: String(mes),
+      dia: String(dia),
+    });
+    if (orgId != null) params.set('orgId', String(orgId));
+    return this.http.get<string[]>(`${this.url}/ips?${params}`);
   }
 
   periodos(orgId?: number): Observable<LoginLogPeriodo[]> {

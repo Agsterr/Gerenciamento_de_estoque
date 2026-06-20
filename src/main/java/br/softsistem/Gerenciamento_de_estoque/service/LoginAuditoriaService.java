@@ -66,18 +66,32 @@ public class LoginAuditoriaService {
     }
 
     @Transactional(readOnly = true)
-    public Page<AcessoLoginDto> listarGlobal(Pageable pageable, Integer ano, Integer mes, Integer dia, Long orgId) {
+    public Page<AcessoLoginDto> listarGlobal(Pageable pageable, Integer ano, Integer mes, Integer dia, Long orgId, String ip) {
+        requireDiaParaListagem(ano, mes, dia);
         DateRange range = boundsForQuery(ano, mes, dia);
-        return repository.findFiltrado(orgId, range.inicio(), range.fim(), pageable)
+        return repository.findFiltrado(orgId, range.inicio(), range.fim(), normalizeIp(ip), pageable)
                 .map(AcessoLoginDto::new);
     }
 
     @Transactional(readOnly = true)
-    public Page<AcessoLoginDto> listarPorOrg(Pageable pageable, Integer ano, Integer mes, Integer dia) {
+    public Page<AcessoLoginDto> listarPorOrg(Pageable pageable, Integer ano, Integer mes, Integer dia, String ip) {
         Long orgId = requireCurrentOrgId();
+        requireDiaParaListagem(ano, mes, dia);
         DateRange range = boundsForQuery(ano, mes, dia);
-        return repository.findFiltrado(orgId, range.inicio(), range.fim(), pageable)
+        return repository.findFiltrado(orgId, range.inicio(), range.fim(), normalizeIp(ip), pageable)
                 .map(AcessoLoginDto::new);
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> listarIpsGlobal(Integer ano, Integer mes, Integer dia, Long orgId) {
+        requireDiaParaListagem(ano, mes, dia);
+        DateRange range = boundsForQuery(ano, mes, dia);
+        return repository.findDistinctIps(orgId, range.inicio(), range.fim());
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> listarIpsOrg(Integer ano, Integer mes, Integer dia) {
+        return listarIpsGlobal(ano, mes, dia, requireCurrentOrgId());
     }
 
     @Transactional(readOnly = true)
@@ -273,6 +287,20 @@ public class LoginAuditoriaService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Informe ao menos o ano do período.");
         }
+    }
+
+    private void requireDiaParaListagem(Integer ano, Integer mes, Integer dia) {
+        if (ano == null || mes == null || dia == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Informe ano, mês e dia para listar os acessos.");
+        }
+    }
+
+    private static String normalizeIp(String ip) {
+        if (ip == null || ip.isBlank()) {
+            return null;
+        }
+        return ip.trim();
     }
 
     private Long requireCurrentOrgId() {
