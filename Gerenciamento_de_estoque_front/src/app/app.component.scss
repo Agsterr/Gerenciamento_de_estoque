@@ -214,6 +214,17 @@
   border-radius: 0;
   background: transparent;
   max-width: none;
+
+  > app-trial-banner,
+  > app-pesquisa-preco-banner,
+  > .demo-banner {
+    display: block;
+  }
+
+  @media (max-width: 768px) {
+    padding: 8px 12px 0;
+    box-sizing: border-box;
+  }
 }
 
 .demo-banner {
