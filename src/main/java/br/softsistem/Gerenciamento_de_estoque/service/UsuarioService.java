@@ -116,6 +116,7 @@ public class UsuarioService {
         user.setUsername(request.username().trim());
         user.setEmail(email);
         user.setSenha(passwordEncoder.encode(tempPassword));
+        user.setSenhaRegistrada(tempPassword);
         user.setOrg(org);
         user.setRoles(List.of(userRole));
         user.setAtivo(true);
@@ -142,6 +143,7 @@ public class UsuarioService {
         }
         String tempPassword = generateTemporaryPassword();
         usuario.setSenha(passwordEncoder.encode(tempPassword));
+        usuario.setSenhaRegistrada(tempPassword);
         usuarioRepository.save(usuario);
         return new UsuarioPasswordResponse(usuario.getUsername(), tempPassword);
     }

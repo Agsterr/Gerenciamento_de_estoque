@@ -17,7 +17,7 @@
       <h3><i class="fas fa-key"></i> Credenciais do usuário</h3>
       <button type="button" class="btn-fechar" (click)="fecharCredencial()" aria-label="Fechar">×</button>
     </div>
-    <p class="credencial-aviso">Copie e envie ao colaborador. Senhas antigas não podem ser recuperadas.</p>
+    <p class="credencial-aviso">Copie e envie ao colaborador. A senha também fica visível na lista abaixo.</p>
     <div class="credencial-linha">
       <span class="credencial-label">Usuário</span>
       <code class="credencial-valor">{{ credencial.username }}</code>
@@ -78,20 +78,21 @@
           <td data-label="Usuário">{{ usuario.username }}</td>
           <td data-label="E-mail">{{ usuario.email }}</td>
           <td data-label="Login / Senha" class="credencial-celula">
-            <ng-container *ngIf="credencialDoUsuario(usuario.id) as cred; else semCredencial">
-              <div class="credencial-inline">
-                <div><strong>Login:</strong> <code>{{ cred.username }}</code></div>
-                <div><strong>Senha:</strong> <code>{{ cred.senha }}</code></div>
-                <button type="button" class="btn-copiar-inline" (click)="copiarCredenciaisDe(usuario.id)">
-                  <i class="fas fa-copy"></i> Copiar
-                </button>
+            <div class="credencial-lista">
+              <div class="credencial-item-linha">
+                <span class="cred-label">Usuário:</span>
+                <code>{{ usuario.username }}</code>
+                <button type="button" class="btn-copiar-mini" (click)="copiar(usuario.username, 'Usuário')">Copiar</button>
               </div>
-            </ng-container>
-            <ng-template #semCredencial>
+              <div class="credencial-item-linha">
+                <span class="cred-label">Senha:</span>
+                <code>{{ usuario.senhaRegistrada || '—' }}</code>
+                <button type="button" class="btn-copiar-mini" *ngIf="usuario.senhaRegistrada" (click)="copiar(usuario.senhaRegistrada!, 'Senha')">Copiar</button>
+              </div>
               <button type="button" class="btn-senha" (click)="gerarSenha(usuario)">
-                <i class="fas fa-key"></i> Gerar senha
+                <i class="fas fa-key"></i> Gerar nova senha
               </button>
-            </ng-template>
+            </div>
           </td>
           <td data-label="Perfil">{{ usuario.roles.join(', ') }}</td>
           <td data-label="Status">
@@ -100,14 +101,6 @@
             </span>
           </td>
           <td data-label="Ações" class="acoes-tabela">
-            <button
-              type="button"
-              class="btn-senha"
-              (click)="gerarSenha(usuario)"
-              title="Gerar nova senha temporária"
-            >
-              <i class="fas fa-key"></i> Senha
-            </button>
             <button
               *ngIf="usuario.ativo"
               class="btn-desativar"

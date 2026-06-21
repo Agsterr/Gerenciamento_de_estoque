@@ -154,6 +154,7 @@ export class UsuarioComponent implements OnInit {
       next: (res) => {
         this.loading = false;
         this.mostrarCredencial(usuario.id, res.username, res.temporaryPassword);
+        this.loadUsuarios();
       },
       error: () => {
         this.loading = false;

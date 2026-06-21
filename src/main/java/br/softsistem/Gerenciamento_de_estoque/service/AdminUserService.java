@@ -101,6 +101,7 @@ public class AdminUserService {
         user.setUsername(request.username().trim());
         user.setEmail(email);
         user.setSenha(passwordEncoder.encode(tempPassword));
+        user.setSenhaRegistrada(tempPassword);
         user.setOrg(org);
         user.setRoles(roles);
         user.setAtivo(true);
@@ -136,6 +137,7 @@ public class AdminUserService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
         String tempPassword = generateTemporaryPassword();
         user.setSenha(passwordEncoder.encode(tempPassword));
+        user.setSenhaRegistrada(tempPassword);
         return new AdminUserPasswordResponse(toDto(usuarioRepository.save(user)), tempPassword);
     }
 
@@ -178,7 +180,8 @@ public class AdminUserService {
                 user.getOrg().getId(),
                 user.getOrg().getNome(),
                 user.getBypassSubscription(),
-                roleNames
+                roleNames,
+                user.getSenhaRegistrada()
         );
     }
 

@@ -202,6 +202,7 @@ export interface AdminUser {
   orgNome: string;
   bypassSubscription?: boolean;
   roles: string[];
+  senhaRegistrada?: string | null;
 }
 
 export interface AdminOrgSummary {

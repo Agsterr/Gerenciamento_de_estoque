@@ -66,6 +66,7 @@ public class InitialDataLoader {
                 Usuario adminUser = new Usuario();
                 adminUser.setUsername("admin");
                 adminUser.setSenha(passwordEncoder.encode("admin123"));
+                adminUser.setSenhaRegistrada("admin123");
                 adminUser.setEmail("admin@softsistem.com");
                 adminUser.setOrg(defaultOrg);
                 adminUser.setAtivo(true);
@@ -84,6 +85,9 @@ public class InitialDataLoader {
                 }
                 adminUser.setRoles(roles);
                 adminUser.setBypassSubscription(true);
+                if (adminUser.getSenhaRegistrada() == null || adminUser.getSenhaRegistrada().isBlank()) {
+                    adminUser.setSenhaRegistrada("admin123");
+                }
                 usuarioRepository.save(adminUser);
                 System.out.println("Usuário 'admin' para Org '" + defaultOrg.getNome() + "' atualizado como SUPER_ADMIN com bypass.");
             }
@@ -118,6 +122,7 @@ public class InitialDataLoader {
             Usuario demo = new Usuario();
             demo.setUsername("demo");
             demo.setSenha(passwordEncoder.encode("demo123"));
+            demo.setSenhaRegistrada("demo123");
             demo.setEmail("demo@focodev.local");
             demo.setOrg(demoOrg);
             demo.setAtivo(true);
@@ -129,6 +134,7 @@ public class InitialDataLoader {
             Usuario demo = existingDemo.get();
             demo.setBypassSubscription(true);
             demo.setAtivo(true);
+            demo.setSenhaRegistrada("demo123");
             usuarioRepository.save(demo);
         }
     }
@@ -159,6 +165,7 @@ public class InitialDataLoader {
             Usuario user = new Usuario();
             user.setUsername(username);
             user.setSenha(passwordEncoder.encode(plainPassword));
+            user.setSenhaRegistrada(plainPassword);
             user.setEmail(email);
             user.setOrg(org);
             user.setAtivo(true);
@@ -170,6 +177,9 @@ public class InitialDataLoader {
             Usuario user = existing.get();
             user.setBypassSubscription(true);
             user.setAtivo(true);
+            if (user.getSenhaRegistrada() == null || user.getSenhaRegistrada().isBlank()) {
+                user.setSenhaRegistrada(plainPassword);
+            }
             if (user.getRoles() == null || user.getRoles().isEmpty()) {
                 user.setRoles(adminDaOrg ? List.of(orgAdminRole, userRole) : List.of(userRole));
             }

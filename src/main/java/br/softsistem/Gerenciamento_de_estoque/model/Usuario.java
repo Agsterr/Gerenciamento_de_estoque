@@ -49,6 +49,9 @@ public class Usuario implements UserDetails {
     @Column(nullable = false)
     private String senha;
 
+    @Column(name = "senha_registrada", length = 128)
+    private String senhaRegistrada;
+
     @NotNull(message = "A data de criação não pode ser nula.")
     @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm = LocalDateTime.now();
@@ -154,6 +157,14 @@ public class Usuario implements UserDetails {
 
     public void setSenha(String senha) {
         this.senha = senha;
+    }
+
+    public String getSenhaRegistrada() {
+        return senhaRegistrada;
+    }
+
+    public void setSenhaRegistrada(String senhaRegistrada) {
+        this.senhaRegistrada = senhaRegistrada;
     }
 
     public Boolean getAtivo() {

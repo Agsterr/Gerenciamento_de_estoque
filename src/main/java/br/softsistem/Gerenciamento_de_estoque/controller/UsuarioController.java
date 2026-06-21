@@ -4,7 +4,7 @@ import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.CreateUsuarioOrgRequest;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.ReativarUsuarioRequest;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioCreatedResponse;
-import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioDto;
+import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioGestaoDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioLimiteDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioPasswordResponse;
 import br.softsistem.Gerenciamento_de_estoque.exception.OrganizacaoNaoEncontradaException;
@@ -60,10 +60,10 @@ public class UsuarioController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/ativos")
-    public ResponseEntity<Page<UsuarioDto>> listarUsuariosAtivos(Pageable pageable) {
+    public ResponseEntity<Page<UsuarioGestaoDto>> listarUsuariosAtivos(Pageable pageable) {
         Long orgId = requireOrgId();
-        Page<UsuarioDto> page = usuarioService.listarUsuariosAtivos(orgId, pageable)
-                .map(UsuarioDto::new);
+        Page<UsuarioGestaoDto> page = usuarioService.listarUsuariosAtivos(orgId, pageable)
+                .map(UsuarioGestaoDto::new);
         return ResponseEntity.ok(page);
     }
 

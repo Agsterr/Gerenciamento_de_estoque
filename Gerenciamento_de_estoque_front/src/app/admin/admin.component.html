@@ -537,23 +537,21 @@
               <td data-label="E-mail">{{ u.email || '—' }}</td>
               <td data-label="Organização">{{ u.orgNome }}</td>
               <td data-label="Login / Senha" class="credencial-celula">
-                <ng-container *ngIf="credencialDoUsuario(u.id) as cred; else semCredencial">
-                  <div class="credencial-inline">
-                    <div><strong>Login:</strong> <code>{{ cred.username }}</code></div>
-                    <div><strong>Senha:</strong> <code>{{ cred.senha }}</code></div>
-                    <div class="credencial-acoes-inline">
-                      <button type="button" class="btn btn-sm btn-copiar-inline" (click)="copiarCredenciaisDe(u.id)">
-                        <i class="fas fa-copy"></i> Copiar
-                      </button>
-                      <button type="button" class="btn btn-sm btn-secondary" (click)="mostrarCredencial(u.id, cred.username, cred.senha)">Ver</button>
-                    </div>
+                <div class="credencial-lista">
+                  <div class="credencial-item-linha">
+                    <span class="cred-label">Usuário:</span>
+                    <code>{{ u.username }}</code>
+                    <button type="button" class="btn-copiar-mini" (click)="copiarCredencial(u.username, 'Usuário')">Copiar</button>
                   </div>
-                </ng-container>
-                <ng-template #semCredencial>
+                  <div class="credencial-item-linha">
+                    <span class="cred-label">Senha:</span>
+                    <code>{{ u.senhaRegistrada || '—' }}</code>
+                    <button type="button" class="btn-copiar-mini" *ngIf="u.senhaRegistrada" (click)="copiarCredencial(u.senhaRegistrada!, 'Senha')">Copiar</button>
+                  </div>
                   <button type="button" class="btn btn-sm btn-info" (click)="resetSenhaUsuario(u)" [disabled]="u.roles?.includes('ROLE_SUPER_ADMIN')">
-                    <i class="fas fa-key"></i> Gerar senha
+                    <i class="fas fa-key"></i> Gerar nova senha
                   </button>
-                </ng-template>
+                </div>
               </td>
               <td data-label="Roles">{{ u.roles?.join(', ') }}</td>
               <td data-label="Isento">
@@ -567,9 +565,6 @@
                 <button class="btn btn-sm" [class.btn-warning]="u.ativo" [class.btn-success]="!u.ativo"
                   (click)="toggleUsuarioAtivo(u)" [disabled]="u.roles?.includes('ROLE_SUPER_ADMIN')">
                   {{ u.ativo ? 'Desativar' : 'Ativar' }}
-                </button>
-                <button class="btn btn-sm btn-info" (click)="resetSenhaUsuario(u)" [disabled]="u.roles?.includes('ROLE_SUPER_ADMIN')" title="Gerar nova senha">
-                  <i class="fas fa-key"></i> Senha
                 </button>
               </td>
             </tr>

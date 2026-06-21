@@ -5,4 +5,5 @@ export interface Usuario {
   ativo: boolean;
   orgId: number;
   roles: string[];
+  senhaRegistrada?: string | null;
 }

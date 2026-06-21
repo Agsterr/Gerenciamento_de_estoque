@@ -10,5 +10,6 @@ public record AdminUserDto(
         Long orgId,
         String orgNome,
         Boolean bypassSubscription,
-        List<String> roles
+        List<String> roles,
+        String senhaRegistrada
 ) {}

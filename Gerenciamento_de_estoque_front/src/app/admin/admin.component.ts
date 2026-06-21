@@ -138,6 +138,10 @@ export class AdminComponent implements OnInit {
       next: (res) => {
         this.loading = false;
         this.mostrarCredencial(user.id, res.user.username, res.temporaryPassword);
+        const idx = this.adminUsers.findIndex((u) => u.id === user.id);
+        if (idx >= 0) {
+          this.adminUsers[idx] = { ...this.adminUsers[idx], senhaRegistrada: res.temporaryPassword };
+        }
       },
       error: () => {
         this.loading = false;
