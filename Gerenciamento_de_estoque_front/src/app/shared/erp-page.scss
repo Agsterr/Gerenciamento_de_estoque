@@ -316,10 +316,6 @@ $danger: #ef4444;
     padding: 16px;
   }
 
-  .main-content {
-    overflow-x: hidden;
-  }
-
   .summary-section {
     flex-direction: column;
   }
@@ -380,15 +376,27 @@ $danger: #ef4444;
     padding: 10px 16px;
   }
 
-  .table-scroll-wrapper .data-table {
+  .main-content {
+    overflow-x: visible;
+  }
+
+  .table-scroll-wrapper,
+  .main-content > .card-lista {
+    overflow-x: visible;
+  }
+
+  .table-scroll-wrapper .data-table,
+  .main-content .data-table {
     min-width: 0;
   }
 
-  .table-scroll-wrapper .data-table thead {
+  .table-scroll-wrapper .data-table thead,
+  .main-content .data-table thead {
     display: none;
   }
 
-  .table-scroll-wrapper .data-table tbody tr {
+  .table-scroll-wrapper .data-table tbody tr,
+  .main-content .data-table tbody tr {
     display: block;
     margin-bottom: 12px;
     border: 1px solid #e2e8f0;
@@ -398,11 +406,14 @@ $danger: #ef4444;
   }
 
   .table-scroll-wrapper .data-table tbody tr:nth-child(even),
-  .table-scroll-wrapper .data-table tbody tr:hover {
+  .table-scroll-wrapper .data-table tbody tr:hover,
+  .main-content .data-table tbody tr:nth-child(even),
+  .main-content .data-table tbody tr:hover {
     background: white;
   }
 
-  .table-scroll-wrapper .data-table td {
+  .table-scroll-wrapper .data-table td,
+  .main-content .data-table td {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -411,26 +422,32 @@ $danger: #ef4444;
     border: none;
     max-width: none;
     white-space: normal;
+    word-break: break-word;
   }
 
-  .table-scroll-wrapper .data-table td::before {
+  .table-scroll-wrapper .data-table td::before,
+  .main-content .data-table td::before {
     content: attr(data-label);
     font-weight: 600;
     color: #64748b;
     flex-shrink: 0;
     min-width: 90px;
+    max-width: 45%;
   }
 
-  .table-scroll-wrapper .data-table td:not([data-label])::before {
+  .table-scroll-wrapper .data-table td:not([data-label])::before,
+  .main-content .data-table td:not([data-label])::before {
     content: none;
   }
 
-  .table-scroll-wrapper .data-table td[colspan] {
+  .table-scroll-wrapper .data-table td[colspan],
+  .main-content .data-table td[colspan] {
     display: block;
     padding: 0;
   }
 
-  .table-scroll-wrapper .data-table .acoes-tabela {
+  .table-scroll-wrapper .data-table .acoes-tabela,
+  .main-content .data-table .acoes-tabela {
     flex-wrap: wrap;
     justify-content: flex-end;
 
