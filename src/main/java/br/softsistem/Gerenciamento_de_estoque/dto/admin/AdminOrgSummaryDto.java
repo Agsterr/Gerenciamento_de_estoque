@@ -6,6 +6,7 @@ public record AdminOrgSummaryDto(
         Boolean orgAtivo,
         Boolean ephemeral,
         Integer maxDispositivos,
+        Integer maxUsuarios,
         long totalUsuarios,
         long dispositivosAprovados
 ) {}

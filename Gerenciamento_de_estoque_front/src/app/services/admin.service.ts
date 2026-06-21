@@ -210,6 +210,7 @@ export interface AdminOrgSummary {
   orgAtivo?: boolean;
   ephemeral?: boolean;
   maxDispositivos: number;
+  maxUsuarios?: number | null;
   totalUsuarios: number;
   dispositivosAprovados: number;
 }
@@ -248,6 +249,10 @@ export class AdminUsersService {
 
   setMaxDispositivos(orgId: number, maxDispositivos: number): Observable<{ id: number; maxDispositivos: number }> {
     return this.http.patch<{ id: number; maxDispositivos: number }>(`${this.url}/orgs/${orgId}/max-dispositivos`, { maxDispositivos });
+  }
+
+  setMaxUsuarios(orgId: number, maxUsuarios: number): Observable<{ id: number; maxUsuarios: number | null }> {
+    return this.http.patch<{ id: number; maxUsuarios: number | null }>(`${this.url}/orgs/${orgId}/max-usuarios`, { maxUsuarios });
   }
 
   resetSenha(userId: number): Observable<AdminUserCreated> {

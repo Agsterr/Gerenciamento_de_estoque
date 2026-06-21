@@ -31,6 +31,21 @@ export class UsuarioComponent implements OnInit {
   credencial: CredencialArmazenada | null = null;
   credenciaisRecentes: Record<number, CredencialArmazenada> = {};
   copiadoMsg = '';
+  limiteUsuarios: { ativos: number; maximo: number | null; ilimitado: boolean } | null = null;
+
+  get podeCriarUsuario(): boolean {
+    if (!this.limiteUsuarios) return true;
+    if (this.limiteUsuarios.ilimitado || this.limiteUsuarios.maximo == null) return true;
+    return this.limiteUsuarios.ativos < this.limiteUsuarios.maximo;
+  }
+
+  get textoLimiteUsuarios(): string {
+    if (!this.limiteUsuarios) return '';
+    if (this.limiteUsuarios.ilimitado || this.limiteUsuarios.maximo == null) {
+      return `Usuários ativos: ${this.limiteUsuarios.ativos} (sem limite definido)`;
+    }
+    return `Usuários ativos: ${this.limiteUsuarios.ativos} / ${this.limiteUsuarios.maximo}`;
+  }
 
   constructor(
     private authService: AuthService,
@@ -41,10 +56,20 @@ export class UsuarioComponent implements OnInit {
     this.isAdmin = this.authService.isAdmin();
     if (this.isAdmin) {
       this.carregarCredenciaisRecentes();
+      this.loadLimites();
       this.loadUsuarios();
     } else {
       this.errorMessage = 'Você não tem permissão para acessar esta página.';
     }
+  }
+
+  loadLimites(): void {
+    this.usuarioService.consultarLimites().subscribe({
+      next: (limite) => {
+        this.limiteUsuarios = limite;
+      },
+      error: () => {},
+    });
   }
 
   loadUsuarios(): void {
@@ -66,6 +91,10 @@ export class UsuarioComponent implements OnInit {
       this.errorMessage = 'Informe o nome de usuário.';
       return;
     }
+    if (!this.podeCriarUsuario) {
+      this.errorMessage = 'Limite de usuários atingido. Contate o suporte para aumentar.';
+      return;
+    }
     this.loading = true;
     this.errorMessage = '';
     this.usuarioService.criar(this.novoUsuario.username.trim(), this.novoUsuario.email).subscribe({
@@ -73,6 +102,7 @@ export class UsuarioComponent implements OnInit {
         this.loading = false;
         this.mostrarCredencial(res.usuario.id, res.usuario.username, res.temporaryPassword);
         this.novoUsuario = { username: '', email: '' };
+        this.loadLimites();
         this.loadUsuarios();
       },
       error: (err) => {

@@ -25,6 +25,9 @@ public class Org {
     @Column(name = "max_dispositivos", nullable = false)
     private Integer maxDispositivos = 3;
 
+    @Column(name = "max_usuarios")
+    private Integer maxUsuarios;
+
     @Column(nullable = false)
     private Boolean ephemeral = false;
 
@@ -75,6 +78,14 @@ public class Org {
         this.maxDispositivos = maxDispositivos;
     }
 
+    public Integer getMaxUsuarios() {
+        return maxUsuarios;
+    }
+
+    public void setMaxUsuarios(Integer maxUsuarios) {
+        this.maxUsuarios = maxUsuarios;
+    }
+
     public Boolean getEphemeral() {
         return ephemeral;
     }
@@ -93,6 +104,11 @@ public class Org {
 
     public boolean isEphemeralOrg() {
         return Boolean.TRUE.equals(ephemeral);
+    }
+
+    /** 0 ou null tratado como sem limite na org (usa plano). */
+    public boolean hasUnlimitedUsers() {
+        return maxUsuarios == null || maxUsuarios <= 0;
     }
 
     /** 0 ou null tratado como ilimitado. */

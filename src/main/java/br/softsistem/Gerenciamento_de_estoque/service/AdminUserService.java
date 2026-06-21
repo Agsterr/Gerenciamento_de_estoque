@@ -2,6 +2,7 @@ package br.softsistem.Gerenciamento_de_estoque.service;
 
 import br.softsistem.Gerenciamento_de_estoque.dto.admin.AdminCreateUserRequest;
 import br.softsistem.Gerenciamento_de_estoque.dto.admin.AdminOrgDeviceLimitRequest;
+import br.softsistem.Gerenciamento_de_estoque.dto.admin.AdminOrgUserLimitRequest;
 import br.softsistem.Gerenciamento_de_estoque.dto.admin.AdminOrgSummaryDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.admin.AdminUserDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.admin.AdminUserPasswordResponse;
@@ -40,19 +41,22 @@ public class AdminUserService {
     private final DispositivoUsuarioRepository dispositivoUsuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final TrialSubscriptionService trialSubscriptionService;
+    private final OrgUserLimitService orgUserLimitService;
 
     public AdminUserService(UsuarioRepository usuarioRepository,
                             OrgRepository orgRepository,
                             RoleRepository roleRepository,
                             DispositivoUsuarioRepository dispositivoUsuarioRepository,
                             PasswordEncoder passwordEncoder,
-                            TrialSubscriptionService trialSubscriptionService) {
+                            TrialSubscriptionService trialSubscriptionService,
+                            OrgUserLimitService orgUserLimitService) {
         this.usuarioRepository = usuarioRepository;
         this.orgRepository = orgRepository;
         this.roleRepository = roleRepository;
         this.dispositivoUsuarioRepository = dispositivoUsuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.trialSubscriptionService = trialSubscriptionService;
+        this.orgUserLimitService = orgUserLimitService;
     }
 
     @Transactional(readOnly = true)
@@ -78,6 +82,8 @@ public class AdminUserService {
         if (Boolean.TRUE.equals(org.getEphemeral())) {
             throw new IllegalArgumentException("Não é permitido criar usuários permanentes na org demo.");
         }
+
+        orgUserLimitService.assertCanAddUser(org, null);
 
         String email = request.email() != null && !request.email().isBlank()
                 ? request.email().trim().toLowerCase(Locale.ROOT)
@@ -152,6 +158,14 @@ public class AdminUserService {
         return new OrgDto(orgRepository.save(org));
     }
 
+    @Transactional
+    public OrgDto atualizarLimiteUsuarios(Long orgId, AdminOrgUserLimitRequest request) {
+        Org org = orgRepository.findById(orgId)
+                .orElseThrow(() -> new ResourceNotFoundException("Organização não encontrada"));
+        org.setMaxUsuarios(request.maxUsuarios() != null && request.maxUsuarios() <= 0 ? null : request.maxUsuarios());
+        return new OrgDto(orgRepository.save(org));
+    }
+
     private AdminUserDto toDto(Usuario user) {
         List<String> roleNames = user.getRoles() != null
                 ? user.getRoles().stream().map(Role::getNome).toList()
@@ -177,6 +191,7 @@ public class AdminUserService {
                 org.getAtivo(),
                 org.getEphemeral(),
                 org.getMaxDispositivos(),
+                org.getMaxUsuarios(),
                 users,
                 devices
         );

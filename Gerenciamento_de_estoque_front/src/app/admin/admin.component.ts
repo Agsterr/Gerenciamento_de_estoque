@@ -62,6 +62,7 @@ export class AdminComponent implements OnInit {
   copiadoMsg = '';
   credenciaisRecentes: Record<number, CredencialArmazenada> = {};
   orgLimites: Record<number, number> = {};
+  orgLimitesUsuarios: Record<number, number> = {};
   pesquisaStats: PesquisaPrecoStats | null = null;
   cacheInfo: any = null;
   cacheStats: any = null;
@@ -168,6 +169,7 @@ export class AdminComponent implements OnInit {
         this.adminOrgs = orgs ?? [];
         for (const o of this.adminOrgs) {
           this.orgLimites[o.orgId] = o.maxDispositivos;
+          this.orgLimitesUsuarios[o.orgId] = o.maxUsuarios ?? 0;
         }
         if (this.adminOrgs.length && !this.novoUsuario.orgId) {
           this.novoUsuario.orgId = this.adminOrgs.find(o => !o.ephemeral)?.orgId ?? this.adminOrgs[0].orgId;
@@ -213,6 +215,7 @@ export class AdminComponent implements OnInit {
             this.adminOrgs = orgs ?? [];
             for (const o of this.adminOrgs) {
               this.orgLimites[o.orgId] = o.maxDispositivos;
+              this.orgLimitesUsuarios[o.orgId] = o.maxUsuarios ?? 0;
             }
             this.adminUsersService.listar(0, 50).subscribe({
               next: (data) => {
@@ -261,6 +264,25 @@ export class AdminComponent implements OnInit {
       error: () => {
         this.loading = false;
         this.onError('Erro ao salvar limite de dispositivos.');
+      },
+    });
+  }
+
+  salvarLimiteUsuarios(org: AdminOrgSummary): void {
+    const max = this.orgLimitesUsuarios[org.orgId];
+    if (max == null || max < 0) {
+      this.onError('Informe um limite válido (0 = usa limite do plano).');
+      return;
+    }
+    this.loading = true;
+    this.adminUsersService.setMaxUsuarios(org.orgId, max).subscribe({
+      next: () => {
+        this.loading = false;
+        this.onSuccess(`Limite de usuários atualizado para ${org.orgNome}.`);
+      },
+      error: () => {
+        this.loading = false;
+        this.onError('Erro ao salvar limite de usuários.');
       },
     });
   }

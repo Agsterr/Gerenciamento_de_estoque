@@ -476,29 +476,36 @@
         </div>
 
         <div class="sub-card">
-          <h4><i class="fas fa-mobile-alt"></i> Limite de dispositivos por organização</h4>
+          <h4><i class="fas fa-sliders-h"></i> Limites por organização</h4>
+          <p class="hint">Defina quantos usuários cada empresa pode ter. Ex.: <strong>2</strong> ou <strong>3</strong> = no máximo essa quantidade de usuários ativos (inclui o admin).</p>
           <div class="table-scroll-wrapper" *ngIf="adminOrgs.length">
           <table class="data-table">
             <thead>
               <tr>
                 <th>Organização</th>
-                <th>Usuários</th>
+                <th>Usuários ativos</th>
+                <th>Máx. usuários</th>
                 <th>Dispositivos aprovados</th>
-                <th>Máx. por conta</th>
-                <th>Ação</th>
+                <th>Máx. dispositivos</th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let o of adminOrgs">
                 <td data-label="Organização">{{ o.orgNome }} <span *ngIf="o.ephemeral" class="badge-demo">demo</span></td>
-                <td data-label="Usuários">{{ o.totalUsuarios }}</td>
+                <td data-label="Usuários ativos">{{ o.totalUsuarios }}</td>
+                <td data-label="Máx. usuários">
+                  <input type="number" min="0" [(ngModel)]="orgLimitesUsuarios[o.orgId]" class="input-limite" />
+                  <small *ngIf="orgLimitesUsuarios[o.orgId] === 0">0 = limite do plano</small>
+                </td>
                 <td data-label="Dispositivos aprovados">{{ o.dispositivosAprovados }}</td>
-                <td data-label="Máx. por conta">
+                <td data-label="Máx. dispositivos">
                   <input type="number" min="0" [(ngModel)]="orgLimites[o.orgId]" class="input-limite" />
                   <small *ngIf="orgLimites[o.orgId] === 0">0 = ilimitado</small>
                 </td>
-                <td data-label="Ação" class="acoes-tabela">
-                  <button class="btn btn-sm btn-info" (click)="salvarLimiteDispositivos(o)">Salvar</button>
+                <td data-label="Ações" class="acoes-tabela">
+                  <button class="btn btn-sm btn-info" (click)="salvarLimiteUsuarios(o)">Salvar usuários</button>
+                  <button class="btn btn-sm btn-secondary" (click)="salvarLimiteDispositivos(o)">Salvar dispositivos</button>
                 </td>
               </tr>
             </tbody>

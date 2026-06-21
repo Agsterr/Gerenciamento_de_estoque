@@ -30,6 +30,13 @@ export class UsuarioService {
     );
   }
 
+  consultarLimites(): Observable<{ ativos: number; maximo: number | null; ilimitado: boolean; origemLimite: string }> {
+    return this.http.get<{ ativos: number; maximo: number | null; ilimitado: boolean; origemLimite: string }>(
+      `${this.apiUrl}/limites`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
   criar(username: string, email?: string): Observable<{ usuario: Usuario; temporaryPassword: string }> {
     return this.http.post<{ usuario: Usuario; temporaryPassword: string }>(
       this.apiUrl,

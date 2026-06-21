@@ -2,6 +2,7 @@ package br.softsistem.Gerenciamento_de_estoque.controller.admin;
 
 import br.softsistem.Gerenciamento_de_estoque.dto.admin.AdminCreateUserRequest;
 import br.softsistem.Gerenciamento_de_estoque.dto.admin.AdminOrgDeviceLimitRequest;
+import br.softsistem.Gerenciamento_de_estoque.dto.admin.AdminOrgUserLimitRequest;
 import br.softsistem.Gerenciamento_de_estoque.dto.admin.AdminOrgSummaryDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.admin.AdminUserDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.admin.AdminUserPasswordResponse;
@@ -88,5 +89,13 @@ public class AdminUsersController {
             @PathVariable Long orgId,
             @Valid @RequestBody AdminOrgDeviceLimitRequest request) {
         return ResponseEntity.ok(adminUserService.atualizarLimiteDispositivos(orgId, request));
+    }
+
+    @PatchMapping("/orgs/{orgId}/max-usuarios")
+    @Operation(summary = "Definir limite de usuários da organização", description = "0 = usa limite do plano; N = máximo de usuários ativos na org")
+    public ResponseEntity<OrgDto> atualizarLimiteUsuarios(
+            @PathVariable Long orgId,
+            @Valid @RequestBody AdminOrgUserLimitRequest request) {
+        return ResponseEntity.ok(adminUserService.atualizarLimiteUsuarios(orgId, request));
     }
 }

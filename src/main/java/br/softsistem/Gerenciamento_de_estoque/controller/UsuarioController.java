@@ -5,6 +5,7 @@ import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.CreateUsuarioOrgReq
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.ReativarUsuarioRequest;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioCreatedResponse;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioDto;
+import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioLimiteDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioPasswordResponse;
 import br.softsistem.Gerenciamento_de_estoque.exception.OrganizacaoNaoEncontradaException;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
@@ -64,6 +65,14 @@ public class UsuarioController {
         Page<UsuarioDto> page = usuarioService.listarUsuariosAtivos(orgId, pageable)
                 .map(UsuarioDto::new);
         return ResponseEntity.ok(page);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/limites")
+    public ResponseEntity<UsuarioLimiteDto> consultarLimites() {
+        Long orgId = requireOrgId();
+        Long adminUserId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(usuarioService.consultarLimite(orgId, adminUserId));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

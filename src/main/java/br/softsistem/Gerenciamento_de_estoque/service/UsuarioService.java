@@ -3,6 +3,7 @@ package br.softsistem.Gerenciamento_de_estoque.service;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.CreateUsuarioOrgRequest;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioCreatedResponse;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioDto;
+import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioLimiteDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioPasswordResponse;
 import br.softsistem.Gerenciamento_de_estoque.exception.ResourceNotFoundException;
 import br.softsistem.Gerenciamento_de_estoque.model.Org;
@@ -35,20 +36,20 @@ public class UsuarioService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final TrialSubscriptionService trialSubscriptionService;
-    private final SubscriptionService subscriptionService;
+    private final OrgUserLimitService orgUserLimitService;
 
     public UsuarioService(UsuarioRepository usuarioRepository,
                           OrgRepository orgRepository,
                           RoleRepository roleRepository,
                           PasswordEncoder passwordEncoder,
                           TrialSubscriptionService trialSubscriptionService,
-                          SubscriptionService subscriptionService) {
+                          OrgUserLimitService orgUserLimitService) {
         this.usuarioRepository = usuarioRepository;
         this.orgRepository = orgRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.trialSubscriptionService = trialSubscriptionService;
-        this.subscriptionService = subscriptionService;
+        this.orgUserLimitService = orgUserLimitService;
     }
 
     @Transactional
@@ -56,6 +57,9 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findById(id)
                 .filter(u -> u.getOrg().getId().equals(orgId))
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado ou não pertence à organização"));
+        if (!Boolean.TRUE.equals(usuario.getAtivo())) {
+            orgUserLimitService.assertCanAddUser(usuario.getOrg(), null);
+        }
         usuario.setAtivo(true);
         usuarioRepository.save(usuario);
     }
@@ -66,6 +70,7 @@ public class UsuarioService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado ou não pertence à organização"));
 
         if (!usuario.getAtivo()) {
+            orgUserLimitService.assertCanAddUser(usuario.getOrg(), null);
             usuario.setAtivo(true);
             usuarioRepository.save(usuario);
         }
@@ -93,7 +98,7 @@ public class UsuarioService {
             throw new IllegalArgumentException("Não é permitido criar usuários na organização demo.");
         }
 
-        validateUserLimit(org, adminUserId);
+        orgUserLimitService.assertCanAddUser(org, adminUserId);
 
         String email = request.email() != null && !request.email().isBlank()
                 ? request.email().trim().toLowerCase(Locale.ROOT)
@@ -141,19 +146,15 @@ public class UsuarioService {
         return new UsuarioPasswordResponse(usuario.getUsername(), tempPassword);
     }
 
-    public Optional<Usuario> findByEmail(String email) {
-        return usuarioRepository.findByEmail(email);
+    @Transactional(readOnly = true)
+    public UsuarioLimiteDto consultarLimite(Long orgId, Long adminUserId) {
+        Org org = orgRepository.findById(orgId)
+                .orElseThrow(() -> new ResourceNotFoundException("Organização não encontrada"));
+        return orgUserLimitService.consultarLimite(org, adminUserId);
     }
 
-    private void validateUserLimit(Org org, Long adminUserId) {
-        if (adminUserId == null) {
-            return;
-        }
-        int currentCount = (int) usuarioRepository.countAtivosByOrgId(org.getId());
-        if (!subscriptionService.isWithinLimits(adminUserId, "users", currentCount)) {
-            throw new IllegalStateException(
-                    "Limite de usuários do seu plano foi atingido. Faça upgrade da assinatura para adicionar mais usuários.");
-        }
+    public Optional<Usuario> findByEmail(String email) {
+        return usuarioRepository.findByEmail(email);
     }
 
     private String generateTemporaryPassword() {

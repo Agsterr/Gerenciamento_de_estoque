@@ -48,6 +48,7 @@ public class AuthService {
     private final DispositivoUsuarioService dispositivoUsuarioService;
     private final DemoDataService demoDataService;
     private final DemoOrgPurgeService demoOrgPurgeService;
+    private final OrgUserLimitService orgUserLimitService;
 
     public AuthService(UsuarioRepository usuarioRepository,
                        OrgRepository orgRepository,
@@ -60,7 +61,8 @@ public class AuthService {
                        RegistrationProperties registrationProperties,
                        DispositivoUsuarioService dispositivoUsuarioService,
                        DemoDataService demoDataService,
-                       DemoOrgPurgeService demoOrgPurgeService) {
+                       DemoOrgPurgeService demoOrgPurgeService,
+                       OrgUserLimitService orgUserLimitService) {
         this.usuarioRepository = usuarioRepository;
         this.orgRepository = orgRepository;
         this.jwtService = jwtService;
@@ -73,6 +75,7 @@ public class AuthService {
         this.dispositivoUsuarioService = dispositivoUsuarioService;
         this.demoDataService = demoDataService;
         this.demoOrgPurgeService = demoOrgPurgeService;
+        this.orgUserLimitService = orgUserLimitService;
     }
 
     @Transactional
@@ -268,14 +271,7 @@ public class AuthService {
             return;
         }
         Long userId = SecurityUtils.getCurrentUserId();
-        if (userId == null) {
-            return;
-        }
-        int currentCount = (int) usuarioRepository.countAtivosByOrgId(org.getId());
-        if (!subscriptionService.isWithinLimits(userId, "users", currentCount)) {
-            throw new IllegalStateException(
-                    "Limite de usuários do seu plano foi atingido. Faça upgrade da assinatura para adicionar mais usuários.");
-        }
+        orgUserLimitService.assertCanAddUser(org, userId);
     }
 
     private Org resolveOrgForRegister(UsuarioRequestDto dto) {

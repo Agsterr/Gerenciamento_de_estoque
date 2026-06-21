@@ -46,7 +46,7 @@ class UsuarioServiceTest {
     private TrialSubscriptionService trialSubscriptionService;
 
     @Mock
-    private SubscriptionService subscriptionService;
+    private OrgUserLimitService orgUserLimitService;
 
     private Usuario usuario;
     private Org org;
@@ -161,8 +161,7 @@ class UsuarioServiceTest {
         Role userRole = new Role("ROLE_USER", org);
 
         when(orgRepository.findById(1L)).thenReturn(Optional.of(org));
-        when(repository.countAtivosByOrgId(1L)).thenReturn(1L);
-        when(subscriptionService.isWithinLimits(10L, "users", 1)).thenReturn(true);
+        doNothing().when(orgUserLimitService).assertCanAddUser(org, 10L);
         when(repository.findByEmailIgnoreCase("novo@test.local")).thenReturn(Optional.empty());
         when(roleRepository.findByNomeAndOrgId("ROLE_USER", 1L)).thenReturn(Optional.of(userRole));
         when(passwordEncoder.encode(anyString())).thenReturn("hash");
