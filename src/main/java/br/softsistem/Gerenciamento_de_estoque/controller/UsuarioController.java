@@ -3,6 +3,7 @@ package br.softsistem.Gerenciamento_de_estoque.controller;
 import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.ReativarUsuarioRequest;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioDto;
+import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioPasswordResponse;
 import br.softsistem.Gerenciamento_de_estoque.exception.OrganizacaoNaoEncontradaException;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
 import br.softsistem.Gerenciamento_de_estoque.service.UsuarioService;
@@ -60,5 +61,12 @@ public class UsuarioController {
         Page<UsuarioDto> page = usuarioService.listarUsuariosAtivos(orgId, pageable)
                 .map(UsuarioDto::new);
         return ResponseEntity.ok(page);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{id}/reset-password")
+    public ResponseEntity<UsuarioPasswordResponse> resetSenha(@PathVariable Long id) {
+        Long orgId = requireOrgId();
+        return ResponseEntity.ok(usuarioService.resetSenha(id, orgId));
     }
 }

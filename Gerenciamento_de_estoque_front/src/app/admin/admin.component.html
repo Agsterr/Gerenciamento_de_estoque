@@ -449,6 +449,32 @@
           <p *ngIf="senhaTemporaria" class="senha-temp"><strong>Senha temporária:</strong> {{ senhaTemporaria }}</p>
         </div>
 
+        <div id="credencial-admin" *ngIf="credencialUsuario && credencialSenha" class="credencial-box">
+          <div class="credencial-header">
+            <h4><i class="fas fa-key"></i> Credenciais do usuário</h4>
+            <button type="button" class="btn-fechar" (click)="fecharCredencial()" aria-label="Fechar">×</button>
+          </div>
+          <p class="credencial-aviso">A senha abaixo é exibida uma única vez. Copie e guarde em local seguro.</p>
+          <div class="credencial-linha">
+            <span class="credencial-label">Usuário</span>
+            <code class="credencial-valor">{{ credencialUsuario }}</code>
+            <button type="button" class="btn-copiar" (click)="copiarCredencial(credencialUsuario, 'Usuário')">
+              <i class="fas fa-copy"></i> Copiar
+            </button>
+          </div>
+          <div class="credencial-linha">
+            <span class="credencial-label">Senha</span>
+            <code class="credencial-valor">{{ credencialSenha }}</code>
+            <button type="button" class="btn-copiar" (click)="copiarCredencial(credencialSenha, 'Senha')">
+              <i class="fas fa-copy"></i> Copiar
+            </button>
+          </div>
+          <button type="button" class="btn-copiar-tudo" (click)="copiarCredenciaisAdmin()">
+            <i class="fas fa-clipboard"></i> Copiar usuário e senha
+          </button>
+        </div>
+        <p *ngIf="copiadoMsg" class="mensagem sucesso">{{ copiadoMsg }}</p>
+
         <div class="sub-card">
           <h4><i class="fas fa-mobile-alt"></i> Limite de dispositivos por organização</h4>
           <div class="table-scroll-wrapper" *ngIf="adminOrgs.length">

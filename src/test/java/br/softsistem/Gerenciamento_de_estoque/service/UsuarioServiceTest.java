@@ -1,5 +1,6 @@
 package br.softsistem.Gerenciamento_de_estoque.service;
 
+import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioPasswordResponse;
 import br.softsistem.Gerenciamento_de_estoque.model.Org;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
 import br.softsistem.Gerenciamento_de_estoque.repository.UsuarioRepository;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.*;
 
@@ -25,6 +27,9 @@ class UsuarioServiceTest {
 
     @Mock
     private UsuarioRepository repository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     private Usuario usuario;
     private Org org;
@@ -115,5 +120,18 @@ class UsuarioServiceTest {
         Page<Usuario> resultado = service.listarUsuariosAtivos(1L, pageable);
 
         assertEquals(1, resultado.getContent().size());
+    }
+
+    @Test
+    void deveResetarSenhaDeUsuarioDaOrg() {
+        when(repository.findById(1L)).thenReturn(Optional.of(usuario));
+        when(passwordEncoder.encode(anyString())).thenReturn("hash");
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        UsuarioPasswordResponse response = service.resetSenha(1L, 1L);
+
+        assertEquals("usuario1", response.username());
+        assertEquals(12, response.temporaryPassword().length());
+        verify(passwordEncoder).encode(response.temporaryPassword());
     }
 }

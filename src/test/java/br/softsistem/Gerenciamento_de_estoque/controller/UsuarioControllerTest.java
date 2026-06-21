@@ -1,6 +1,7 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.ReativarUsuarioRequest;
+import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioPasswordResponse;
 import br.softsistem.Gerenciamento_de_estoque.model.Org;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
 import br.softsistem.Gerenciamento_de_estoque.service.UsuarioService;
@@ -129,5 +130,16 @@ class UsuarioControllerTest {
                         .param("size", "10")
                         .param("page", "0"))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void resetSenha_deveRetornarCredenciais() throws Exception {
+        UsuarioPasswordResponse response = new UsuarioPasswordResponse("usuario1", "TempPass123!");
+        Mockito.when(usuarioService.resetSenha(1L, 1L)).thenReturn(response);
+        mockMvc.perform(post("/usuarios/1/reset-password").param("orgId", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("usuario1"))
+                .andExpect(jsonPath("$.temporaryPassword").value("TempPass123!"));
+        Mockito.verify(usuarioService).resetSenha(1L, 1L);
     }
 }

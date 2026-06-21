@@ -5,6 +5,11 @@ import { AuthService } from '../services/auth.service';
 import { UsuarioService } from '../services/usuario.service';
 import { Usuario } from '../models/usuario.model';
 
+interface CredencialUsuario {
+  username: string;
+  senha: string;
+}
+
 @Component({
   selector: 'app-usuario',
   standalone: true,
@@ -19,6 +24,8 @@ export class UsuarioComponent implements OnInit {
   mensagem = '';
   loading = false;
   reativarUsername = '';
+  credencial: CredencialUsuario | null = null;
+  copiadoMsg = '';
 
   constructor(
     private authService: AuthService,
@@ -79,5 +86,49 @@ export class UsuarioComponent implements OnInit {
       },
       error: () => (this.errorMessage = 'Erro ao reativar usuário.'),
     });
+  }
+
+  gerarSenha(usuario: Usuario): void {
+    if (!confirm(`Gerar nova senha temporária para ${usuario.username}? A senha atual será substituída.`)) {
+      return;
+    }
+    this.loading = true;
+    this.usuarioService.resetSenha(usuario.id).subscribe({
+      next: (res) => {
+        this.loading = false;
+        this.credencial = { username: res.username, senha: res.temporaryPassword };
+        this.mensagem = '';
+        this.errorMessage = '';
+        this.scrollToCredencial();
+      },
+      error: () => {
+        this.loading = false;
+        this.errorMessage = 'Erro ao gerar nova senha.';
+      },
+    });
+  }
+
+  fecharCredencial(): void {
+    this.credencial = null;
+  }
+
+  copiar(texto: string, label: string): void {
+    if (!texto) return;
+    navigator.clipboard.writeText(texto).then(() => {
+      this.copiadoMsg = `${label} copiado!`;
+      setTimeout(() => (this.copiadoMsg = ''), 2500);
+    });
+  }
+
+  copiarCredenciais(): void {
+    if (!this.credencial) return;
+    const texto = `Usuário: ${this.credencial.username}\nSenha: ${this.credencial.senha}`;
+    this.copiar(texto, 'Credenciais');
+  }
+
+  private scrollToCredencial(): void {
+    setTimeout(() => {
+      document.getElementById('credencial-usuario')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
   }
 }

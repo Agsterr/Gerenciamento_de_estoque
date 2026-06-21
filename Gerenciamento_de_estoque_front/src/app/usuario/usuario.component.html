@@ -5,10 +5,36 @@
 <div *ngIf="!isAdmin" class="mensagem erro">{{ errorMessage }}</div>
 <div *ngIf="mensagem" class="mensagem sucesso">{{ mensagem }}</div>
 <div *ngIf="errorMessage && isAdmin" class="mensagem erro">{{ errorMessage }}</div>
+<div *ngIf="copiadoMsg" class="mensagem sucesso">{{ copiadoMsg }}</div>
 
 <div *ngIf="loading" class="spinner-overlay"><div class="spinner"></div></div>
 
 <div *ngIf="isAdmin" class="usuario-content">
+  <div id="credencial-usuario" *ngIf="credencial" class="credencial-box">
+    <div class="credencial-header">
+      <h3><i class="fas fa-key"></i> Credenciais do usuário</h3>
+      <button type="button" class="btn-fechar" (click)="fecharCredencial()" aria-label="Fechar">×</button>
+    </div>
+    <p class="credencial-aviso">A senha abaixo é exibida uma única vez. Copie e guarde em local seguro.</p>
+    <div class="credencial-linha">
+      <span class="credencial-label">Usuário</span>
+      <code class="credencial-valor">{{ credencial.username }}</code>
+      <button type="button" class="btn-copiar" (click)="copiar(credencial.username, 'Usuário')">
+        <i class="fas fa-copy"></i> Copiar
+      </button>
+    </div>
+    <div class="credencial-linha">
+      <span class="credencial-label">Senha</span>
+      <code class="credencial-valor">{{ credencial.senha }}</code>
+      <button type="button" class="btn-copiar" (click)="copiar(credencial.senha, 'Senha')">
+        <i class="fas fa-copy"></i> Copiar
+      </button>
+    </div>
+    <button type="button" class="btn-copiar-tudo" (click)="copiarCredenciais()">
+      <i class="fas fa-clipboard"></i> Copiar usuário e senha
+    </button>
+  </div>
+
   <div class="reativar-box">
     <h3>Reativar usuário</h3>
     <div class="reativar-form">
@@ -21,43 +47,53 @@
     </div>
   </div>
 
-  <table class="tabela-usuarios" *ngIf="usuarios.length > 0">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Usuário</th>
-        <th>E-mail</th>
-        <th>Roles</th>
-        <th>Status</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let usuario of usuarios">
-        <td>{{ usuario.id }}</td>
-        <td>{{ usuario.username }}</td>
-        <td>{{ usuario.email }}</td>
-        <td>{{ usuario.roles.join(', ') }}</td>
-        <td>
-          <span class="badge" [class.ativo]="usuario.ativo">
-            {{ usuario.ativo ? 'Ativo' : 'Inativo' }}
-          </span>
-        </td>
-        <td>
-          <button
-            *ngIf="usuario.ativo"
-            class="btn-desativar"
-            (click)="desativar(usuario)"
-          >Desativar</button>
-          <button
-            *ngIf="!usuario.ativo"
-            class="btn-ativar"
-            (click)="ativar(usuario)"
-          >Ativar</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="table-scroll-wrapper" *ngIf="usuarios.length > 0">
+    <table class="tabela-usuarios data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Usuário</th>
+          <th>E-mail</th>
+          <th>Roles</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let usuario of usuarios">
+          <td data-label="ID">{{ usuario.id }}</td>
+          <td data-label="Usuário">{{ usuario.username }}</td>
+          <td data-label="E-mail">{{ usuario.email }}</td>
+          <td data-label="Roles">{{ usuario.roles.join(', ') }}</td>
+          <td data-label="Status">
+            <span class="badge" [class.ativo]="usuario.ativo">
+              {{ usuario.ativo ? 'Ativo' : 'Inativo' }}
+            </span>
+          </td>
+          <td data-label="Ações" class="acoes-tabela">
+            <button
+              type="button"
+              class="btn-senha"
+              (click)="gerarSenha(usuario)"
+              title="Gerar nova senha temporária"
+            >
+              <i class="fas fa-key"></i> Senha
+            </button>
+            <button
+              *ngIf="usuario.ativo"
+              class="btn-desativar"
+              (click)="desativar(usuario)"
+            >Desativar</button>
+            <button
+              *ngIf="!usuario.ativo"
+              class="btn-ativar"
+              (click)="ativar(usuario)"
+            >Ativar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
   <p *ngIf="usuarios.length === 0 && !loading" class="vazio">Nenhum usuário ativo encontrado.</p>
 </div>

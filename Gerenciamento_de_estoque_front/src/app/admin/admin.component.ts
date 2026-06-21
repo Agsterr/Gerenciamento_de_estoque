@@ -49,6 +49,9 @@ export class AdminComponent implements OnInit {
   adminOrgs: AdminOrgSummary[] = [];
   novoUsuario = { username: '', email: '', orgId: 0 as number, roles: 'ROLE_USER', bypassSubscription: true };
   senhaTemporaria = '';
+  credencialUsuario = '';
+  credencialSenha = '';
+  copiadoMsg = '';
   orgLimites: Record<number, number> = {};
   pesquisaStats: PesquisaPrecoStats | null = null;
   cacheInfo: any = null;
@@ -123,8 +126,7 @@ export class AdminComponent implements OnInit {
     this.adminUsersService.resetSenha(user.id).subscribe({
       next: (res) => {
         this.loading = false;
-        this.senhaTemporaria = res.temporaryPassword;
-        this.onSuccess(`Nova senha para ${user.username}: ${res.temporaryPassword}`);
+        this.mostrarCredencial(res.user.username, res.temporaryPassword);
       },
       error: () => {
         this.loading = false;
@@ -151,7 +153,6 @@ export class AdminComponent implements OnInit {
 
   carregarAdminUsuarios(): void {
     this.loading = true;
-    this.senhaTemporaria = '';
     this.adminUsersService.listarOrgs().subscribe({
       next: (orgs) => {
         this.adminOrgs = orgs ?? [];
@@ -194,11 +195,23 @@ export class AdminComponent implements OnInit {
     }).subscribe({
       next: (res) => {
         this.loading = false;
-        this.senhaTemporaria = res.temporaryPassword;
+        this.mostrarCredencial(res.user.username, res.temporaryPassword);
         this.novoUsuario.username = '';
         this.novoUsuario.email = '';
-        this.onSuccess(`Usuário criado. Senha temporária: ${res.temporaryPassword}`);
-        this.carregarAdminUsuarios();
+        this.adminUsersService.listarOrgs().subscribe({
+          next: (orgs) => {
+            this.adminOrgs = orgs ?? [];
+            for (const o of this.adminOrgs) {
+              this.orgLimites[o.orgId] = o.maxDispositivos;
+            }
+            this.adminUsersService.listar(0, 50).subscribe({
+              next: (data) => {
+                this.adminUsers = data.content ?? [];
+              },
+              error: () => this.onError('Erro ao carregar usuários.'),
+            });
+          },
+        });
       },
       error: (err) => {
         this.loading = false;
@@ -862,5 +875,35 @@ export class AdminComponent implements OnInit {
   private onError(msg: string): void {
     this.mensagemErro = msg;
     setTimeout(() => (this.mensagemErro = ''), 3000);
+  }
+
+  mostrarCredencial(username: string, senha: string): void {
+    this.credencialUsuario = username;
+    this.credencialSenha = senha;
+    this.senhaTemporaria = senha;
+    this.mensagem = '';
+    setTimeout(() => {
+      document.getElementById('credencial-admin')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
+  }
+
+  fecharCredencial(): void {
+    this.credencialUsuario = '';
+    this.credencialSenha = '';
+    this.senhaTemporaria = '';
+  }
+
+  copiarCredencial(texto: string, label: string): void {
+    if (!texto) return;
+    navigator.clipboard.writeText(texto).then(() => {
+      this.copiadoMsg = `${label} copiado!`;
+      setTimeout(() => (this.copiadoMsg = ''), 2500);
+    });
+  }
+
+  copiarCredenciaisAdmin(): void {
+    if (!this.credencialUsuario || !this.credencialSenha) return;
+    const texto = `Usuário: ${this.credencialUsuario}\nSenha: ${this.credencialSenha}`;
+    this.copiarCredencial(texto, 'Credenciais');
   }
 }
