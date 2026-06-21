@@ -24,7 +24,7 @@ export interface DashboardResumo {
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
-  private url = `${environment.apiUrl}/dashboard`;
+  private url = `${environment.apiUrl}/api/dashboard`;
 
   constructor(private http: HttpClient) {}
 

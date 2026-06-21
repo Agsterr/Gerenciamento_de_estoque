@@ -14,7 +14,25 @@
   align-items: center;
   gap: 6px;
   font-size: 0.9rem;
-  white-space: nowrap;
+  flex-wrap: wrap;
+}
+
+.barcode-search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+
+  .search-input {
+    flex: 1 1 160px;
+    min-width: 0;
+    margin-bottom: 0;
+  }
+
+  .btn {
+    flex-shrink: 0;
+  }
 }
 
 .acoes-produto {
@@ -585,42 +603,78 @@ input.invalido, select.invalido {
     flex-direction: column;
     gap: 10px;
     padding: 12px 8px 8px 8px;
+
+    h2 {
+      font-size: 1.35rem;
+    }
+
+    .acoes-header {
+      width: 100%;
+
+      .botao-listar,
+      .botao-adicionar {
+        flex: 1;
+        justify-content: center;
+        min-height: 44px;
+      }
+    }
   }
   .main-content {
     padding: 0 2px;
+    overflow-x: visible;
   }
   .card-lista {
-    padding: 10px 2px;
+    padding: 10px 8px;
+  }
+
+  .table-scroll-wrapper {
+    overflow-x: visible;
+    margin-left: -4px;
+    margin-right: -4px;
+
+    .entrega-table {
+      min-width: 0;
+    }
   }
   
-  // Responsividade da tabela
-  .entrega-table, .entrega-table thead, .entrega-table tbody, .entrega-table tr, .entrega-table th, .entrega-table td {
-    display: block;
-    width: 100%;
+  // Layout em cards no mobile
+  .entrega-table thead {
+    display: none;
   }
-  .entrega-table thead { display: none; }
+
   .entrega-table tbody tr {
-    margin-bottom: 18px;
+    display: block;
+    margin-bottom: 12px;
+    border: 1px solid #e2e8f0;
     border-radius: 10px;
     box-shadow: 0 2px 12px 0 rgba(30,41,59,0.07);
     background: white;
-    padding: 8px;
-    color: #1e293b !important; // Força a cor do texto
+    padding: 8px 12px;
   }
+
+  .entrega-table tbody tr:nth-child(even) {
+    background: white;
+  }
+
   .entrega-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
     border: none;
-    position: relative;
-    padding-left: 50%;
-    min-height: 32px;
-    font-size: 0.97em;
-    color: #1e293b !important; // Força a cor do texto
+    padding: 8px 0;
+    min-height: 0;
+    white-space: normal;
+    word-break: break-word;
   }
-  .entrega-table td:before {
-    position: absolute;
-    left: 8px;
-    top: 0;
-    width: 48%;
-    white-space: nowrap;
+
+  .entrega-table td::before {
+    position: static;
+    width: auto;
+    min-width: 90px;
+    max-width: 45%;
+    flex-shrink: 0;
+    white-space: normal;
     font-weight: 600;
     color: #2563eb;
     content: attr(data-label);
@@ -645,6 +699,10 @@ input.invalido, select.invalido {
 
   .barcode-search .btn {
     min-height: 44px;
+  }
+
+  .filtro-estoque-baixo {
+    margin-top: 4px;
   }
 }
 @media (max-width: 700px) {
