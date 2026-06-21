@@ -303,6 +303,7 @@
 
   .criar-form button {
     width: 100%;
+    min-height: 44px;
   }
 
   .credencial-linha {
@@ -313,5 +314,38 @@
   .btn-copiar {
     width: 100%;
     justify-content: center;
+    min-height: 44px;
+  }
+
+  .credencial-celula,
+  .acoes-tabela {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+
+    &::before {
+      max-width: none;
+      min-width: 0;
+    }
+  }
+
+  .acoes-tabela .btn-senha,
+  .acoes-tabela .btn-desativar,
+  .acoes-tabela .btn-ativar {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .btn-copiar-inline,
+  .btn-senha {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .limite-info {
+    display: block;
+    width: 100%;
   }
 }

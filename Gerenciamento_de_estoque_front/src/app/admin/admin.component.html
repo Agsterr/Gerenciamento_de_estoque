@@ -494,14 +494,18 @@
               <tr *ngFor="let o of adminOrgs">
                 <td data-label="Organização">{{ o.orgNome }} <span *ngIf="o.ephemeral" class="badge-demo">demo</span></td>
                 <td data-label="Usuários ativos">{{ o.totalUsuarios }}</td>
-                <td data-label="Máx. usuários">
-                  <input type="number" min="0" [(ngModel)]="orgLimitesUsuarios[o.orgId]" class="input-limite" />
-                  <small *ngIf="orgLimitesUsuarios[o.orgId] === 0">0 = limite do plano</small>
+                <td data-label="Máx. usuários" class="celula-limite-wrap">
+                  <div class="celula-limite">
+                    <input type="number" min="0" [(ngModel)]="orgLimitesUsuarios[o.orgId]" class="input-limite" />
+                    <small class="limite-hint" *ngIf="orgLimitesUsuarios[o.orgId] === 0">0 = limite do plano</small>
+                  </div>
                 </td>
                 <td data-label="Dispositivos aprovados">{{ o.dispositivosAprovados }}</td>
-                <td data-label="Máx. dispositivos">
-                  <input type="number" min="0" [(ngModel)]="orgLimites[o.orgId]" class="input-limite" />
-                  <small *ngIf="orgLimites[o.orgId] === 0">0 = ilimitado</small>
+                <td data-label="Máx. dispositivos" class="celula-limite-wrap">
+                  <div class="celula-limite">
+                    <input type="number" min="0" [(ngModel)]="orgLimites[o.orgId]" class="input-limite" />
+                    <small class="limite-hint" *ngIf="orgLimites[o.orgId] === 0">0 = ilimitado</small>
+                  </div>
                 </td>
                 <td data-label="Ações" class="acoes-tabela">
                   <button class="btn btn-sm btn-info" (click)="salvarLimiteUsuarios(o)">Salvar usuários</button>
