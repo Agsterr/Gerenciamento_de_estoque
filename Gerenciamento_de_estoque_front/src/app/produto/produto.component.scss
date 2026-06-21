@@ -291,6 +291,7 @@
   margin: 0 2px;
   font-size: 0.8rem;
   padding: 6px 10px;
+  display: inline-flex;
 }
 
 // Estilos dos botões principais
@@ -598,7 +599,7 @@ input.invalido, select.invalido {
     max-width: 100%;
   }
 }
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .header-produto {
     flex-direction: column;
     gap: 10px;
@@ -636,8 +637,7 @@ input.invalido, select.invalido {
       min-width: 0;
     }
   }
-  
-  // Layout em cards no mobile
+
   .entrega-table thead {
     display: none;
   }
@@ -664,15 +664,19 @@ input.invalido, select.invalido {
     border: none;
     padding: 8px 0;
     min-height: 0;
+    max-width: none;
+    width: 100%;
+    box-sizing: border-box;
     white-space: normal;
-    word-break: break-word;
+    overflow-wrap: break-word;
+    word-break: normal;
   }
 
   .entrega-table td::before {
     position: static;
     width: auto;
     min-width: 90px;
-    max-width: 45%;
+    max-width: 42%;
     flex-shrink: 0;
     white-space: normal;
     font-weight: 600;
@@ -680,9 +684,25 @@ input.invalido, select.invalido {
     content: attr(data-label);
   }
 
+  .entrega-table td > *:not(.acoes-cell) {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: right;
+  }
+
   .acoes-produto {
-    justify-content: flex-end;
-    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+
+    .acoes-cell {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
 
     .btn {
       min-width: 44px;

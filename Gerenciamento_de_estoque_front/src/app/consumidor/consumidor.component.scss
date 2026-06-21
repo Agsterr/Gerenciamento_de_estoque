@@ -398,6 +398,7 @@ $transition: 0.18s cubic-bezier(.4,0,.2,1);
 // Estilo específico para os botões na tabela
 .tabela-consumidores .btn {
   margin: 0 2px;
+  display: inline-flex;
 }
 
 // Paginação
@@ -649,51 +650,76 @@ $transition: 0.18s cubic-bezier(.4,0,.2,1);
   }
 }
 
-@media (max-width: 600px) {
-  .tabela-consumidores, .tabela-consumidores thead, .tabela-consumidores tbody, .tabela-consumidores tr, .tabela-consumidores th, .tabela-consumidores td {
-    display: block;
-    width: 100%;
-  }
-  
+@media (max-width: 768px) {
   .tabela-consumidores thead {
     display: none;
   }
-  
+
   .tabela-consumidores tbody tr {
-    margin-bottom: 16px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: block;
+    margin-bottom: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px 0 rgba(30, 41, 59, 0.07);
     background: white;
-    padding: 12px;
+    padding: 8px 12px;
     color: #1e293b !important;
   }
-  
+
+  .tabela-consumidores tbody tr:nth-child(even) {
+    background: white;
+  }
+
   .tabela-consumidores td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
     border: none;
-    position: relative;
-    padding-left: 50%;
-    min-height: 32px;
+    position: static;
+    padding: 8px 0;
+    min-height: 0;
+    max-width: none;
+    width: 100%;
+    box-sizing: border-box;
     font-size: 0.9rem;
     color: #1e293b !important;
-    
-    &:before {
-      position: absolute;
-      left: 8px;
-      top: 0;
-      width: 48%;
-      white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: normal;
+
+    &::before {
+      position: static;
+      width: auto;
+      min-width: 90px;
+      max-width: 42%;
+      flex-shrink: 0;
+      white-space: normal;
       font-weight: 600;
       color: #3b82f6;
       content: attr(data-label);
     }
   }
-  
+
   .acoes-tabela {
-    text-align: left;
-    padding-left: 8px !important;
-    
-    &:before {
-      content: "Ações: ";
+    flex-wrap: wrap;
+    align-items: center;
+    padding-left: 0 !important;
+    text-align: right;
+
+    .acoes-cell {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .btn {
+      min-width: 44px;
+      min-height: 44px;
+      justify-content: center;
     }
   }
 }
