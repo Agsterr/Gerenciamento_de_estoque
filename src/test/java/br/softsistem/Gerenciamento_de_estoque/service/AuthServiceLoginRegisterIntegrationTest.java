@@ -44,8 +44,8 @@ class AuthServiceLoginRegisterIntegrationTest {
         assertTrue(saved.getSenha().startsWith("$2"), "Senha deve estar em BCrypt no banco");
         assertTrue(passwordEncoder.matches(senha, saved.getSenha()));
 
-        assertDoesNotThrow(() -> authService.login(new LoginRequestDto(username, senha), null));
-        assertDoesNotThrow(() -> authService.login(new LoginRequestDto(email, senha), null));
+        assertDoesNotThrow(() -> authService.login(new LoginRequestDto(username, senha, null), null));
+        assertDoesNotThrow(() -> authService.login(new LoginRequestDto(email, senha, null), null));
     }
 
     @Test
@@ -58,6 +58,6 @@ class AuthServiceLoginRegisterIntegrationTest {
         authService.register(new UsuarioRequestDto(username, senha, email, null, null, orgNome));
 
         assertThrows(BadCredentialsException.class,
-                () -> authService.login(new LoginRequestDto(username, "senhaErrada"), null));
+                () -> authService.login(new LoginRequestDto(username, "senhaErrada", null), null));
     }
 }

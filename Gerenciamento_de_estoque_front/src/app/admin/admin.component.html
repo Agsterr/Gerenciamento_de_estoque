@@ -414,9 +414,35 @@
 
       <!-- Aba Usuários -->
       <div *ngIf="abaAtiva === 'usuarios'">
+        <div id="credencial-admin" *ngIf="credencialUsuario && credencialSenha" class="credencial-box">
+          <div class="credencial-header">
+            <h4><i class="fas fa-key"></i> Credenciais do usuário</h4>
+            <button type="button" class="btn-fechar" (click)="fecharCredencial()" aria-label="Fechar">×</button>
+          </div>
+          <p class="credencial-aviso">Copie e envie ao usuário. Senhas antigas não podem ser recuperadas — só as geradas nesta sessão ficam visíveis aqui.</p>
+          <div class="credencial-linha">
+            <span class="credencial-label">Usuário</span>
+            <code class="credencial-valor">{{ credencialUsuario }}</code>
+            <button type="button" class="btn-copiar" (click)="copiarCredencial(credencialUsuario, 'Usuário')">
+              <i class="fas fa-copy"></i> Copiar
+            </button>
+          </div>
+          <div class="credencial-linha">
+            <span class="credencial-label">Senha</span>
+            <code class="credencial-valor">{{ credencialSenha }}</code>
+            <button type="button" class="btn-copiar" (click)="copiarCredencial(credencialSenha, 'Senha')">
+              <i class="fas fa-copy"></i> Copiar
+            </button>
+          </div>
+          <button type="button" class="btn-copiar-tudo" (click)="copiarCredenciaisAdmin()">
+            <i class="fas fa-clipboard"></i> Copiar usuário e senha
+          </button>
+        </div>
+        <p *ngIf="copiadoMsg" class="mensagem sucesso">{{ copiadoMsg }}</p>
+
         <div class="sub-card">
           <h4><i class="fas fa-user-plus"></i> Criar usuário (SUPER_ADMIN)</h4>
-          <p class="hint">Cadastro público desabilitado — crie contas aqui. A senha temporária é exibida uma vez.</p>
+          <p class="hint">Cadastro público desabilitado — crie contas aqui. Após criar ou gerar senha, use <strong>Copiar usuário e senha</strong> para enviar ao cliente.</p>
           <div class="form-row">
             <div class="form-group">
               <label>Usuário</label>
@@ -448,32 +474,6 @@
           </div>
           <p *ngIf="senhaTemporaria" class="senha-temp"><strong>Senha temporária:</strong> {{ senhaTemporaria }}</p>
         </div>
-
-        <div id="credencial-admin" *ngIf="credencialUsuario && credencialSenha" class="credencial-box">
-          <div class="credencial-header">
-            <h4><i class="fas fa-key"></i> Credenciais do usuário</h4>
-            <button type="button" class="btn-fechar" (click)="fecharCredencial()" aria-label="Fechar">×</button>
-          </div>
-          <p class="credencial-aviso">A senha abaixo é exibida uma única vez. Copie e guarde em local seguro.</p>
-          <div class="credencial-linha">
-            <span class="credencial-label">Usuário</span>
-            <code class="credencial-valor">{{ credencialUsuario }}</code>
-            <button type="button" class="btn-copiar" (click)="copiarCredencial(credencialUsuario, 'Usuário')">
-              <i class="fas fa-copy"></i> Copiar
-            </button>
-          </div>
-          <div class="credencial-linha">
-            <span class="credencial-label">Senha</span>
-            <code class="credencial-valor">{{ credencialSenha }}</code>
-            <button type="button" class="btn-copiar" (click)="copiarCredencial(credencialSenha, 'Senha')">
-              <i class="fas fa-copy"></i> Copiar
-            </button>
-          </div>
-          <button type="button" class="btn-copiar-tudo" (click)="copiarCredenciaisAdmin()">
-            <i class="fas fa-clipboard"></i> Copiar usuário e senha
-          </button>
-        </div>
-        <p *ngIf="copiadoMsg" class="mensagem sucesso">{{ copiadoMsg }}</p>
 
         <div class="sub-card">
           <h4><i class="fas fa-mobile-alt"></i> Limite de dispositivos por organização</h4>
@@ -513,6 +513,7 @@
               <th>Usuário</th>
               <th>E-mail</th>
               <th>Organização</th>
+              <th>Login / Senha</th>
               <th>Roles</th>
               <th>Isento</th>
               <th>Status</th>
@@ -524,6 +525,25 @@
               <td data-label="Usuário">{{ u.username }}</td>
               <td data-label="E-mail">{{ u.email || '—' }}</td>
               <td data-label="Organização">{{ u.orgNome }}</td>
+              <td data-label="Login / Senha" class="credencial-celula">
+                <ng-container *ngIf="credencialDoUsuario(u.id) as cred; else semCredencial">
+                  <div class="credencial-inline">
+                    <div><strong>Login:</strong> <code>{{ cred.username }}</code></div>
+                    <div><strong>Senha:</strong> <code>{{ cred.senha }}</code></div>
+                    <div class="credencial-acoes-inline">
+                      <button type="button" class="btn btn-sm btn-copiar-inline" (click)="copiarCredenciaisDe(u.id)">
+                        <i class="fas fa-copy"></i> Copiar
+                      </button>
+                      <button type="button" class="btn btn-sm btn-secondary" (click)="mostrarCredencial(u.id, cred.username, cred.senha)">Ver</button>
+                    </div>
+                  </div>
+                </ng-container>
+                <ng-template #semCredencial>
+                  <button type="button" class="btn btn-sm btn-info" (click)="resetSenhaUsuario(u)" [disabled]="u.roles?.includes('ROLE_SUPER_ADMIN')">
+                    <i class="fas fa-key"></i> Gerar senha
+                  </button>
+                </ng-template>
+              </td>
               <td data-label="Roles">{{ u.roles?.join(', ') }}</td>
               <td data-label="Isento">
                 <button class="btn btn-sm" [class.btn-success]="u.bypassSubscription" [class.btn-secondary]="!u.bypassSubscription"
@@ -537,8 +557,8 @@
                   (click)="toggleUsuarioAtivo(u)" [disabled]="u.roles?.includes('ROLE_SUPER_ADMIN')">
                   {{ u.ativo ? 'Desativar' : 'Ativar' }}
                 </button>
-                <button class="btn btn-sm btn-info" (click)="resetSenhaUsuario(u)" title="Nova senha temporária">
-                  <i class="fas fa-key"></i>
+                <button class="btn btn-sm btn-info" (click)="resetSenhaUsuario(u)" [disabled]="u.roles?.includes('ROLE_SUPER_ADMIN')" title="Gerar nova senha">
+                  <i class="fas fa-key"></i> Senha
                 </button>
               </td>
             </tr>

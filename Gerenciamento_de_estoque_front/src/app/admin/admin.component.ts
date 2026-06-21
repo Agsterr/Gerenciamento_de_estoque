@@ -5,6 +5,14 @@ import { AuthService } from '../services/auth.service';
 import { AdminWebhookService, AdminCacheService, AdminLoginLogsService, AdminSubscriptionAdminService, AdminUsersService, AdminPesquisaPrecoService, LoginLog, LoginLogPeriodo, LoginLogExportFile, AdminOrgSubscription, AdminUser, AdminOrgSummary, PesquisaPrecoStats } from '../services/admin.service';
 import { AdminSugestaoService, Sugestao } from '../services/login-logs.service';
 
+interface CredencialArmazenada {
+  username: string;
+  senha: string;
+  geradoEm: number;
+}
+
+const CREDENCIAIS_STORAGE_KEY = 'admin_credenciais_recentes';
+
 @Component({
   selector: 'app-admin',
   standalone: true,
@@ -52,6 +60,7 @@ export class AdminComponent implements OnInit {
   credencialUsuario = '';
   credencialSenha = '';
   copiadoMsg = '';
+  credenciaisRecentes: Record<number, CredencialArmazenada> = {};
   orgLimites: Record<number, number> = {};
   pesquisaStats: PesquisaPrecoStats | null = null;
   cacheInfo: any = null;
@@ -98,6 +107,7 @@ export class AdminComponent implements OnInit {
     } else if (aba === 'sugestoes') {
       this.carregarSugestoes();
     } else if (aba === 'usuarios') {
+      this.carregarCredenciaisRecentes();
       this.carregarAdminUsuarios();
     } else if (aba === 'pesquisa-preco') {
       this.carregarPesquisaPreco();
@@ -121,12 +131,12 @@ export class AdminComponent implements OnInit {
   }
 
   resetSenhaUsuario(user: AdminUser): void {
-    if (!confirm(`Gerar nova senha temporária para ${user.username}?`)) return;
+    if (!confirm(`Gerar nova senha para ${user.username}?\n\nA senha atual será substituída. Use os botões Copiar para enviar ao usuário.`)) return;
     this.loading = true;
     this.adminUsersService.resetSenha(user.id).subscribe({
       next: (res) => {
         this.loading = false;
-        this.mostrarCredencial(res.user.username, res.temporaryPassword);
+        this.mostrarCredencial(user.id, res.user.username, res.temporaryPassword);
       },
       error: () => {
         this.loading = false;
@@ -195,7 +205,7 @@ export class AdminComponent implements OnInit {
     }).subscribe({
       next: (res) => {
         this.loading = false;
-        this.mostrarCredencial(res.user.username, res.temporaryPassword);
+        this.mostrarCredencial(res.user.id, res.user.username, res.temporaryPassword);
         this.novoUsuario.username = '';
         this.novoUsuario.email = '';
         this.adminUsersService.listarOrgs().subscribe({
@@ -877,14 +887,46 @@ export class AdminComponent implements OnInit {
     setTimeout(() => (this.mensagemErro = ''), 3000);
   }
 
-  mostrarCredencial(username: string, senha: string): void {
+  mostrarCredencial(userId: number, username: string, senha: string): void {
     this.credencialUsuario = username;
     this.credencialSenha = senha;
     this.senhaTemporaria = senha;
+    this.credenciaisRecentes[userId] = { username, senha, geradoEm: Date.now() };
+    this.salvarCredenciaisRecentes();
     this.mensagem = '';
     setTimeout(() => {
       document.getElementById('credencial-admin')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 100);
+  }
+
+  credencialDoUsuario(userId: number): CredencialArmazenada | null {
+    return this.credenciaisRecentes[userId] ?? null;
+  }
+
+  private carregarCredenciaisRecentes(): void {
+    try {
+      const raw = sessionStorage.getItem(CREDENCIAIS_STORAGE_KEY);
+      this.credenciaisRecentes = raw ? JSON.parse(raw) : {};
+    } catch {
+      this.credenciaisRecentes = {};
+    }
+  }
+
+  private salvarCredenciaisRecentes(): void {
+    try {
+      sessionStorage.setItem(CREDENCIAIS_STORAGE_KEY, JSON.stringify(this.credenciaisRecentes));
+    } catch {
+      // ignore quota errors
+    }
+  }
+
+  limparCredencialUsuario(userId: number): void {
+    const credencial = this.credenciaisRecentes[userId];
+    delete this.credenciaisRecentes[userId];
+    this.salvarCredenciaisRecentes();
+    if (credencial && this.credencialUsuario === credencial.username) {
+      this.fecharCredencial();
+    }
   }
 
   fecharCredencial(): void {
@@ -905,5 +947,11 @@ export class AdminComponent implements OnInit {
     if (!this.credencialUsuario || !this.credencialSenha) return;
     const texto = `Usuário: ${this.credencialUsuario}\nSenha: ${this.credencialSenha}`;
     this.copiarCredencial(texto, 'Credenciais');
+  }
+
+  copiarCredenciaisDe(userId: number): void {
+    const cred = this.credenciaisRecentes[userId];
+    if (!cred) return;
+    this.copiarCredencial(`Usuário: ${cred.username}\nSenha: ${cred.senha}`, 'Login e senha');
   }
 }

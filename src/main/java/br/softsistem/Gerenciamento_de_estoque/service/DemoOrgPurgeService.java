@@ -28,7 +28,7 @@ public class DemoOrgPurgeService {
         log.info("Limpando dados operacionais da org demo id={}", orgId);
 
         jdbcTemplate.update(
-                "DELETE FROM pedido_venda_itens WHERE pedido_venda_id IN (SELECT id FROM pedidos_venda WHERE org_id = ?)",
+                "DELETE FROM pedido_venda_itens WHERE pedido_id IN (SELECT id FROM pedidos_venda WHERE org_id = ?)",
                 orgId);
         jdbcTemplate.update("DELETE FROM pedidos_venda WHERE org_id = ?", orgId);
         jdbcTemplate.update(

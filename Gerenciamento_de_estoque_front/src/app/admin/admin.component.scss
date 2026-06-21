@@ -487,3 +487,29 @@ pre {
     justify-content: center;
   }
 }
+
+.credencial-celula code {
+  font-family: ui-monospace, monospace;
+  word-break: break-all;
+  user-select: all;
+}
+
+.credencial-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.credencial-acoes-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+
+.btn-copiar-inline {
+  background: #3949ab !important;
+  color: #fff !important;
+  border: none;
+}
