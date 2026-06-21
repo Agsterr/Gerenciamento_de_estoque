@@ -1,12 +1,15 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
 import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
+import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.CreateUsuarioOrgRequest;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.ReativarUsuarioRequest;
+import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioCreatedResponse;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioPasswordResponse;
 import br.softsistem.Gerenciamento_de_estoque.exception.OrganizacaoNaoEncontradaException;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
 import br.softsistem.Gerenciamento_de_estoque.service.UsuarioService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -61,6 +64,14 @@ public class UsuarioController {
         Page<UsuarioDto> page = usuarioService.listarUsuariosAtivos(orgId, pageable)
                 .map(UsuarioDto::new);
         return ResponseEntity.ok(page);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping
+    public ResponseEntity<UsuarioCreatedResponse> criarUsuario(@Valid @RequestBody CreateUsuarioOrgRequest request) {
+        Long orgId = requireOrgId();
+        Long adminUserId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(usuarioService.criarUsuarioComum(request, orgId, adminUserId));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

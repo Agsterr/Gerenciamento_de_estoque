@@ -1,6 +1,9 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
+import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.CreateUsuarioOrgRequest;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.ReativarUsuarioRequest;
+import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioCreatedResponse;
+import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioPasswordResponse;
 import br.softsistem.Gerenciamento_de_estoque.model.Org;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
@@ -141,5 +144,23 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.username").value("usuario1"))
                 .andExpect(jsonPath("$.temporaryPassword").value("TempPass123!"));
         Mockito.verify(usuarioService).resetSenha(1L, 1L);
+    }
+
+    @Test
+    void criarUsuario_deveRetornarUsuarioESenha() throws Exception {
+        Usuario usuario = criarUsuario();
+        usuario.setRoles(new java.util.ArrayList<>());
+        UsuarioCreatedResponse response = new UsuarioCreatedResponse(new UsuarioDto(usuario), "TempPass123!");
+        CreateUsuarioOrgRequest request = new CreateUsuarioOrgRequest("novo", "novo@test.local");
+        Mockito.when(usuarioService.criarUsuarioComum(any(CreateUsuarioOrgRequest.class), eq(1L), any()))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/usuarios")
+                        .param("orgId", "1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.usuario.username").value("usuario1"))
+                .andExpect(jsonPath("$.temporaryPassword").value("TempPass123!"));
     }
 }

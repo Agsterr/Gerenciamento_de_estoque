@@ -1,8 +1,13 @@
 package br.softsistem.Gerenciamento_de_estoque.service;
 
+import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.CreateUsuarioOrgRequest;
+import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioCreatedResponse;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioPasswordResponse;
 import br.softsistem.Gerenciamento_de_estoque.model.Org;
+import br.softsistem.Gerenciamento_de_estoque.model.Role;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
+import br.softsistem.Gerenciamento_de_estoque.repository.OrgRepository;
+import br.softsistem.Gerenciamento_de_estoque.repository.RoleRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.UsuarioRepository;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +34,19 @@ class UsuarioServiceTest {
     private UsuarioRepository repository;
 
     @Mock
+    private OrgRepository orgRepository;
+
+    @Mock
+    private RoleRepository roleRepository;
+
+    @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private TrialSubscriptionService trialSubscriptionService;
+
+    @Mock
+    private SubscriptionService subscriptionService;
 
     private Usuario usuario;
     private Org org;
@@ -38,12 +55,15 @@ class UsuarioServiceTest {
     void setup() {
         org = new Org();
         org.setId(1L);
+        org.setNome("Org Teste");
+        org.setEphemeral(false);
 
         usuario = new Usuario();
         usuario.setId(1L);
         usuario.setUsername("usuario1");
         usuario.setOrg(org);
         usuario.setAtivo(false);
+        usuario.setRoles(new ArrayList<>());
     }
 
     @Test
@@ -133,5 +153,30 @@ class UsuarioServiceTest {
         assertEquals("usuario1", response.username());
         assertEquals(12, response.temporaryPassword().length());
         verify(passwordEncoder).encode(response.temporaryPassword());
+    }
+
+    @Test
+    void deveCriarUsuarioComumNaOrg() {
+        CreateUsuarioOrgRequest request = new CreateUsuarioOrgRequest("novo_user", "novo@test.local");
+        Role userRole = new Role("ROLE_USER", org);
+
+        when(orgRepository.findById(1L)).thenReturn(Optional.of(org));
+        when(repository.countAtivosByOrgId(1L)).thenReturn(1L);
+        when(subscriptionService.isWithinLimits(10L, "users", 1)).thenReturn(true);
+        when(repository.findByEmailIgnoreCase("novo@test.local")).thenReturn(Optional.empty());
+        when(roleRepository.findByNomeAndOrgId("ROLE_USER", 1L)).thenReturn(Optional.of(userRole));
+        when(passwordEncoder.encode(anyString())).thenReturn("hash");
+        when(repository.save(any(Usuario.class))).thenAnswer(inv -> {
+            Usuario saved = inv.getArgument(0);
+            saved.setId(99L);
+            saved.setRoles(List.of(userRole));
+            return saved;
+        });
+
+        UsuarioCreatedResponse response = service.criarUsuarioComum(request, 1L, 10L);
+
+        assertEquals("novo_user", response.usuario().username());
+        assertEquals(12, response.temporaryPassword().length());
+        verify(trialSubscriptionService).startTrialForUser(any(Usuario.class));
     }
 }

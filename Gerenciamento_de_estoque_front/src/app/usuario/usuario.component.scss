@@ -8,6 +8,12 @@
     color: #1a237e;
     font-size: 1.4rem;
   }
+
+  .subtitulo {
+    margin: 0.35rem 0 0;
+    color: #666;
+    font-size: 0.95rem;
+  }
 }
 
 .mensagem {
@@ -121,6 +127,70 @@
   h3 { margin: 0 0 0.75rem; font-size: 1rem; }
 }
 
+.criar-box {
+  background: #fff;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  h3 { margin: 0 0 0.5rem; font-size: 1rem; color: #1a237e; }
+
+  .hint {
+    margin: 0 0 0.75rem;
+    font-size: 0.9rem;
+    color: #666;
+  }
+}
+
+.criar-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  input {
+    flex: 1;
+    min-width: 10rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+  }
+
+  button {
+    padding: 0.5rem 1rem;
+    background: #2e7d32;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+}
+
+.credencial-celula code {
+  font-family: ui-monospace, monospace;
+  word-break: break-all;
+  user-select: all;
+}
+
+.credencial-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.btn-copiar-inline {
+  align-self: flex-start;
+  padding: 0.35rem 0.65rem;
+  background: #3949ab;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
 .reativar-form {
   display: flex;
   gap: 0.5rem;
@@ -211,8 +281,13 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 768px) {
-  .reativar-form {
+  .reativar-form,
+  .criar-form {
     flex-direction: column;
+  }
+
+  .criar-form button {
+    width: 100%;
   }
 
   .credencial-linha {

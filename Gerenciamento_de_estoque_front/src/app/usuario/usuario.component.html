@@ -1,5 +1,6 @@
 <header class="header-usuario">
-  <h2><i class="fas fa-user-cog"></i> Gestão de Usuários</h2>
+  <h2><i class="fas fa-user-cog"></i> Gestão de Usuários da Empresa</h2>
+  <p class="subtitulo">Crie usuários comuns para sua equipe e gerencie o acesso da sua organização.</p>
 </header>
 
 <div *ngIf="!isAdmin" class="mensagem erro">{{ errorMessage }}</div>
@@ -15,7 +16,7 @@
       <h3><i class="fas fa-key"></i> Credenciais do usuário</h3>
       <button type="button" class="btn-fechar" (click)="fecharCredencial()" aria-label="Fechar">×</button>
     </div>
-    <p class="credencial-aviso">A senha abaixo é exibida uma única vez. Copie e guarde em local seguro.</p>
+    <p class="credencial-aviso">Copie e envie ao colaborador. Senhas antigas não podem ser recuperadas.</p>
     <div class="credencial-linha">
       <span class="credencial-label">Usuário</span>
       <code class="credencial-valor">{{ credencial.username }}</code>
@@ -33,6 +34,16 @@
     <button type="button" class="btn-copiar-tudo" (click)="copiarCredenciais()">
       <i class="fas fa-clipboard"></i> Copiar usuário e senha
     </button>
+  </div>
+
+  <div class="criar-box">
+    <h3><i class="fas fa-user-plus"></i> Novo usuário comum</h3>
+    <p class="hint">Usuários criados aqui entram como <strong>ROLE_USER</strong> e ficam vinculados à sua empresa.</p>
+    <div class="criar-form">
+      <input type="text" placeholder="Nome de usuário (login)" [(ngModel)]="novoUsuario.username" />
+      <input type="email" placeholder="E-mail (opcional)" [(ngModel)]="novoUsuario.email" />
+      <button type="button" (click)="criarUsuario()"><i class="fas fa-plus"></i> Criar usuário</button>
+    </div>
   </div>
 
   <div class="reativar-box">
@@ -54,7 +65,8 @@
           <th>ID</th>
           <th>Usuário</th>
           <th>E-mail</th>
-          <th>Roles</th>
+          <th>Login / Senha</th>
+          <th>Perfil</th>
           <th>Status</th>
           <th>Ações</th>
         </tr>
@@ -64,7 +76,23 @@
           <td data-label="ID">{{ usuario.id }}</td>
           <td data-label="Usuário">{{ usuario.username }}</td>
           <td data-label="E-mail">{{ usuario.email }}</td>
-          <td data-label="Roles">{{ usuario.roles.join(', ') }}</td>
+          <td data-label="Login / Senha" class="credencial-celula">
+            <ng-container *ngIf="credencialDoUsuario(usuario.id) as cred; else semCredencial">
+              <div class="credencial-inline">
+                <div><strong>Login:</strong> <code>{{ cred.username }}</code></div>
+                <div><strong>Senha:</strong> <code>{{ cred.senha }}</code></div>
+                <button type="button" class="btn-copiar-inline" (click)="copiarCredenciaisDe(usuario.id)">
+                  <i class="fas fa-copy"></i> Copiar
+                </button>
+              </div>
+            </ng-container>
+            <ng-template #semCredencial>
+              <button type="button" class="btn-senha" (click)="gerarSenha(usuario)">
+                <i class="fas fa-key"></i> Gerar senha
+              </button>
+            </ng-template>
+          </td>
+          <td data-label="Perfil">{{ usuario.roles.join(', ') }}</td>
           <td data-label="Status">
             <span class="badge" [class.ativo]="usuario.ativo">
               {{ usuario.ativo ? 'Ativo' : 'Inativo' }}

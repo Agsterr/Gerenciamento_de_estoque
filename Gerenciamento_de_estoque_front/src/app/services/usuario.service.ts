@@ -30,6 +30,14 @@ export class UsuarioService {
     );
   }
 
+  criar(username: string, email?: string): Observable<{ usuario: Usuario; temporaryPassword: string }> {
+    return this.http.post<{ usuario: Usuario; temporaryPassword: string }>(
+      this.apiUrl,
+      { username, email: email?.trim() || undefined },
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
   ativar(id: number): Observable<{ message: string }> {
     return this.http.put<{ message: string }>(
       `${this.apiUrl}/${id}/ativar`,

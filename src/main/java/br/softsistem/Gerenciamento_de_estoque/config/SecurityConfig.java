@@ -93,6 +93,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/webhooks/**").permitAll()
                         .requestMatchers("/roles/**").hasRole("ADMIN")
                         .requestMatchers("/usuarios/reativar-usuario").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/usuarios").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/usuarios/{id}/desativar").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/usuarios/{id}/reset-password").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/relatorios/**").authenticated()

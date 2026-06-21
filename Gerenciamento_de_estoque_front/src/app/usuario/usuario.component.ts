@@ -5,10 +5,13 @@ import { AuthService } from '../services/auth.service';
 import { UsuarioService } from '../services/usuario.service';
 import { Usuario } from '../models/usuario.model';
 
-interface CredencialUsuario {
+interface CredencialArmazenada {
   username: string;
   senha: string;
+  geradoEm: number;
 }
+
+const CREDENCIAIS_STORAGE_KEY = 'org_credenciais_recentes';
 
 @Component({
   selector: 'app-usuario',
@@ -24,7 +27,9 @@ export class UsuarioComponent implements OnInit {
   mensagem = '';
   loading = false;
   reativarUsername = '';
-  credencial: CredencialUsuario | null = null;
+  novoUsuario = { username: '', email: '' };
+  credencial: CredencialArmazenada | null = null;
+  credenciaisRecentes: Record<number, CredencialArmazenada> = {};
   copiadoMsg = '';
 
   constructor(
@@ -35,6 +40,7 @@ export class UsuarioComponent implements OnInit {
   ngOnInit(): void {
     this.isAdmin = this.authService.isAdmin();
     if (this.isAdmin) {
+      this.carregarCredenciaisRecentes();
       this.loadUsuarios();
     } else {
       this.errorMessage = 'Você não tem permissão para acessar esta página.';
@@ -51,6 +57,27 @@ export class UsuarioComponent implements OnInit {
       error: () => {
         this.errorMessage = 'Erro ao carregar usuários.';
         this.loading = false;
+      },
+    });
+  }
+
+  criarUsuario(): void {
+    if (!this.novoUsuario.username.trim()) {
+      this.errorMessage = 'Informe o nome de usuário.';
+      return;
+    }
+    this.loading = true;
+    this.errorMessage = '';
+    this.usuarioService.criar(this.novoUsuario.username.trim(), this.novoUsuario.email).subscribe({
+      next: (res) => {
+        this.loading = false;
+        this.mostrarCredencial(res.usuario.id, res.usuario.username, res.temporaryPassword);
+        this.novoUsuario = { username: '', email: '' };
+        this.loadUsuarios();
+      },
+      error: (err) => {
+        this.loading = false;
+        this.errorMessage = err?.error?.error || err?.error?.message || 'Erro ao criar usuário.';
       },
     });
   }
@@ -89,23 +116,32 @@ export class UsuarioComponent implements OnInit {
   }
 
   gerarSenha(usuario: Usuario): void {
-    if (!confirm(`Gerar nova senha temporária para ${usuario.username}? A senha atual será substituída.`)) {
+    if (!confirm(`Gerar nova senha para ${usuario.username}?\n\nA senha atual será substituída.`)) {
       return;
     }
     this.loading = true;
     this.usuarioService.resetSenha(usuario.id).subscribe({
       next: (res) => {
         this.loading = false;
-        this.credencial = { username: res.username, senha: res.temporaryPassword };
-        this.mensagem = '';
-        this.errorMessage = '';
-        this.scrollToCredencial();
+        this.mostrarCredencial(usuario.id, res.username, res.temporaryPassword);
       },
       error: () => {
         this.loading = false;
         this.errorMessage = 'Erro ao gerar nova senha.';
       },
     });
+  }
+
+  credencialDoUsuario(userId: number): CredencialArmazenada | null {
+    return this.credenciaisRecentes[userId] ?? null;
+  }
+
+  mostrarCredencial(userId: number, username: string, senha: string): void {
+    this.credencial = { username, senha, geradoEm: Date.now() };
+    this.credenciaisRecentes[userId] = this.credencial;
+    this.salvarCredenciaisRecentes();
+    this.mensagem = '';
+    this.scrollToCredencial();
   }
 
   fecharCredencial(): void {
@@ -124,6 +160,29 @@ export class UsuarioComponent implements OnInit {
     if (!this.credencial) return;
     const texto = `Usuário: ${this.credencial.username}\nSenha: ${this.credencial.senha}`;
     this.copiar(texto, 'Credenciais');
+  }
+
+  copiarCredenciaisDe(userId: number): void {
+    const cred = this.credenciaisRecentes[userId];
+    if (!cred) return;
+    this.copiar(`Usuário: ${cred.username}\nSenha: ${cred.senha}`, 'Login e senha');
+  }
+
+  private carregarCredenciaisRecentes(): void {
+    try {
+      const raw = sessionStorage.getItem(CREDENCIAIS_STORAGE_KEY);
+      this.credenciaisRecentes = raw ? JSON.parse(raw) : {};
+    } catch {
+      this.credenciaisRecentes = {};
+    }
+  }
+
+  private salvarCredenciaisRecentes(): void {
+    try {
+      sessionStorage.setItem(CREDENCIAIS_STORAGE_KEY, JSON.stringify(this.credenciaisRecentes));
+    } catch {
+      // ignore
+    }
   }
 
   private scrollToCredencial(): void {
