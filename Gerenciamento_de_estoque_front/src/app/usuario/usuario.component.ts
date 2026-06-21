@@ -42,9 +42,9 @@ export class UsuarioComponent implements OnInit {
   get textoLimiteUsuarios(): string {
     if (!this.limiteUsuarios) return '';
     if (this.limiteUsuarios.ilimitado || this.limiteUsuarios.maximo == null) {
-      return `Usuários ativos: ${this.limiteUsuarios.ativos} (sem limite definido)`;
+      return `Usuários ativos: ${this.limiteUsuarios.ativos} (sem limite de aparelhos definido)`;
     }
-    return `Usuários ativos: ${this.limiteUsuarios.ativos} / ${this.limiteUsuarios.maximo}`;
+    return `Usuários ativos: ${this.limiteUsuarios.ativos} / ${this.limiteUsuarios.maximo} (limite de aparelhos)`;
   }
 
   constructor(
@@ -92,7 +92,7 @@ export class UsuarioComponent implements OnInit {
       return;
     }
     if (!this.podeCriarUsuario) {
-      this.errorMessage = 'Limite de usuários atingido. Contate o suporte para aumentar.';
+      this.errorMessage = 'Limite de aparelhos/usuários atingido. Contate o suporte para aumentar.';
       return;
     }
     this.loading = true;
@@ -143,28 +143,6 @@ export class UsuarioComponent implements OnInit {
       },
       error: () => (this.errorMessage = 'Erro ao reativar usuário.'),
     });
-  }
-
-  gerarSenha(usuario: Usuario): void {
-    if (!confirm(`Gerar nova senha para ${usuario.username}?\n\nA senha atual será substituída.`)) {
-      return;
-    }
-    this.loading = true;
-    this.usuarioService.resetSenha(usuario.id).subscribe({
-      next: (res) => {
-        this.loading = false;
-        this.mostrarCredencial(usuario.id, res.username, res.temporaryPassword);
-        this.loadUsuarios();
-      },
-      error: () => {
-        this.loading = false;
-        this.errorMessage = 'Erro ao gerar nova senha.';
-      },
-    });
-  }
-
-  credencialDoUsuario(userId: number): CredencialArmazenada | null {
-    return this.credenciaisRecentes[userId] ?? null;
   }
 
   mostrarCredencial(userId: number, username: string, senha: string): void {

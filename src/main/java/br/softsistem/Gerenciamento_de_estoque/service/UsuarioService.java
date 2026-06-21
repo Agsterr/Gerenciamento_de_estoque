@@ -4,7 +4,6 @@ import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.CreateUsuarioOrgReq
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioCreatedResponse;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioLimiteDto;
-import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioPasswordResponse;
 import br.softsistem.Gerenciamento_de_estoque.exception.ResourceNotFoundException;
 import br.softsistem.Gerenciamento_de_estoque.model.Org;
 import br.softsistem.Gerenciamento_de_estoque.model.Role;
@@ -131,21 +130,6 @@ public class UsuarioService {
 
         trialSubscriptionService.startTrialForUser(saved);
         return new UsuarioCreatedResponse(new UsuarioDto(saved), tempPassword);
-    }
-
-    @Transactional
-    public UsuarioPasswordResponse resetSenha(Long id, Long orgId) {
-        Usuario usuario = usuarioRepository.findById(id)
-                .filter(u -> u.getOrg().getId().equals(orgId))
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado ou não pertence à organização"));
-        if (usuario.isSuperAdmin()) {
-            throw new IllegalArgumentException("Não é permitido resetar senha de SUPER_ADMIN.");
-        }
-        String tempPassword = generateTemporaryPassword();
-        usuario.setSenha(passwordEncoder.encode(tempPassword));
-        usuario.setSenhaRegistrada(tempPassword);
-        usuarioRepository.save(usuario);
-        return new UsuarioPasswordResponse(usuario.getUsername(), tempPassword);
     }
 
     @Transactional(readOnly = true)

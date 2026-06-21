@@ -68,12 +68,4 @@ export class UsuarioService {
       { headers: this.getAuthHeaders() }
     );
   }
-
-  resetSenha(id: number): Observable<{ username: string; temporaryPassword: string }> {
-    return this.http.post<{ username: string; temporaryPassword: string }>(
-      `${this.apiUrl}/${id}/reset-password`,
-      {},
-      { headers: this.getAuthHeaders() }
-    );
-  }
 }

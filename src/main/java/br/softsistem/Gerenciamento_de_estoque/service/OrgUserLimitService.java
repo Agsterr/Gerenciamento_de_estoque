@@ -33,10 +33,10 @@ public class OrgUserLimitService {
     public void assertCanAddUser(Org org, Long userIdForPlanLookup) {
         long ativos = usuarioRepository.countAtivosByOrgId(org.getId());
 
-        Integer orgMax = org.getMaxUsuarios();
-        if (orgMax != null && orgMax > 0 && ativos >= orgMax) {
+        Integer orgMax = positiveOrNull(org.getMaxDispositivos());
+        if (orgMax != null && ativos >= orgMax) {
             throw new IllegalStateException(
-                    "Limite de usuários da organização atingido (" + orgMax + " ativos). Contate o suporte para aumentar.");
+                    "Limite de aparelhos/usuários da organização atingido (" + orgMax + " ativos). Contate o suporte para aumentar.");
         }
 
         if (subscriptionService.hasSubscriptionBypass(userIdForPlanLookup)) {
@@ -51,7 +51,7 @@ public class OrgUserLimitService {
     }
 
     Optional<Integer> effectiveMaxUsers(Org org, Long userIdForPlanLookup) {
-        Integer orgMax = positiveOrNull(org.getMaxUsuarios());
+        Integer orgMax = positiveOrNull(org.getMaxDispositivos());
         Integer planMax = subscriptionService.hasSubscriptionBypass(userIdForPlanLookup)
                 ? null
                 : positiveOrNull(resolvePlanMaxUsers(userIdForPlanLookup, org.getId()));
@@ -89,15 +89,15 @@ public class OrgUserLimitService {
     }
 
     private String describeOrigem(Org org, Long userIdForPlanLookup) {
-        Integer orgMax = positiveOrNull(org.getMaxUsuarios());
+        Integer orgMax = positiveOrNull(org.getMaxDispositivos());
         Integer planMax = subscriptionService.hasSubscriptionBypass(userIdForPlanLookup)
                 ? null
                 : positiveOrNull(resolvePlanMaxUsers(userIdForPlanLookup, org.getId()));
         if (orgMax != null && planMax != null) {
-            return "ORG_E_PLANO";
+            return "DISPOSITIVOS_E_PLANO";
         }
         if (orgMax != null) {
-            return "ORG";
+            return "DISPOSITIVOS";
         }
         if (planMax != null) {
             return "PLANO";

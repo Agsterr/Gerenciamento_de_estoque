@@ -6,7 +6,6 @@ import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.ReativarUsuarioRequ
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioCreatedResponse;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioGestaoDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioLimiteDto;
-import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioPasswordResponse;
 import br.softsistem.Gerenciamento_de_estoque.exception.OrganizacaoNaoEncontradaException;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
 import br.softsistem.Gerenciamento_de_estoque.service.UsuarioService;
@@ -83,10 +82,4 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.criarUsuarioComum(request, orgId, adminUserId));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/{id}/reset-password")
-    public ResponseEntity<UsuarioPasswordResponse> resetSenha(@PathVariable Long id) {
-        Long orgId = requireOrgId();
-        return ResponseEntity.ok(usuarioService.resetSenha(id, orgId));
-    }
 }

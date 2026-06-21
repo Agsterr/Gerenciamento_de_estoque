@@ -38,7 +38,7 @@ class OrgUserLimitServiceTest {
 
     @Test
     void deveBloquearQuandoLimiteDaOrgAtingido() {
-        org.setMaxUsuarios(3);
+        org.setMaxDispositivos(3);
         when(usuarioRepository.countAtivosByOrgId(1L)).thenReturn(3L);
 
         IllegalStateException ex = assertThrows(IllegalStateException.class,
@@ -47,8 +47,8 @@ class OrgUserLimitServiceTest {
     }
 
     @Test
-    void deveUsarMenorEntreOrgEPlano() {
-        org.setMaxUsuarios(5);
+    void deveUsarMenorEntreDispositivosEPlano() {
+        org.setMaxDispositivos(5);
         Plan plan = new Plan();
         plan.setMaxUsers(2);
         Subscription subscription = new Subscription();
@@ -60,6 +60,6 @@ class OrgUserLimitServiceTest {
 
         var limite = service.consultarLimite(org, 10L);
         assertEquals(2, limite.maximo());
-        assertEquals("ORG_E_PLANO", limite.origemLimite());
+        assertEquals("DISPOSITIVOS_E_PLANO", limite.origemLimite());
     }
 }

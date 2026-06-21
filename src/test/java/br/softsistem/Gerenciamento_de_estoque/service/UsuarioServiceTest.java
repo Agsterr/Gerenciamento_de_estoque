@@ -2,7 +2,6 @@ package br.softsistem.Gerenciamento_de_estoque.service;
 
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.CreateUsuarioOrgRequest;
 import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioCreatedResponse;
-import br.softsistem.Gerenciamento_de_estoque.dto.usuarioDto.UsuarioPasswordResponse;
 import br.softsistem.Gerenciamento_de_estoque.model.Org;
 import br.softsistem.Gerenciamento_de_estoque.model.Role;
 import br.softsistem.Gerenciamento_de_estoque.model.Usuario;
@@ -140,19 +139,6 @@ class UsuarioServiceTest {
         Page<Usuario> resultado = service.listarUsuariosAtivos(1L, pageable);
 
         assertEquals(1, resultado.getContent().size());
-    }
-
-    @Test
-    void deveResetarSenhaDeUsuarioDaOrg() {
-        when(repository.findById(1L)).thenReturn(Optional.of(usuario));
-        when(passwordEncoder.encode(anyString())).thenReturn("hash");
-        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-
-        UsuarioPasswordResponse response = service.resetSenha(1L, 1L);
-
-        assertEquals("usuario1", response.username());
-        assertEquals(12, response.temporaryPassword().length());
-        verify(passwordEncoder).encode(response.temporaryPassword());
     }
 
     @Test
