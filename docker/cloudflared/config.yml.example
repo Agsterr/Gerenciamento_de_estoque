@@ -1,19 +1,34 @@
-# Copie para config.yml e ajuste após: cloudflared tunnel login && cloudflared tunnel create gerenciamento-estoque
-# Coloque cert.pem e <tunnel-id>.json nesta pasta (não versionar — já estão no .gitignore).
+# Copie para config.yml e gere credentials.json com:
+#   bash scripts/sync-cloudflared-ingress.sh
 #
-# Rota DNS (URL fixa):
-#   cloudflared tunnel route dns gerenciamento-estoque focodev.com.br
-#   cloudflared tunnel route dns gerenciamento-estoque www.focodev.com.br
+# Roteamento de dominios (tunel gerenciamento-estoque):
+#   focodev.com.br              -> localhost:80   (Gerenciamento de Estoque)
+#   www.focodev.com.br          -> 127.0.0.1:8082 (Site institucional FocoDev)
+#   painel.focodev.com.br       -> 127.0.0.1:8082 (Painel admin do site)
+#   rotas.focodev.com.br        -> 127.0.0.1:8081 (App Rotas)
+#   admin.rotas.focodev.com.br  -> 127.0.0.1:8081
+#   admin-rotas.focodev.com.br  -> 127.0.0.1:8081
+#   portal-rotas.focodev.com.br -> 127.0.0.1:8081
 #
-# No painel Asaas, webhook:
+# Webhook Asaas (estoque):
 #   https://focodev.com.br/api/webhooks/asaas
 
 tunnel: SEU_TUNNEL_ID
-credentials-file: /etc/cloudflared/SEU_TUNNEL_ID.json
+credentials-file: /etc/cloudflared/credentials.json
 
 ingress:
   - hostname: focodev.com.br
-    service: http://nginx:80
+    service: http://localhost:80
   - hostname: www.focodev.com.br
-    service: http://nginx:80
+    service: http://127.0.0.1:8082
+  - hostname: painel.focodev.com.br
+    service: http://127.0.0.1:8082
+  - hostname: rotas.focodev.com.br
+    service: http://127.0.0.1:8081
+  - hostname: admin.rotas.focodev.com.br
+    service: http://127.0.0.1:8081
+  - hostname: admin-rotas.focodev.com.br
+    service: http://127.0.0.1:8081
+  - hostname: portal-rotas.focodev.com.br
+    service: http://127.0.0.1:8081
   - service: http_status:404

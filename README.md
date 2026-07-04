@@ -2,7 +2,8 @@
 
 API REST para controle de estoque, vendas e assinaturas — pensada para pequenas e médias empresas que precisam organizar produtos, clientes, movimentações e relatórios em um único sistema.
 
-**Produção:** [focodev.com.br](https://focodev.com.br)  
+**Produção:** [focodev.com.br](https://focodev.com.br) (sistema de estoque)  
+**Site institucional:** [www.focodev.com.br](https://www.focodev.com.br)  
 **Front-end:** [Gerenciamento_de_estoque_front](https://github.com/Agsterr/Gerenciamento_de_estoque_front)
 
 ---
@@ -126,7 +127,8 @@ O sistema roda no **Hetzner** com Docker Compose, nginx e túnel **Cloudflare**:
 |------|-------|
 | Servidor | `178.105.11.19` |
 | Path no servidor | `/opt/gerenciamento-estoque` |
-| Domínio | `https://focodev.com.br` |
+| Domínio (estoque) | `https://focodev.com.br` |
+| Site institucional | `https://www.focodev.com.br` |
 
 Deploy automático: push na branch `main` dispara o workflow do GitHub Actions.
 

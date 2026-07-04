@@ -75,6 +75,8 @@ services:
         condition: service_healthy
     ports:
       - "${HTTP_PORT:-80}:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - app-network
     restart: unless-stopped
@@ -85,9 +87,10 @@ services:
     depends_on:
       nginx:
         condition: service_started
-    command: tunnel --no-autoupdate run --token ${CLOUDFLARED_TUNNEL_TOKEN}
-    env_file:
-      - .env
+    command: tunnel --config /etc/cloudflared/config.yml --no-autoupdate run
+    volumes:
+      - ./docker/cloudflared/config.yml:/etc/cloudflared/config.yml:ro
+      - ./docker/cloudflared/credentials.json:/etc/cloudflared/credentials.json:ro
     network_mode: host
     restart: unless-stopped
 
