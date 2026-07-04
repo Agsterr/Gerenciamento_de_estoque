@@ -1,214 +1,150 @@
-# 📦 **Sistema de Gerenciamento de Estoque - API REST**
+# Gerenciamento de Estoque
 
-Este projeto é uma **API REST** desenvolvida em **Spring Boot** para o **gerenciamento de estoque**.
-O sistema permite o controle de **produtos, consumidores, movimentações de estoque e entregas**, incluindo **autenticação segura de usuários, relatórios, integração com pagamentos e documentação interativa da API**.
+API REST para controle de estoque, vendas e assinaturas — pensada para pequenas e médias empresas que precisam organizar produtos, clientes, movimentações e relatórios em um único sistema.
 
----
-
-## 🚀 **Funcionalidades**
-
-### 🛒 **Gestão de Produtos**
-
-* Cadastro, atualização, listagem e exclusão de produtos.
-* Controle de quantidade em estoque.
-
-### 👥 **Gestão de Consumidores**
-
-* Cadastro e gerenciamento de clientes/consumidores.
-
-### 📦 **Gestão de Entregas**
-
-* Registro de entregas associadas a consumidores e produtos.
-
-### 🔄 **Movimentação de Estoque**
-
-* Entrada e saída de produtos.
-* Histórico de movimentações.
-
-### 🔒 **Autenticação & Segurança**
-
-* Login com usuário e senha.
-* Implementação de **Spring Security com JWT (JSON Web Token)**.
-* Controle de acessos por perfis de usuário.
-* Configuração de **CORS** para integração com front-end.
-
-### ✅ **Validações**
-
-* Uso de **Bean Validation** para garantir integridade dos dados recebidos pela API.
-
-### 📊 **Relatórios**
-
-* Geração de relatórios com **JasperReports** (PDF/Excel).
-
-### 🏢 **Multi-tenant**
-
-* Suporte a múltiplos clientes (multi-tenancy), permitindo separar os dados por empresa/usuário.
-
-### 💳 **Integração com Pagamentos (Stripe)**
-
-* Integração com **Stripe API** para pagamentos online.
-* Suporte a cobrança de entregas, movimentações ou mensalidades.
-* Estrutura flexível para expansão de planos pagos.
-
-### 📖 **Documentação da API (Swagger/OpenAPI)**
-
-* Geração automática de documentação interativa com **SpringDoc OpenAPI**.
-* Endpoints da API descritos com suporte a autenticação via JWT.
-* Testes rápidos via Swagger UI.
+**Produção:** [focodev.com.br](https://focodev.com.br)  
+**Front-end:** [Gerenciamento_de_estoque_front](https://github.com/Agsterr/Gerenciamento_de_estoque_front)
 
 ---
 
-## 🛠️ **Tecnologias Utilizadas**
+## O que o sistema faz
 
-* ☕ **Java 17+**
-* 🌱 **Spring Boot**
-* 🗃️ **Spring Data JPA**
-* 🔒 **Spring Security + JWT**
-* 🌀 **Hibernate (JPA)**
-* ✅ **Bean Validation (Jakarta Validation)**
-* 🐘 **PostgreSQL**
-* 📊 **JasperReports**
-* 💳 **Stripe API**
-* 📖 **SpringDoc OpenAPI (Swagger)**
-* 🔗 **CORS Configuration**
-* 🏢 **Multi-tenancy Strategy**
-
----
-
-## 📂 **Principais Módulos da API**
-
-* `/api/produtos` → Operações de produtos
-* `/api/consumidores` → Operações de consumidores
-* `/api/entregas` → Operações de entregas
-* `/api/movimentacoes` → Controle de entradas/saídas de estoque
-* `/api/auth` → Autenticação (login e cadastro de usuários)
-* `/api/relatorios` → Geração de relatórios em PDF
-* `/api/pagamentos` → Integração com Stripe
+- **Produtos e categorias** — cadastro, estoque e controle de quantidade
+- **Consumidores** — gestão de clientes
+- **Movimentações** — entradas e saídas com histórico
+- **Entregas** — registro vinculado a consumidores e produtos
+- **Pedidos de compra e venda** — fluxo comercial completo
+- **Organizações (multi-tenant)** — cada empresa tem seus dados isolados
+- **Usuários e perfis** — autenticação JWT com controle de acesso por papel
+- **Assinaturas e planos** — cobrança recorrente via **Asaas** (e suporte legado ao Mercado Pago)
+- **Relatórios** — exportação em PDF com JasperReports
+- **Pesquisa de preço e sugestões** — módulos auxiliares para análise
+- **Painel administrativo** — gestão de usuários, assinaturas e webhooks
 
 ---
 
-## 🔑 **Autenticação**
+## Tecnologias
 
-A autenticação é realizada via **JWT**.
-
-**Fluxo básico:**
-
-1. Usuário realiza login (`/api/auth/login`) enviando **nome de usuário e senha**.
-2. A API retorna um **token JWT**.
-3. O token deve ser enviado no header:
-
-   ```
-   Authorization: Bearer <token>
-   ```
-
-   para acessar as rotas protegidas.
+| Camada | Stack |
+|--------|-------|
+| Backend | Java 17, Spring Boot 3.3, Spring Security, Spring Data JPA |
+| Banco | PostgreSQL 15, Flyway (migrações) |
+| Cache | Redis (opcional em produção) |
+| Auth | JWT (jjwt) |
+| Pagamentos | Asaas (principal), Mercado Pago SDK |
+| Relatórios | JasperReports |
+| Docs | SpringDoc OpenAPI (Swagger UI) |
+| Infra | Docker, nginx, Cloudflare Tunnel |
+| CI/CD | GitHub Actions → deploy no Hetzner |
 
 ---
 
-## 📊 **Relatórios**
+## Estrutura do projeto
 
-* Relatório de produtos em estoque.
-* Relatório de movimentações.
-* Relatório de entregas.
-
-Formatos: **PDF / Excel** via **JasperReports**.
-
----
-
-## 💳 **Integração Stripe**
-
-* Endpoint `/api/pagamentos` para iniciar e processar transações.
-* Suporte a pagamentos online diretamente pela API.
-* Uso das bibliotecas oficiais do **Stripe para Java**.
-* Estrutura preparada para expansão futura (**planos de assinatura, checkout etc.**).
+```text
+Gerenciamento_de_estoque/
+├── src/main/java/          # API Spring Boot
+├── src/main/resources/     # application.properties, migrações Flyway
+├── docker/                 # nginx, secrets, backup
+├── scripts/                # deploy e setup no servidor
+├── docker-compose.yml      # Stack local e produção
+└── Dockerfile
+```
 
 ---
 
-## 📖 **Documentação da API - Swagger**
+## Como rodar localmente
 
-A API conta com documentação interativa via **SpringDoc OpenAPI**.
+### Pré-requisitos
 
-No **Swagger UI** é possível:
+- Java 17+
+- Maven 3.8+
+- Docker e Docker Compose (recomendado)
 
-* Visualizar todos os endpoints da API.
-* Testar requisições autenticadas com JWT.
-* Baixar a especificação OpenAPI em **JSON** ou **YAML**.
+### Com Docker (mais simples)
 
----
+```bash
+git clone https://github.com/Agsterr/Gerenciamento_de_estoque.git
+cd Gerenciamento_de_estoque
+docker compose up --build
+```
 
-## ⚙️ **Configuração do Projeto**
+Para produção ou variáveis customizadas, crie um arquivo `.env` na raiz (veja [docs/DEPLOY_DOCKER.md](docs/DEPLOY_DOCKER.md)).
 
-### 🔧 Pré-requisitos
+A API sobe em `http://localhost:8080`. O nginx expõe a porta `80`.
 
-* Java 17+
-* Maven
-* PostgreSQL
-* Conta no Stripe (para configurar as chaves de API).
+### Sem Docker
 
-### 🚀 Passos
+```bash
+mvn spring-boot:run
+```
 
-1. Clonar o repositório:
-
-   ```bash
-   git clone https://github.com/seu-usuario/seu-repositorio.git
-   ```
-
-2. Configurar o banco no `application.properties` ou `application.yml`:
-
-   ```properties
-   spring.datasource.url=jdbc:postgresql://localhost:5432/estoque
-   spring.datasource.username=seu-usuario
-   spring.datasource.password=sua-senha
-   ```
-
-3. Configurar as credenciais do Stripe:
-
-   ```properties
-   stripe.api.key=sk_test_sua_chave_aqui
-   stripe.webhook.secret=whsec_sua_chave_aqui
-   ```
-
-4. Executar a aplicação:
-
-   ```bash
-   mvn spring-boot:run
-   ```
+Configure o PostgreSQL em `src/main/resources/application.properties` (ou via variáveis de ambiente).
 
 ---
 
-## 🔑 **Multi-tenancy**
+## Documentação da API
 
-* Suporte a múltiplos clientes (**multi-tenant**).
-* Cada requisição pode ser associada a um **tenant específico**, garantindo separação lógica dos dados.
+Com a aplicação rodando, acesse:
 
----
+- **Swagger UI:** `http://localhost:8080/swagger-ui.html`
+- **OpenAPI JSON:** `http://localhost:8080/v3/api-docs`
 
-## 📌 **Observações**
+A maioria dos endpoints exige autenticação. Faça login e envie o token no header:
 
-* Projeto **backend (API REST)**, ideal para consumo por aplicações **front-end** (Angular, React, Vue ou mobile).
-* Relatórios exportados em **PDF** (adaptável para outros formatos).
-* **JWT + Spring Security** garantem segurança e escalabilidade.
-* **Stripe** adiciona flexibilidade para monetização e pagamentos.
-* **Swagger** facilita testes e integração com clientes e parceiros.
+```http
+Authorization: Bearer <seu-token-jwt>
+```
 
 ---
 
-## 🌐 **Deploy e Hospedagem**
+## Principais endpoints
 
-* A aplicação está hospedada na plataforma **Render**.
-* Integração contínua (**CI/CD**) configurada com **GitHub**.
-* A cada **push** na branch principal, o Render executa automaticamente o **build** e realiza o **deploy**.
-* O ambiente de produção é atualizado de forma automática e transparente.
+| Módulo | Rota base |
+|--------|-----------|
+| Autenticação | `/api/auth` |
+| Produtos | `/produtos` |
+| Consumidores | `/consumidores` |
+| Movimentações | `/movimentacoes` |
+| Entregas | `/entregas` |
+| Pedidos de venda | `/pedidos-venda` |
+| Pedidos de compra | `/pedidos-compra` |
+| Organizações | `/api/orgs` |
+| Assinaturas | `/api/subscription` |
+| Planos | `/api/plans` |
+| Relatórios | `/relatorios` |
+| Webhooks | `/api/webhooks` |
+| Admin | `/admin` |
 
 ---
 
-## 📖 **Próximos Passos**
+## Deploy em produção
 
-* 📧 Implementação de notificações automáticas por e-mail.
-* 📊 Dashboard com estatísticas de estoque.
-* 🌍 Expansão do suporte multi-tenant para subdomínios.
-* 💳 Integração com **Stripe Hosted Checkout Page**.
+O sistema roda no **Hetzner** com Docker Compose, nginx e túnel **Cloudflare**:
+
+| Item | Valor |
+|------|-------|
+| Servidor | `178.105.11.19` |
+| Path no servidor | `/opt/gerenciamento-estoque` |
+| Domínio | `https://focodev.com.br` |
+
+Deploy automático: push na branch `main` dispara o workflow do GitHub Actions.
+
+```bash
+# Deploy manual (no servidor)
+ssh hetzner "bash /opt/gerenciamento-estoque/scripts/deploy-hetzner.sh"
+```
 
 ---
 
-✍️ **Autor:** *Agster Junior da Costa Santos*
+## Testes
+
+```bash
+mvn test
+```
+
+---
+
+## Autor
+
+**Agster Junior da Costa Santos** — [GitHub](https://github.com/Agsterr)
