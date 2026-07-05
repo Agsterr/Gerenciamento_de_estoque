@@ -208,9 +208,6 @@ Não commitar `.env` ou secrets. Só criar commit quando o usuário pedir explic
 
 ## Login de teste (smoke)
 
-Credenciais padrão do script `scripts/test-api.ps1`:
+Use as credenciais configuradas no seu ambiente de desenvolvimento ou teste (variáveis de ambiente / `.env`). Não commite senhas no repositório.
 
-- Usuário: `admin`
-- Senha: `admin123`
-
-Usar apenas em ambientes de dev/teste conhecidos.
+O script `scripts/test-api.ps1` aceita `-User` e `-Senha` por parâmetro.
