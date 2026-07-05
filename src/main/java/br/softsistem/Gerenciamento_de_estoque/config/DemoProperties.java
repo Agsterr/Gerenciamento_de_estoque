@@ -16,8 +16,12 @@ public record DemoProperties(
         if (username == null || username.isBlank()) {
             username = "demo";
         }
-        if (password == null || password.isBlank()) {
-            password = "demo123";
+        if (password == null) {
+            password = "";
         }
+    }
+
+    public boolean isConfigured() {
+        return enabled && password != null && !password.isBlank();
     }
 }

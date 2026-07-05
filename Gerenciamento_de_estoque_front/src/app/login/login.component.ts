@@ -84,12 +84,12 @@ export class LoginComponent implements OnInit {
   experimentarDemo(): void {
     this.isDemoSubmitting = true;
     this.errorMessage = '';
-    this.authService.loginDemo(this.demoUsername).subscribe({
+    this.authService.loginDemo().subscribe({
       next: (response) => {
         this.isDemoSubmitting = false;
         if (response?.token) {
           this.snackBar.open(
-            'Modo demonstração: seus dados serão apagados ao sair. Credenciais: demo / demo123',
+            'Modo demonstração: seus dados serão apagados ao sair.',
             'OK',
             { duration: 6000 }
           );

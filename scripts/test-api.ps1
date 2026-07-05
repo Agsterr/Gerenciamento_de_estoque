@@ -1,14 +1,19 @@
 # Smoke test da API — Gerenciamento de Estoque
-# Uso: .\scripts\test-api.ps1 [-BaseUrl "https://focodev.com.br"] [-User admin] [-Senha admin123] [-SkipAuth]
+# Uso: $env:API_TEST_PASSWORD='sua-senha'; .\scripts\test-api.ps1 [-BaseUrl "https://focodev.com.br"] [-User admin] [-SkipAuth]
 param(
     [string]$BaseUrl = "http://localhost",
     [string]$User = "admin",
-    [string]$Senha = "admin123",
+    [string]$Senha = $env:API_TEST_PASSWORD,
     [switch]$SkipAuth
 )
 
 $ErrorActionPreference = "Stop"
 $base = $BaseUrl.TrimEnd("/")
+
+if (-not $SkipAuth -and [string]::IsNullOrWhiteSpace($Senha)) {
+    Write-Error "Defina API_TEST_PASSWORD ou use -SkipAuth."
+    exit 1
+}
 
 function Test-Get {
     param([string]$Path, [hashtable]$Headers = @{})
@@ -38,16 +43,17 @@ if ($SkipAuth) {
 Write-Host "`n=== Login ===" -ForegroundColor Yellow
 $loginBody = (@{ username = $User; senha = $Senha } | ConvertTo-Json -Compress)
 try {
-    $login = Invoke-RestMethod -Method Post -Uri "$base/auth/login" -ContentType "application/json" -Body $loginBody
-    Write-Host "  -> 200 token obtido" -ForegroundColor Green
+    $loginResp = Invoke-WebRequest -Uri "$base/auth/login" -Method POST -Body $loginBody -ContentType "application/json" -UseBasicParsing
+    Write-Host "  -> $($loginResp.StatusCode)" -ForegroundColor Green
+    $token = ($loginResp.Content | ConvertFrom-Json).token
+    if (-not $token) { throw "Token ausente na resposta" }
 } catch {
-    Write-Host "  -> login falhou: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "  -> Falha no login: $_" -ForegroundColor Red
     exit 1
 }
 
-$headers = @{ Authorization = "Bearer $($login.token)" }
-
 Write-Host "`n=== Autenticados ===" -ForegroundColor Yellow
+$headers = @{ Authorization = "Bearer $token" }
 Test-Get "/produtos" $headers
 Test-Get "/categorias" $headers
 Test-Get "/api/subscription/status" $headers

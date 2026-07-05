@@ -87,6 +87,7 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers("/auth/demo-login").permitAll()
                         .requestMatchers("/auth/config").permitAll()
                         .requestMatchers("/auth/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/logout").authenticated()

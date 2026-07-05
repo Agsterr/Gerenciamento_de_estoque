@@ -58,8 +58,23 @@ export class AuthService {
     );
   }
 
-  loginDemo(demoUsername: string, demoPassword = 'demo123'): Observable<LoginResponse> {
-    return this.login({ username: demoUsername, senha: demoPassword });
+  loginDemo(): Observable<LoginResponse> {
+    return this.apiService.post<LoginResponse>('/auth/demo-login', {
+      deviceFingerprint: this.getDeviceFingerprint(),
+    }).pipe(
+      tap((response: LoginResponse) => {
+        if (response?.token) {
+          this.storeSession(response);
+        }
+      }),
+      catchError((err) => {
+        console.error('Erro ao entrar no modo demo:', err);
+        const msg = err?.error?.error || 'Modo demonstração indisponível.';
+        window.alert(msg);
+        this.router.navigate(['/login']);
+        return of({ token: '' });
+      })
+    );
   }
 
   private storeSession(response: LoginResponse): void {

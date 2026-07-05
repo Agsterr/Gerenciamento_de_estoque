@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.softsistem.Gerenciamento_de_estoque.config.DemoProperties;
 import br.softsistem.Gerenciamento_de_estoque.config.RegistrationProperties;
 import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
 import br.softsistem.Gerenciamento_de_estoque.exception.RegistrationDisabledException;
@@ -49,6 +50,7 @@ public class AuthService {
     private final DemoDataService demoDataService;
     private final DemoOrgPurgeService demoOrgPurgeService;
     private final OrgUserLimitService orgUserLimitService;
+    private final DemoProperties demoProperties;
 
     public AuthService(UsuarioRepository usuarioRepository,
                        OrgRepository orgRepository,
@@ -62,7 +64,8 @@ public class AuthService {
                        DispositivoUsuarioService dispositivoUsuarioService,
                        DemoDataService demoDataService,
                        DemoOrgPurgeService demoOrgPurgeService,
-                       OrgUserLimitService orgUserLimitService) {
+                       OrgUserLimitService orgUserLimitService,
+                       DemoProperties demoProperties) {
         this.usuarioRepository = usuarioRepository;
         this.orgRepository = orgRepository;
         this.jwtService = jwtService;
@@ -76,6 +79,20 @@ public class AuthService {
         this.demoDataService = demoDataService;
         this.demoOrgPurgeService = demoOrgPurgeService;
         this.orgUserLimitService = orgUserLimitService;
+        this.demoProperties = demoProperties;
+    }
+
+    @Transactional
+    public LoginResponseDto loginDemo(String deviceFingerprint, HttpServletRequest httpRequest) {
+        if (!demoProperties.isConfigured()) {
+            throw new BadCredentialsException(LOGIN_FAILED_MESSAGE);
+        }
+        LoginRequestDto request = new LoginRequestDto(
+                demoProperties.username(),
+                demoProperties.password(),
+                deviceFingerprint
+        );
+        return login(request, httpRequest);
     }
 
     @Transactional

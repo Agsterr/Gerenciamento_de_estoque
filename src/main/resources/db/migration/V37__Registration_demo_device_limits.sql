@@ -8,7 +8,7 @@ COMMENT ON COLUMN orgs.max_dispositivos IS 'Máximo de dispositivos aprovados po
 COMMENT ON COLUMN orgs.ephemeral IS 'Organização de demonstração — dados operacionais são apagados no logout ou por job.';
 COMMENT ON COLUMN orgs.demo_last_access IS 'Último acesso à org demo (para limpeza de sessões abandonadas).';
 
--- Org demo compartilhada (credenciais: demo / demo123 — senha definida no InitialDataLoader)
+-- Org demo compartilhada (senha definida via DEMO_PASSWORD no InitialDataLoader)
 INSERT INTO orgs (nome, ativo, max_dispositivos, ephemeral)
 SELECT 'org_demo', TRUE, 999, TRUE
 WHERE NOT EXISTS (SELECT 1 FROM orgs WHERE nome = 'org_demo');

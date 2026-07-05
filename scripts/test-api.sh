@@ -1,11 +1,16 @@
 #!/bin/bash
 # Smoke test da API — uso no servidor ou Linux
-# Uso: BASE_URL=https://focodev.com.br ./scripts/test-api.sh
+# Uso: API_TEST_PASSWORD='sua-senha' BASE_URL=https://focodev.com.br ./scripts/test-api.sh
 
 set -euo pipefail
 BASE="${BASE_URL:-http://localhost}"
 USER="${API_USER:-admin}"
-PASS="${API_PASS:-admin123}"
+PASS="${API_TEST_PASSWORD:-}"
+
+if [ -z "$PASS" ]; then
+  echo "Defina API_TEST_PASSWORD." >&2
+  exit 1
+fi
 
 echo "=== Publicos ($BASE) ==="
 curl -s -o /dev/null -w "GET /actuator/health -> %{http_code}\n" "$BASE/actuator/health"
