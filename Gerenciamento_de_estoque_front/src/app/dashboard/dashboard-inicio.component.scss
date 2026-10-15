@@ -2,25 +2,49 @@
 
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 14px;
   margin-bottom: 24px;
 }
 
 .kpi-card {
+  position: relative;
+  overflow: hidden;
   background: #fff;
-  border-radius: 10px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  border-left: 4px solid #007bff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+  }
+  &:hover { transform: translateY(-2px); }
 }
 
-.kpi-card.destaque { border-left-color: #28a745; }
-.kpi-card.alerta { border-left-color: #dc3545; }
+.kpi-card.destaque {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-color: transparent;
+  box-shadow: 0 16px 32px -18px rgba(29, 78, 216, 0.8);
+  &::before { display: none; }
+  .kpi-label { color: #dbeafe; }
+  .kpi-valor { color: #fff; }
+}
+.kpi-card.alerta {
+  border-color: #fecaca;
+  background: #fff7f7;
+  &::before { background: linear-gradient(90deg, #f87171, #dc2626); }
+  .kpi-valor { color: #b91c1c; }
+}
 
-.kpi-label { display: block; font-size: 0.85rem; color: #666; }
-.kpi-valor { display: block; font-size: 1.35rem; font-weight: 700; color: #222; margin-top: 4px; }
-.kpi-link { display: inline-block; margin-top: 8px; font-size: 0.85rem; color: #007bff; text-decoration: none; }
+.kpi-label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--ink-500); }
+.kpi-valor { display: block; font-size: 1.5rem; font-weight: 800; color: var(--ink-900); margin-top: 6px; letter-spacing: -0.02em; }
+.kpi-link { display: inline-block; margin-top: 8px; font-size: 0.85rem; font-weight: 600; color: #dc2626; text-decoration: none; }
 .kpi-link:hover { text-decoration: underline; }
 
 .charts-grid {
@@ -32,39 +56,52 @@
 
 .chart-card {
   background: #fff;
-  border-radius: 10px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
 }
 
-.chart-card h3 { font-size: 1rem; margin: 0 0 16px; color: #333; }
+.chart-card h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 16px;
+  color: var(--ink-900);
+  i { color: var(--brand-600); margin-right: 6px; }
+}
 
 .bar-chart {
   display: flex;
-  align-items: flex-end;
+  align-items: stretch;
   gap: 8px;
-  min-height: 140px;
+  height: 190px;
   padding-top: 8px;
 }
 
+/* A barra cresce dentro de uma coluna de altura fixa (antes a altura em % não tinha
+   referência e todas as barras ficavam com o mínimo) */
 .bar-item {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-end;
   gap: 4px;
+  height: 100%;
 }
 
 .bar {
   width: 100%;
   max-width: 48px;
-  background: linear-gradient(180deg, #007bff, #0056b3);
-  border-radius: 4px 4px 0 0;
+  background: linear-gradient(180deg, #60a5fa, #1d4ed8);
+  border-radius: 8px 8px 3px 3px;
   min-height: 8px;
 }
 
-.bar-label { font-size: 0.75rem; color: #666; }
-.bar-value { font-size: 0.7rem; color: #888; text-align: center; }
+.bar { max-height: calc(100% - 44px); }
+.bar-label { font-size: 0.75rem; color: #64748b; }
+.bar-value { font-size: 0.68rem; color: #94a3b8; text-align: center; white-space: nowrap; }
 
 .rank-list { display: flex; flex-direction: column; gap: 10px; }
 
@@ -91,10 +128,16 @@
   padding: 10px 16px;
   background: #f7faff;
   border-radius: 8px;
-  color: #007bff;
+  color: #2563eb;
   text-decoration: none;
   font-weight: 500;
 }
 
 .sem-dados { color: #888; font-size: 0.9rem; }
 .loading-dash { text-align: center; padding: 40px; color: #666; }
+
+@media (max-width: 600px) {
+  .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .kpi-card { padding: 14px; }
+  .kpi-valor { font-size: 1.15rem; }
+}

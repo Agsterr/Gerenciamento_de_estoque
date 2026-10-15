@@ -34,7 +34,7 @@
         <div class="bar-item" *ngFor="let m of resumo.faturamentoPorMes">
           <div class="bar" [style.height.%]="barHeight(asNumber(m.valor), maxFaturamento)"></div>
           <span class="bar-label">{{ formatMes(m.mes) }}</span>
-          <span class="bar-value">{{ m.valor | currency:'BRL':'symbol':'1.0-0' }}</span>
+          <span class="bar-value" [title]="m.valor | currency:'BRL'">{{ valorCurto(asNumber(m.valor)) }}</span>
         </div>
       </div>
     </div>

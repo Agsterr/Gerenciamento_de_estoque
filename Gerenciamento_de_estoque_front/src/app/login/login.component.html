@@ -1,9 +1,24 @@
 <div class="login-container">
+  <aside class="login-brand" aria-hidden="true">
+    <div class="brand-row">
+      <span class="brand-tile"><mat-icon>warehouse</mat-icon></span>
+      <span>Gerenciamento de Estoque</span>
+    </div>
+    <div>
+      <h2 class="brand-headline">Seu estoque, vendas e entregas em um só lugar.</h2>
+      <ul class="brand-list">
+        <li><mat-icon>inventory_2</mat-icon> Alerta automático de estoque baixo</li>
+        <li><mat-icon>local_shipping</mat-icon> Pedidos, entregas e clientes organizados</li>
+        <li><mat-icon>insights</mat-icon> Relatórios e faturamento do mês</li>
+      </ul>
+    </div>
+    <p class="brand-foot">Desenvolvido por FocoDev</p>
+  </aside>
   <div class="login-wrapper" role="main" aria-labelledby="login-title">
     <header class="login-header">
-      <mat-icon class="login-icon" aria-hidden="true">account_circle</mat-icon>
-      <h2 class="login-title" id="login-title">Acesso ao Sistema</h2>
-      <p class="login-subtitle">Faça login para acessar o sistema de gerenciamento de estoque</p>
+      <span class="login-icon-tile" aria-hidden="true"><mat-icon>lock_open</mat-icon></span>
+      <h2 class="login-title" id="login-title">Bem-vindo de volta</h2>
+      <p class="login-subtitle">Entre para acessar o seu painel de estoque.</p>
     </header>
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form" novalidate>

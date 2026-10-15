@@ -1,10 +1,34 @@
+@import '@fontsource-variable/inter';
+
+/* Tokens do tema (azul da marca) */
+:root {
+  --brand-50: #eff6ff;
+  --brand-100: #dbeafe;
+  --brand-500: #3b82f6;
+  --brand-600: #2563eb;
+  --brand-700: #1d4ed8;
+  --ink-900: #0f172a;
+  --ink-700: #334155;
+  --ink-500: #64748b;
+  --line: #e2e8f0;
+  --surface: #ffffff;
+  --app-bg: #f4f7fb;
+  --radius: 14px;
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -12px rgba(15, 23, 42, 0.12);
+  --font-sans: 'Inter Variable', 'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mat-sys-label-large-font: var(--font-sans);
+  --mat-sys-body-medium-font: var(--font-sans);
+  --mat-sys-body-large-font: var(--font-sans);
+  --mat-sys-title-medium-font: var(--font-sans);
+}
+
 /* Estilo base para o HTML e body */
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  font-family: 'Roboto', sans-serif;
-  background-color: #f1f5f9;
+  font-family: var(--font-sans);
+  background-color: var(--app-bg);
   color: #1e293b;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -33,7 +57,7 @@ a:hover {
 
 /* Seleção de texto personalizada */
 ::selection {
-  background: #1976d2; /* Azul para seleção */
+  background: #2563eb; /* Azul para seleção */
   color: #fff; /* texto branco */
 }
 
@@ -43,4 +67,27 @@ a:hover {
 }
 
 html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+body { margin: 0; font-family: var(--font-sans); }
+
+/* Títulos com a fonte do tema e tracking mais justo */
+h1, h2, h3 {
+  font-family: var(--font-sans);
+  letter-spacing: -0.015em;
+}
+
+/* Campos de formulário nativos com foco visível e consistente */
+input:not([type='checkbox']):not([type='radio']), select, textarea {
+  font-family: inherit;
+}
+input:not([type='checkbox']):not([type='radio']):focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--brand-500) !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
