@@ -21,6 +21,7 @@ public class RateLimitingInterceptor implements HandlerInterceptor {
     // Configurações de rate limiting
     private static final int MAX_REQUESTS_PER_MINUTE = 60;
     private static final int MAX_SUBSCRIPTION_REQUESTS_PER_MINUTE = 10;
+    private static final int MAX_AUTH_REQUESTS_PER_MINUTE = 10;
     private static final long WINDOW_SIZE_MILLIS = 60 * 1000; // 1 minuto
     
     // Armazenamento em memória para contadores (em produção, usar Redis)
@@ -28,19 +29,24 @@ public class RateLimitingInterceptor implements HandlerInterceptor {
     
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        String clientId = getClientIdentifier(request);
         String endpoint = request.getRequestURI();
-        
-        int maxRequests = MAX_REQUESTS_PER_MINUTE;
-        if (isSubscriptionWriteEndpoint(endpoint)) {
+
+        int maxRequests;
+        String bucket;
+        if (isAuthEndpoint(endpoint)) {
+            // Login/cadastro: limite por IP (sem User-Agent) para dificultar força bruta
+            maxRequests = MAX_AUTH_REQUESTS_PER_MINUTE;
+            bucket = getClientIp(request) + ":auth";
+        } else if (isSubscriptionWriteEndpoint(endpoint)) {
             maxRequests = MAX_SUBSCRIPTION_REQUESTS_PER_MINUTE;
-        } else if (isSubscriptionEndpoint(endpoint)) {
+            bucket = getClientIdentifier(request) + ":sub-write";
+        } else {
             maxRequests = MAX_REQUESTS_PER_MINUTE;
+            bucket = getClientIdentifier(request) + ":sub-read";
         }
-        String bucket = clientId + ":" + (maxRequests == MAX_SUBSCRIPTION_REQUESTS_PER_MINUTE ? "sub-write" : "sub-read");
         
         if (isRateLimited(bucket, maxRequests)) {
-            log.warn("Rate limit excedido para cliente: {} no endpoint: {}", clientId, endpoint);
+            log.warn("Rate limit excedido para cliente: {} no endpoint: {}", bucket, endpoint);
             response.setStatus(429); // HTTP 429 Too Many Requests
             response.setContentType("application/json");
             response.getWriter().write(
@@ -56,8 +62,7 @@ public class RateLimitingInterceptor implements HandlerInterceptor {
      * Identifica o cliente baseado no IP e user agent
      */
     private String getClientIdentifier(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        String clientIp = xForwardedFor != null ? xForwardedFor.split(",")[0] : request.getRemoteAddr();
+        String clientIp = getClientIp(request);
         String userAgent = request.getHeader("User-Agent");
         
         // Combinar IP e User-Agent para identificação mais precisa
@@ -65,10 +70,20 @@ public class RateLimitingInterceptor implements HandlerInterceptor {
     }
     
     /**
-     * Verifica se o endpoint é de assinatura (qualquer um sob /api/subscription/ ou webhooks).
+     * IP real do cliente. Atrás do Cloudflare Tunnel o header CF-Connecting-IP é
+     * definido pelo Cloudflare e não pode ser forjado pelo cliente.
      */
-    private boolean isSubscriptionEndpoint(String endpoint) {
-        return endpoint.startsWith("/api/subscription/") || endpoint.startsWith("/api/webhooks/");
+    private String getClientIp(HttpServletRequest request) {
+        String cfIp = request.getHeader("CF-Connecting-IP");
+        if (cfIp != null && !cfIp.isBlank()) {
+            return cfIp.trim();
+        }
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        return xForwardedFor != null ? xForwardedFor.split(",")[0].trim() : request.getRemoteAddr();
+    }
+
+    private boolean isAuthEndpoint(String endpoint) {
+        return endpoint.startsWith("/auth/");
     }
 
     /**

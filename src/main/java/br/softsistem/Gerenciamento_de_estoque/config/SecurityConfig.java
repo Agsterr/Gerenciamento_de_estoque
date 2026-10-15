@@ -106,8 +106,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/plans/public").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/asaas/config").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/plans/mp-plans").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/plans/ensure-from-mp").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/mercadopago/public-key").permitAll()
+                        // Regra específica precisa vir antes de /api/subscription/** (primeira regra que casa vence)
+                        .requestMatchers("/api/subscription/all").hasRole("SUPER_ADMIN")
                         .requestMatchers("/api/subscription/**").authenticated()
                         // Endpoints admin para gerenciar eventos falhados - requerem autenticação
                         .requestMatchers("/admin/webhooks/failed/**").hasRole("SUPER_ADMIN")
@@ -128,7 +129,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/plans/**").hasRole("SUPER_ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/plans/sync-mercadopago").hasRole("SUPER_ADMIN")
                         .requestMatchers("/api/orgs/**").hasRole("SUPER_ADMIN")
-                        .requestMatchers("/api/subscription/all").hasRole("SUPER_ADMIN")
                         .requestMatchers("/api/cache/**").hasRole("SUPER_ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

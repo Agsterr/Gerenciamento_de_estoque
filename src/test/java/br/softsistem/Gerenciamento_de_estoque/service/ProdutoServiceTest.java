@@ -44,6 +44,7 @@ class ProdutoServiceTest {
 
         org = new Org();
         org.setId(1L);
+        categoria.setOrg(org);
 
         produto = new Produto();
         produto.setId(1L);
@@ -72,6 +73,17 @@ class ProdutoServiceTest {
         assertEquals("Produto Teste", salvo.getNome());
         assertEquals(5, salvo.getQuantidade());
         verify(movimentacaoProdutoRepository).save(any(MovimentacaoProduto.class));
+    }
+
+    @Test
+    void naoDeveUsarCategoriaDeOutraOrganizacao() {
+        Org outraOrg = new Org();
+        outraOrg.setId(2L);
+        categoria.setOrg(outraOrg);
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoria));
+
+        assertThrows(ResourceNotFoundException.class, () -> service.salvar(request, 1L));
+        verify(produtoRepository, never()).save(any());
     }
 
     @Test
