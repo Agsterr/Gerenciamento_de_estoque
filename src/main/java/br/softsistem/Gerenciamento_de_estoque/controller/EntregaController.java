@@ -1,5 +1,6 @@
 package br.softsistem.Gerenciamento_de_estoque.controller;
 
+import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
 import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaComAvisoResponseDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaRequestDto;
 import br.softsistem.Gerenciamento_de_estoque.dto.entregaDto.EntregaResponseDto;
@@ -102,8 +103,14 @@ public class EntregaController {
     @GetMapping("/por-produto/{produtoId}")
     public ResponseEntity<Page<EntregaResponseDto>> porProduto(
             @PathVariable Long produtoId,
-            @RequestParam("orgId") Long orgId,
+            @RequestParam(value = "orgId", required = false) Long ignoredOrgId,
             Pageable pageable) {
+        // A organização vem sempre do token; o orgId enviado pelo cliente é ignorado
+        // (antes era usado direto e permitia ler entregas de outra organização).
+        Long orgId = SecurityUtils.getCurrentOrgId();
+        if (orgId == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         Page<EntregaResponseDto> pageDto = entregaService.listarEntregasPorProduto(produtoId, orgId, pageable);
         return ResponseEntity.ok(pageDto);
     }

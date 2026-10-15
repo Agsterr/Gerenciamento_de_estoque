@@ -43,6 +43,13 @@ export class DashboardInicioComponent implements OnInit {
     return `${meses[parseInt(m, 10) - 1]}/${y.slice(2)}`;
   }
 
+  /** Valor compacto para caber embaixo das barras (ex.: R$ 31,2 mil). */
+  valorCurto(v: number): string {
+    if (Math.abs(v) >= 1_000_000) return `R$ ${(v / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mi`;
+    if (Math.abs(v) >= 1_000) return `R$ ${(v / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mil`;
+    return `R$ ${v.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`;
+  }
+
   asNumber(v: unknown): number {
     return Number(v) || 0;
   }

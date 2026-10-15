@@ -4,8 +4,10 @@
   top: 0;
   left: 0;
   width: 100%;
-  background: #fff;
-  box-shadow: 0 2px 16px 0 rgba(30,41,59,0.09);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--line);
   z-index: 100;
   padding: 0;
 }
@@ -14,7 +16,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  max-width: 1200px;
+  max-width: none;
   margin: 0 auto;
   padding: 0 24px;
   height: 64px;
@@ -27,26 +29,34 @@
 }
 
 .brand {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 10px;
   text-decoration: none;
 }
 .brand-icon {
-  font-size: 2.1rem;
-  color: #2563eb;
+  width: 38px;
+  height: 38px;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  color: #fff;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  box-shadow: 0 6px 16px -6px rgba(37, 99, 235, 0.6);
 }
 .brand-title {
-  font-size: 1.45rem;
+  font-size: 1.15rem;
   font-weight: 800;
-  color: #2563eb;
-  letter-spacing: 1px;
+  color: var(--ink-900);
+  letter-spacing: -0.01em;
 }
 
 .navbar-menu {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   transition: all 0.25s cubic-bezier(.4,0,.2,1);
 }
 
@@ -55,24 +65,30 @@
   align-items: center;
   gap: 8px;
   text-decoration: none;
-  color: #333;
-  font-size: 1.13rem;
+  color: var(--ink-700);
+  font-size: 0.95rem;
   font-weight: 500;
-  padding: 10px 18px;
-  border-radius: 7px;
+  padding: 8px 14px;
+  border-radius: 10px;
   transition: background 0.18s, color 0.18s;
   position: relative;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
 }
 
 .nav-link.active, .nav-link.router-link-active {
-  background: #2563eb;
-  color: #fff;
-  box-shadow: 0 2px 8px 0 rgba(37,99,235,0.08);
+  background: var(--brand-50);
+  color: var(--brand-700);
+  font-weight: 600;
 }
 
 .nav-link:hover {
-  background: #f1f5fa;
-  color: #2563eb;
+  background: #f1f5f9;
+  color: var(--brand-700);
 }
 
 .user-button {
@@ -80,36 +96,47 @@
   align-items: center;
   gap: 10px;
   background: none;
-  border: none;
+  border: 1px solid var(--line);
   cursor: pointer;
-  padding: 8px 16px;
-  border-radius: 7px;
-  font-size: 1.13rem;
+  padding: 4px 10px 4px 4px;
+  margin-left: 6px;
+  border-radius: 999px;
+  height: auto;
+  font-size: 0.95rem;
   font-weight: 500;
-  transition: background 0.18s, color 0.18s;
+  transition: background 0.18s, border-color 0.18s;
+
+  ::ng-deep .mdc-button__label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 }
 .user-button:hover {
-  background: #f1f5fa;
-  color: #2563eb;
+  background: #f8fafc;
+  border-color: #cbd5e1;
 }
 .avatar {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
   border-radius: 50%;
-  background: #2563eb;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 1.18rem;
-  margin-right: 4px;
-  box-shadow: 0 1px 4px 0 rgba(30,41,59,0.10);
+  font-size: 0.95rem;
 }
 .user-name {
   font-weight: 600;
-  font-size: 1.08rem;
-  color: #333;
+  font-size: 0.9rem;
+  color: var(--ink-700);
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .menu-toggle {
   background: none;
@@ -122,8 +149,8 @@
   justify-content: center;
 }
 .menu-toggle mat-icon {
-  font-size: 2.1rem;
-  color: #2563eb;
+  font-size: 1.8rem;
+  color: var(--ink-700);
 }
 // Responsividade
 @media (max-width: 900px) {
@@ -242,5 +269,16 @@
     font-size: 1.1rem;
     width: 1.1rem;
     height: 1.1rem;
+  }
+}
+
+// O conteúdo tem as classes .router-container e .main-content; o "margin: 0" do
+// .router-container anulava o espaço do cabeçalho fixo e o topo das telas ficava
+// escondido atrás dele.
+.router-container.main-content {
+  margin-top: 64px;
+
+  @media (max-width: 768px) {
+    margin-top: 56px;
   }
 }
