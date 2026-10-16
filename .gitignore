@@ -51,3 +51,8 @@ docker/secrets/asaas_prod_api_key.txt
 # Backups de banco (gerados localmente ou no servidor)
 backups/
 data/log-exports/
+
+# Dependências e artefatos locais (não versionar)
+node_modules/
+hs_err_pid*.log
+replay_pid*.log

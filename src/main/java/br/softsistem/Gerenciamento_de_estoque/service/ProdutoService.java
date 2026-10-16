@@ -54,6 +54,7 @@ public class ProdutoService {
     @CacheEvict(value = "produtos", allEntries = true)
     public Produto salvar(ProdutoRequest produtoRequest, Long orgId) {
         Categoria categoria = categoriaRepository.findById(produtoRequest.getCategoriaId())
+                .filter(c -> c.getOrg() != null && c.getOrg().getId().equals(orgId))
                 .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada."));
 
         Org org = orgRepository.findById(orgId)
@@ -140,6 +141,7 @@ public class ProdutoService {
     @CacheEvict(value = "produtos", allEntries = true)
     public Produto editar(Long id, ProdutoRequest produtoRequest, Long orgId) {
         Categoria categoria = categoriaRepository.findById(produtoRequest.getCategoriaId())
+                .filter(c -> c.getOrg() != null && c.getOrg().getId().equals(orgId))
                 .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada."));
 
         Org org = orgRepository.findById(orgId)

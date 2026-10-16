@@ -26,7 +26,10 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(rateLimitingInterceptor)
                 .addPathPatterns(
                     "/api/subscription/**",
-                    "/api/webhooks/**"
+                    "/api/webhooks/**",
+                    "/auth/login",
+                    "/auth/demo-login",
+                    "/auth/register"
                 )
                 .excludePathPatterns(
                     "/swagger-ui/**",
