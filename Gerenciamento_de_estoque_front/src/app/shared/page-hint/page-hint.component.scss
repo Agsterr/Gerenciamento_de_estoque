@@ -9,6 +9,8 @@
   align-items: flex-start;
 }
 
+.page-hint-toggle { display: none; }
+
 .page-hint-icon {
   flex-shrink: 0;
   width: 40px;
@@ -92,39 +94,83 @@
 
 @media (max-width: 768px) {
   .page-hint {
-    flex-direction: column;
-    gap: 12px;
-    padding: 14px 16px;
-    margin-bottom: 16px;
+    display: block;
+    padding: 0;
+    margin-bottom: 14px;
+    border: none;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: var(--m-card-shadow);
+    overflow: hidden;
     scroll-margin-top: 120px;
   }
 
-  .page-hint-icon {
-    width: 36px;
-    height: 36px;
-    font-size: 1rem;
+  .page-hint-icon { display: none; }
+
+  .page-hint-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--ink-700);
+    cursor: pointer;
+    text-align: left;
   }
 
+  .page-hint-toggle-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.8rem;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  }
+
+  .page-hint-toggle-text { flex: 1; }
+
+  .page-hint-chevron {
+    color: var(--ink-500);
+    font-size: 0.8rem;
+    transition: transform 0.2s;
+  }
+
+  .page-hint.open .page-hint-chevron { transform: rotate(180deg); }
+
   .page-hint-body {
-    strong {
-      font-size: 0.9rem;
-    }
+    display: none;
+    padding: 0 16px 14px;
+
+    strong { display: none; }
 
     p {
       font-size: 0.875rem;
+      color: var(--ink-700);
       word-wrap: break-word;
       overflow-wrap: anywhere;
     }
   }
 
+  .page-hint.open .page-hint-body { display: block; }
+
   .page-hint-deps {
-    flex-direction: column;
-    align-items: flex-start;
     gap: 6px;
   }
 
   .dep-link {
     max-width: 100%;
     white-space: normal;
+    border-color: #ddd6fe;
+    color: var(--m-indigo);
   }
+
+  .help-link { color: var(--m-indigo); }
 }

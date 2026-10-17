@@ -27,37 +27,16 @@
     <!-- Cabeçalho compacto no mobile (telas de módulo) -->
     <header class="mobile-page-header" *ngIf="isMobile && !isHubRoute">
       <a routerLink="/dashboard/inicio" class="mobile-back" aria-label="Voltar ao início">
-        <i class="fas fa-arrow-left"></i>
+        <i class="fas fa-chevron-left"></i>
       </a>
-      <h1 class="mobile-page-title">{{ pageTitle }}</h1>
+      <div class="mobile-page-heading">
+        <span class="mobile-page-kicker">Painel</span>
+        <h1 class="mobile-page-title">{{ pageTitle }}</h1>
+      </div>
       <button type="button" class="mobile-more-btn" (click)="toggleMoreMenu()" aria-label="Mais opções">
-        <i class="fas fa-ellipsis-v"></i>
+        <i class="fas fa-th-large"></i>
       </button>
     </header>
-
-    <!-- Hub mobile: só título leve (KPIs ficam no router-outlet / inicio) -->
-    <header class="mobile-hub-header" *ngIf="isMobile && isHubRoute">
-      <h1>Painel</h1>
-      <p>Escolha uma opção abaixo ou use o menu</p>
-    </header>
-
-    <!-- Atalhos rápidos só na tela inicial (mobile) -->
-    <nav class="mobile-quick-grid" *ngIf="isMobile && isHubRoute" aria-label="Acesso rápido">
-      <a
-        *ngFor="let item of primaryMobile"
-        [routerLink]="navLink(item)"
-        routerLinkActive="active"
-        [routerLinkActiveOptions]="{ exact: item.path === 'inicio' }"
-        class="quick-tile"
-      >
-        <i class="fas" [ngClass]="item.icon"></i>
-        <span>{{ item.label }}</span>
-      </a>
-      <button type="button" class="quick-tile quick-tile-more" (click)="toggleMoreMenu()">
-        <i class="fas fa-th"></i>
-        <span>Mais</span>
-      </button>
-    </nav>
 
     <div class="dashboard-content">
       <router-outlet></router-outlet>
@@ -73,7 +52,7 @@
       [routerLinkActiveOptions]="{ exact: item.path === 'inicio' }"
       class="bottom-nav-item"
     >
-      <i class="fas" [ngClass]="item.icon"></i>
+      <span class="bottom-nav-icon"><i class="fas" [ngClass]="item.icon"></i></span>
       <span>{{ item.label }}</span>
     </a>
     <button
@@ -82,7 +61,7 @@
       [class.active]="moreMenuOpen"
       (click)="toggleMoreMenu()"
     >
-      <i class="fas fa-bars"></i>
+      <span class="bottom-nav-icon"><i class="fas fa-th-large"></i></span>
       <span>Mais</span>
     </button>
   </nav>
@@ -99,21 +78,22 @@
     *ngIf="isMobile && moreMenuOpen"
     aria-label="Mais módulos"
   >
+    <span class="drawer-handle" aria-hidden="true"></span>
     <header class="drawer-header">
-      <h2>Mais opções</h2>
+      <h2>Todos os módulos</h2>
       <button type="button" (click)="closeMoreMenu()" aria-label="Fechar">
         <i class="fas fa-times"></i>
       </button>
     </header>
     <nav class="drawer-links">
       <a
-        *ngFor="let item of visibleSecondaryMenu"
+        *ngFor="let item of visibleSecondaryMenu; let i = index"
         [routerLink]="navLink(item)"
         routerLinkActive="active"
         class="drawer-link"
         (click)="closeMoreMenu()"
       >
-        <i class="fas" [ngClass]="item.icon"></i>
+        <span class="drawer-icon" [ngClass]="'tone-' + (i % 6)"><i class="fas" [ngClass]="item.icon"></i></span>
         <span>{{ item.label }}</span>
       </a>
     </nav>

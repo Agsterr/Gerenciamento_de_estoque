@@ -2,7 +2,7 @@
 
 
 
-<header class="header-page">
+<header class="header-page m-module-head">
 
   <h2><i class="fas fa-file-invoice-dollar"></i> Pedidos de Venda</h2>
 
@@ -28,11 +28,45 @@
 
 
 
-<div class="main-content">
+<div class="main-content m-flat">
 
   <div class="card-lista" *ngIf="showList">
 
-    <div class="table-scroll-wrapper">
+    <!-- Mobile: lista em cartões -->
+    <div class="m-list m-only">
+      <div class="m-list-head">
+        <span>Pedidos</span>
+        <strong>{{ pedidos.length }}</strong>
+      </div>
+      <article class="m-card" *ngFor="let p of pedidos" [class.is-muted]="statusClass(p.status) === 'cancelado'">
+        <div class="m-card-top">
+          <span class="m-avatar" [ngClass]="mobileStatusTone(p)">
+            <i class="fas" [ngClass]="isPedidoInterno(p) ? 'fa-people-carry' : 'fa-receipt'"></i>
+          </span>
+          <div class="m-main">
+            <h3 class="m-title">{{ destinatarioLabel(p) }}</h3>
+            <p class="m-sub">{{ p.numero }} · {{ p.dataHora | date:'dd/MM HH:mm' }}</p>
+          </div>
+          <div class="m-price">{{ p.valorTotal | currency:'BRL' }}</div>
+        </div>
+        <div class="m-meta">
+          <span class="m-chip" [ngClass]="mobileStatusChip(p)">{{ p.status }}</span>
+          <span class="m-chip violet" *ngIf="isPedidoInterno(p)"><i class="fas fa-user-tag"></i> Interno</span>
+          <span class="m-chip" *ngIf="!isPedidoInterno(p) && p.formaPagamento"><i class="fas fa-wallet"></i> {{ labelForma(p.formaPagamento) }} · {{ labelCondicao(p.condicaoPagamento) }}</span>
+          <span class="m-chip"><i class="fas fa-user"></i> {{ p.vendedorNome || p.vendedorId }}</span>
+        </div>
+        <div class="m-actions" *ngIf="podeConfirmar(p) || podeAcao(p)">
+          <button type="button" *ngIf="podeConfirmar(p)" class="m-btn success" (click)="confirmar(p.id)"><i class="fas fa-check"></i> Confirmar</button>
+          <button type="button" *ngIf="podeAcao(p)" class="m-btn danger" (click)="cancelar(p.id)" aria-label="Cancelar pedido"><i class="fas fa-ban"></i></button>
+        </div>
+      </article>
+      <div class="m-empty" *ngIf="!pedidos.length">
+        <i class="fas fa-receipt"></i>
+        Nenhum pedido ainda.
+      </div>
+    </div>
+
+    <div class="table-scroll-wrapper d-only">
     <table class="data-table">
 
       <thead>

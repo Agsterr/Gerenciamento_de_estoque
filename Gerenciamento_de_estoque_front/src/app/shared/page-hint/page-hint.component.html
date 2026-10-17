@@ -1,4 +1,10 @@
-<div class="page-hint" role="note">
+<div class="page-hint" role="note" [class.open]="aberto">
+  <!-- Mobile: cabeçalho compacto que expande a dica -->
+  <button type="button" class="page-hint-toggle" (click)="aberto = !aberto" [attr.aria-expanded]="aberto">
+    <span class="page-hint-toggle-icon"><i class="fas fa-lightbulb"></i></span>
+    <span class="page-hint-toggle-text">Como começar</span>
+    <i class="fas fa-chevron-down page-hint-chevron"></i>
+  </button>
   <div class="page-hint-icon">
     <i class="fas fa-lightbulb"></i>
   </div>

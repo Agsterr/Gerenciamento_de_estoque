@@ -261,6 +261,13 @@ export class ProdutoComponent implements OnInit {
     this.filteredProdutos = list;
   }
 
+  /** Percentual da barra de nível no cartão mobile (100% = 3x o mínimo). */
+  nivelEstoque(p: Produto): number {
+    const qtd = Math.max(0, p.quantidade ?? 0);
+    const ref = Math.max(1, (p.quantidadeMinima ?? 0) * 3);
+    return Math.min(100, Math.max(qtd > 0 ? 6 : 0, Math.round((qtd / ref) * 100)));
+  }
+
   isEstoqueBaixo(p: Produto): boolean {
     const qtd = p.quantidade ?? 0;
     const min = p.quantidadeMinima ?? 0;

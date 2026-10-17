@@ -1,7 +1,7 @@
 <!-- Cabeçalho fixo -->
 <app-page-hint [message]="pageHint.message" [prerequisites]="pageHint.prerequisites"></app-page-hint>
 
-<header class="header-produto">
+<header class="header-produto m-module-head">
   <h2><i class="fas fa-box"></i> Gestão de Produtos</h2>
   <div class="acoes-header">
     <button class="botao-listar" (click)="toggleList()" title="Ver lista de produtos">
@@ -14,7 +14,7 @@
 </header>
 
 <!-- Resumo dos Produtos -->
-<div class="summary-section" *ngIf="totalElements > 0">
+<div class="summary-section d-only" *ngIf="totalElements > 0">
   <div class="summary-card">
     <i class="fas fa-box"></i>
     <div class="summary-content">
@@ -37,10 +37,10 @@
   <div class="spinner"></div>
 </div>
 
-<div class="main-content">
+<div class="main-content m-flat">
   <!-- Card Lista -->
   <div class="card-lista" *ngIf="showList">
-    <div class="busca-container">
+    <div class="busca-container m-search">
       <input type="text" [(ngModel)]="searchTerm" (input)="applyFilter()" placeholder="Buscar produtos..." class="search-input" />
       <div class="barcode-search">
         <input type="text" [(ngModel)]="barcodeSearch" placeholder="Código de barras..." class="search-input" />
@@ -51,7 +51,47 @@
         Somente estoque baixo
       </label>
     </div>
-    <div class="table-scroll-wrapper">
+    <!-- Mobile: lista em cartões -->
+    <div class="m-list m-only">
+      <div class="m-list-head">
+        <span>Produtos</span>
+        <strong>{{ totalElements || filteredProdutos.length }}</strong>
+      </div>
+      <article class="m-card" *ngFor="let produto of filteredProdutos" [class.is-alert]="isEstoqueBaixo(produto)">
+        <div class="m-card-top">
+          <span class="m-avatar" [class.red]="isEstoqueBaixo(produto)">{{ (produto.nome || '?').charAt(0) | uppercase }}</span>
+          <div class="m-main">
+            <h3 class="m-title">{{ produto.nome }}</h3>
+            <p class="m-sub">{{ produto.categoriaNome || 'Sem categoria' }}<ng-container *ngIf="produto.sku"> · {{ produto.sku }}</ng-container></p>
+          </div>
+          <div class="m-price">
+            {{ produto.preco | currency:'BRL' }}
+            <small *ngIf="produto.custoMedio">custo {{ produto.custoMedio | currency:'BRL' }}</small>
+          </div>
+        </div>
+        <div class="m-stock">
+          <div class="m-stock-row">
+            <span><strong>{{ produto.quantidade }}</strong> em estoque</span>
+            <span *ngIf="!isEstoqueBaixo(produto)">mín. {{ produto.quantidadeMinima }}</span>
+            <span *ngIf="isEstoqueBaixo(produto)" class="m-chip red"><i class="fas fa-exclamation-triangle"></i> Baixo · mín. {{ produto.quantidadeMinima }}</span>
+          </div>
+          <div class="m-stock-track">
+            <div class="m-stock-fill" [class.low]="isEstoqueBaixo(produto)" [style.width.%]="nivelEstoque(produto)"></div>
+          </div>
+        </div>
+        <div class="m-actions">
+          <button type="button" class="m-btn success" (click)="entradaEstoque(produto)"><i class="fas fa-arrow-down"></i> Entrada</button>
+          <button type="button" class="m-btn primary" (click)="editProduto(produto)"><i class="fas fa-pen"></i> Editar</button>
+          <button type="button" class="m-btn danger" (click)="deleteProduto(produto.id)" aria-label="Excluir"><i class="fas fa-trash-alt"></i></button>
+        </div>
+      </article>
+      <div class="m-empty" *ngIf="!filteredProdutos.length">
+        <i class="fas fa-box-open"></i>
+        Nenhum produto encontrado.
+      </div>
+    </div>
+
+    <div class="table-scroll-wrapper d-only">
     <table class="entrega-table">
       <colgroup>
         <col style="width: 70px">

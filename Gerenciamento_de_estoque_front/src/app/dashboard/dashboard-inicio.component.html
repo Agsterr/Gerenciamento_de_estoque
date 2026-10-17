@@ -1,26 +1,74 @@
 <div class="dashboard-inicio" *ngIf="!loading && resumo">
+  <!-- Mobile: destaque com saudação e faturamento -->
+  <section class="m-hero m-only" aria-label="Resumo do mês">
+    <div class="m-hero-top">
+      <div>
+        <span class="m-hero-hello">{{ saudacao }}{{ userName ? ', ' + userName : '' }} 👋</span>
+        <span class="m-hero-label">Faturamento do mês</span>
+      </div>
+      <span class="m-hero-badge"><i class="fas fa-chart-line"></i></span>
+    </div>
+    <strong class="m-hero-value">{{ resumo.faturamentoMes | currency:'BRL' }}</strong>
+    <div class="m-hero-stats">
+      <div>
+        <span>{{ resumo.pedidosConfirmadosMes }}</span>
+        <small>pedidos confirmados</small>
+      </div>
+      <div>
+        <span><i class="fas fa-arrow-down"></i> {{ resumo.entradasMes }}</span>
+        <small>entradas</small>
+      </div>
+      <div>
+        <span><i class="fas fa-arrow-up"></i> {{ resumo.saidasMes }}</span>
+        <small>saídas</small>
+      </div>
+    </div>
+  </section>
+
+  <nav class="m-actions-row m-only" aria-label="Ações rápidas">
+    <a routerLink="/dashboard/pedidos-venda" class="m-action">
+      <span class="m-action-icon tone-violet"><i class="fas fa-cash-register"></i></span>
+      Vender
+    </a>
+    <a routerLink="/dashboard/produtos" class="m-action">
+      <span class="m-action-icon tone-blue"><i class="fas fa-box-open"></i></span>
+      Produtos
+    </a>
+    <a routerLink="/dashboard/movimentacoes" class="m-action">
+      <span class="m-action-icon tone-green"><i class="fas fa-exchange-alt"></i></span>
+      Estoque
+    </a>
+    <a routerLink="/dashboard/pedidos-compra" class="m-action">
+      <span class="m-action-icon tone-orange"><i class="fas fa-truck"></i></span>
+      Compras
+    </a>
+  </nav>
+
   <section class="kpi-grid">
-    <div class="kpi-card destaque">
+    <div class="kpi-card destaque m-dup">
       <span class="kpi-label">Faturamento do mês</span>
       <span class="kpi-valor">{{ resumo.faturamentoMes | currency:'BRL' }}</span>
     </div>
     <div class="kpi-card">
+      <span class="kpi-icon m-only tone-blue"><i class="fas fa-tags"></i></span>
       <span class="kpi-label">Valor em estoque (venda)</span>
       <span class="kpi-valor">{{ resumo.valorEstoque | currency:'BRL' }}</span>
     </div>
     <div class="kpi-card">
+      <span class="kpi-icon m-only tone-violet"><i class="fas fa-coins"></i></span>
       <span class="kpi-label">Valor em estoque (custo)</span>
       <span class="kpi-valor">{{ resumo.valorEstoqueCusto | currency:'BRL' }}</span>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-card m-dup">
       <span class="kpi-label">Pedidos confirmados (mês)</span>
       <span class="kpi-valor">{{ resumo.pedidosConfirmadosMes }}</span>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-card m-dup">
       <span class="kpi-label">Entradas / Saídas (mês)</span>
       <span class="kpi-valor">{{ resumo.entradasMes }} / {{ resumo.saidasMes }}</span>
     </div>
     <div class="kpi-card alerta" *ngIf="resumo.produtosEstoqueBaixo > 0">
+      <span class="kpi-icon m-only tone-red"><i class="fas fa-exclamation-triangle"></i></span>
       <span class="kpi-label">Estoque baixo</span>
       <span class="kpi-valor">{{ resumo.produtosEstoqueBaixo }} produtos</span>
       <a routerLink="/dashboard/produtos" class="kpi-link">Ver produtos</a>
@@ -66,7 +114,7 @@
     </div>
   </div>
 
-  <section class="acesso-rapido">
+  <section class="acesso-rapido d-only">
     <h3>Acesso rápido</h3>
     <div class="links">
       <a routerLink="/dashboard/pedidos-venda"><i class="fas fa-file-invoice-dollar"></i> Novo pedido de venda</a>

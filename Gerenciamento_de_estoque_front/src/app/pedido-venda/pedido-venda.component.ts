@@ -206,6 +206,16 @@ export class PedidoVendaComponent implements OnInit {
     return 'rascunho';
   }
 
+  mobileStatusTone(p: PedidoVenda): string {
+    const c = this.statusClass(p.status);
+    return c === 'confirmado' ? 'green' : c === 'rascunho' ? 'amber' : c === 'cancelado' ? 'slate' : '';
+  }
+
+  mobileStatusChip(p: PedidoVenda): string {
+    const c = this.statusClass(p.status);
+    return c === 'confirmado' ? 'green' : c === 'rascunho' ? 'amber' : c === 'cancelado' ? 'red' : 'blue';
+  }
+
   labelForma(f?: string): string {
     if (!f) return '—';
     return this.formasPagamento.find((x) => x.value === f)?.label || f;

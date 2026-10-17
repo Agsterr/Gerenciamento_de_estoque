@@ -14,4 +14,6 @@ export class PageHintComponent {
   @Input() message = '';
   @Input() prerequisites: HelpPrerequisite[] = [];
   @Input() showHelpLink = true;
+  /** Só tem efeito no mobile, onde a dica começa recolhida. */
+  aberto = false;
 }
