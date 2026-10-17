@@ -1,7 +1,7 @@
 <!-- Cabeçalho fixo -->
 <app-page-hint [message]="pageHint.message" [prerequisites]="pageHint.prerequisites"></app-page-hint>
 
-<header class="header-consumidor">
+<header class="header-consumidor m-module-head">
   <h2><i class="fas fa-users"></i> Gestão de Consumidores</h2>
   <div class="acoes-header">
     <button class="botao-listar" (click)="toggleList()" title="Ver lista de consumidores">
@@ -14,7 +14,7 @@
 </header>
 
 <!-- Resumo dos Consumidores -->
-<div class="summary-section" *ngIf="totalConsumidoresOrganizacao > 0">
+<div class="summary-section d-only" *ngIf="totalConsumidoresOrganizacao > 0">
   <div class="summary-card">
     <i class="fas fa-users"></i>
     <div class="summary-content">
@@ -37,10 +37,10 @@
   <div class="spinner"></div>
 </div>
 
-<div class="main-content">
+<div class="main-content m-flat">
   <!-- Card Lista -->
   <div class="card-lista" *ngIf="showList">
-    <div class="busca-container">
+    <div class="busca-container m-search">
       <div class="busca-input-wrapper">
         <i class="fas fa-search"></i>
         <input
@@ -52,7 +52,35 @@
         />
       </div>
     </div>
-    <table class="tabela-consumidores">
+    <!-- Mobile: lista em cartões -->
+    <div class="m-list m-only">
+      <div class="m-list-head">
+        <span>Clientes</span>
+        <strong>{{ totalConsumidoresOrganizacao || filteredConsumers.length }}</strong>
+      </div>
+      <article class="m-card" *ngFor="let consumer of filteredConsumers; let i = index">
+        <div class="m-card-top">
+          <span class="m-avatar round" [ngClass]="['', 'green', 'amber', 'slate'][i % 4]">{{ iniciais(consumer.nome) }}</span>
+          <div class="m-main">
+            <h3 class="m-title">{{ consumer.nome }}</h3>
+            <p class="m-sub" *ngIf="consumer.cpf"><i class="fas fa-id-card"></i> {{ consumer.cpf }}</p>
+          </div>
+        </div>
+        <div class="m-meta" *ngIf="consumer.endereco">
+          <span class="m-chip"><i class="fas fa-map-marker-alt"></i> {{ consumer.endereco }}</span>
+        </div>
+        <div class="m-actions">
+          <button type="button" class="m-btn primary" (click)="editConsumer(consumer)"><i class="fas fa-pen"></i> Editar</button>
+          <button type="button" class="m-btn danger" (click)="deleteConsumer(consumer.id)" aria-label="Excluir"><i class="fas fa-trash-alt"></i></button>
+        </div>
+      </article>
+      <div class="m-empty" *ngIf="!filteredConsumers.length">
+        <i class="fas fa-user-friends"></i>
+        Nenhum cliente encontrado.
+      </div>
+    </div>
+
+    <table class="tabela-consumidores d-only">
       <thead>
         <tr>
           <th><i class="fas fa-hashtag"></i> ID</th>

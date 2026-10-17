@@ -312,27 +312,96 @@ $danger: #ef4444;
 
 @media (max-width: 768px) {
   .header-page {
-    padding: 16px;
+    padding: 0;
+    margin: 4px 0 14px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
     flex-direction: column;
     align-items: stretch;
+    gap: 10px;
 
     h2 {
       font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
       flex-wrap: wrap;
       word-wrap: break-word;
       min-width: 0;
+
+      i { display: none; }
     }
 
     .acoes-header {
       width: 100%;
+      gap: 8px;
 
       .botao-listar,
       .botao-adicionar {
         flex: 1;
         justify-content: center;
         min-width: 0;
+        border-radius: 999px;
+        font-size: 0.88rem;
       }
     }
+  }
+
+  /* Dentro do painel o título já aparece no cabeçalho fixo */
+  :host-context(.mobile-module) .header-page {
+    h2,
+    .subtitulo { display: none; }
+  }
+
+  .botao-listar {
+    background: #fff;
+    color: var(--ink-700);
+    box-shadow: var(--m-card-shadow);
+  }
+
+  .botao-adicionar {
+    background: var(--m-grad);
+    box-shadow: 0 10px 22px -10px rgba(79, 70, 229, 0.9);
+  }
+
+  .main-content {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .main-content > .card-lista {
+    padding: 0;
+  }
+
+  .main-content > .card-form {
+    padding: 18px 16px;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: var(--m-card-shadow);
+  }
+
+  .summary-card {
+    border: none;
+    border-radius: 18px;
+    box-shadow: var(--m-card-shadow);
+    padding: 14px 16px;
+
+    i {
+      font-size: 1.1rem;
+      color: #fff;
+      background: var(--m-grad);
+      padding: 12px;
+      border-radius: 14px;
+    }
+  }
+
+  .campo-busca {
+    border-radius: 999px;
+    border-color: transparent;
+    box-shadow: var(--m-card-shadow);
+    min-height: 48px;
   }
 
   .card-lista,
@@ -423,10 +492,11 @@ $danger: #ef4444;
   .main-content .data-table tbody tr {
     display: block;
     margin-bottom: 12px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 8px 12px;
+    border: 1px solid rgba(99, 102, 241, 0.08);
+    border-radius: 18px;
+    padding: 10px 14px;
     background: white;
+    box-shadow: var(--m-card-shadow);
   }
 
   .table-scroll-wrapper .data-table tbody tr:nth-child(even),
@@ -442,18 +512,36 @@ $danger: #ef4444;
     justify-content: space-between;
     align-items: flex-start;
     gap: 12px;
-    padding: 8px 0;
+    padding: 7px 0;
     border: none;
+    border-bottom: 1px dashed #eef0f5;
     max-width: none;
     white-space: normal;
     word-break: break-word;
+    font-size: 0.9rem;
+    text-align: right;
+  }
+
+  .table-scroll-wrapper .data-table td:last-child,
+  .main-content .data-table td:last-child {
+    border-bottom: none;
+  }
+
+  .table-scroll-wrapper .data-table td:first-child,
+  .main-content .data-table td:first-child {
+    font-weight: 700;
+    color: var(--ink-900);
   }
 
   .table-scroll-wrapper .data-table td::before,
   .main-content .data-table td::before {
     content: attr(data-label);
     font-weight: 600;
-    color: #64748b;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-align: left;
+    color: #8b93a7;
     flex-shrink: 0;
     min-width: 90px;
     max-width: 45%;
@@ -480,6 +568,7 @@ $danger: #ef4444;
       min-height: 44px;
       min-width: 44px;
       justify-content: center;
+      border-radius: 12px;
     }
   }
 

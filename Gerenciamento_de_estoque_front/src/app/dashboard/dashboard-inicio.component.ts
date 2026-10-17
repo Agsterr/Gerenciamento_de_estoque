@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { DashboardService, DashboardResumo } from '../services/dashboard.service';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-dashboard-inicio',
@@ -16,8 +17,14 @@ export class DashboardInicioComponent implements OnInit {
   maxFaturamento = 1;
   maxVendidos = 1;
   maxEstoque = 1;
+  readonly userName: string;
+  readonly saudacao: string;
 
-  constructor(private dashboardService: DashboardService) {}
+  constructor(private dashboardService: DashboardService, authService: AuthService) {
+    this.userName = authService.getLoggedUser()?.username ?? '';
+    const hora = new Date().getHours();
+    this.saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+  }
 
   ngOnInit(): void {
     this.dashboardService.resumo().subscribe({
