@@ -18,6 +18,8 @@ import br.softsistem.Gerenciamento_de_estoque.config.AsaasConfig;
 import br.softsistem.Gerenciamento_de_estoque.config.MercadoPagoConfig;
 import br.softsistem.Gerenciamento_de_estoque.config.PaymentProviderConfig;
 import br.softsistem.Gerenciamento_de_estoque.config.SecurityUtils;
+import br.softsistem.Gerenciamento_de_estoque.dto.SubscriptionDto;
+import br.softsistem.Gerenciamento_de_estoque.dto.SubscriptionMapper;
 import br.softsistem.Gerenciamento_de_estoque.enumeracao.AsaasPaymentMode;
 import br.softsistem.Gerenciamento_de_estoque.enumeracao.SubscriptionStatus;
 import br.softsistem.Gerenciamento_de_estoque.exception.SubscriptionPersistenceException;
@@ -689,6 +691,27 @@ public class SubscriptionService {
         return usuarioRepository.findById(userId)
                 .map(trialSubscriptionService::startTrialForUser)
                 .orElse(null);
+    }
+
+    /** DTO montado dentro da transação (user/plan são LAZY e open-in-view está desligado). */
+    public SubscriptionDto getCurrentSubscriptionDtoForUser() {
+        return toDtoWithTrial(getCurrentSubscriptionForUser());
+    }
+
+    public SubscriptionDto syncAsaasPaymentDtoForCurrentUser() {
+        return toDtoWithTrial(syncAsaasPaymentForCurrentUser());
+    }
+
+    public List<SubscriptionDto> getSubscriptionHistoryDtosForUser() {
+        return getSubscriptionHistoryForUser().stream().map(this::toDtoWithTrial).toList();
+    }
+
+    public List<SubscriptionDto> getAllSubscriptionDtosForAdmin() {
+        return getAllSubscriptionsForAdmin().stream().map(this::toDtoWithTrial).toList();
+    }
+
+    private SubscriptionDto toDtoWithTrial(Subscription subscription) {
+        return SubscriptionMapper.toDto(subscription, trialSubscriptionService.getTrialDays());
     }
 
     private Subscription normalizeTrialSubscription(Subscription subscription) {

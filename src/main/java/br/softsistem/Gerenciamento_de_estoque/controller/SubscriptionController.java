@@ -74,11 +74,10 @@ public class SubscriptionController {
      */
     @GetMapping("/current")
     public ResponseEntity<SubscriptionDto> getCurrentSubscription() {
-        Subscription subscription = subscriptionService.getCurrentSubscriptionForUser();
-        if (subscription == null) {
+        SubscriptionDto dto = subscriptionService.getCurrentSubscriptionDtoForUser();
+        if (dto == null) {
             return ResponseEntity.notFound().build();
         }
-        SubscriptionDto dto = SubscriptionMapper.toDto(subscription);
         return ResponseEntity.ok(dto);
     }
 
@@ -88,11 +87,11 @@ public class SubscriptionController {
      */
     @PostMapping("/sync-payment")
     public ResponseEntity<SubscriptionDto> syncAsaasPayment() {
-        Subscription subscription = subscriptionService.syncAsaasPaymentForCurrentUser();
-        if (subscription == null) {
+        SubscriptionDto dto = subscriptionService.syncAsaasPaymentDtoForCurrentUser();
+        if (dto == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(SubscriptionMapper.toDto(subscription));
+        return ResponseEntity.ok(dto);
     }
 
     /**
@@ -101,16 +100,16 @@ public class SubscriptionController {
     @PostMapping("/simulate-payment")
     public ResponseEntity<?> simulateSandboxPayment() {
         try {
-            Subscription subscription = subscriptionService.syncAsaasPaymentForCurrentUser();
-            if (subscription == null) {
+            SubscriptionDto dto = subscriptionService.syncAsaasPaymentDtoForCurrentUser();
+            if (dto == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Nenhuma cobrança pendente encontrada"));
             }
-            if (subscription.getStatus() != br.softsistem.Gerenciamento_de_estoque.enumeracao.SubscriptionStatus.ACTIVE) {
+            if (!"ACTIVE".equals(String.valueOf(dto.getStatus()))) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                         "error", "Pagamento ainda não confirmado. Gere uma cobrança em /assinatura e tente novamente.",
-                        "status", subscription.getStatus().name()));
+                        "status", String.valueOf(dto.getStatus())));
             }
-            return ResponseEntity.ok(SubscriptionMapper.toDto(subscription));
+            return ResponseEntity.ok(dto);
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
@@ -304,11 +303,7 @@ public class SubscriptionController {
      */
     @GetMapping("/history")
     public ResponseEntity<List<SubscriptionDto>> getSubscriptionHistory() {
-        List<Subscription> subscriptions = subscriptionService.getSubscriptionHistoryForUser();
-        List<SubscriptionDto> dtos = subscriptions.stream()
-                .map(SubscriptionMapper::toDto)
-                .toList();
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok(subscriptionService.getSubscriptionHistoryDtosForUser());
     }
 
     /**
@@ -336,11 +331,7 @@ public class SubscriptionController {
      */
     @GetMapping("/all")
     public ResponseEntity<List<SubscriptionDto>> getAllSubscriptions() {
-        List<Subscription> subscriptions = subscriptionService.getAllSubscriptionsForAdmin();
-        List<SubscriptionDto> dtos = subscriptions.stream()
-                .map(SubscriptionMapper::toDto)
-                .toList();
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok(subscriptionService.getAllSubscriptionDtosForAdmin());
     }
 
     
