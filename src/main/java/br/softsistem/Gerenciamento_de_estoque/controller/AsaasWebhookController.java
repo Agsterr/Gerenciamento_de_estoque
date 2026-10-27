@@ -59,13 +59,23 @@ public class AsaasWebhookController {
             log.warn("Webhook Asaas em produção sem ASAAS_WEBHOOK_TOKEN configurado");
         }
 
+        Map<String, Object> payload;
         try {
-            Map<String, Object> payload = objectMapper.readValue(requestBody, new TypeReference<>() {});
+            payload = objectMapper.readValue(requestBody, new TypeReference<>() {});
+        } catch (Exception e) {
+            // Corpo inválido nunca vai processar: reenviar não adianta.
+            log.error("Webhook Asaas com JSON inválido: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("received", false, "error", "JSON inválido"));
+        }
+
+        try {
             asaasWebhookService.processEvent(payload);
             return ResponseEntity.ok(Map.of("received", true));
         } catch (Exception e) {
-            log.error("Erro ao processar webhook Asaas: {}", e.getMessage(), e);
-            return ResponseEntity.ok(Map.of("received", true, "note", "processamento assíncrono pendente"));
+            // 5xx faz o Asaas reenviar o evento (fila sequencial) em vez de perder a confirmação do pagamento.
+            log.error("Erro ao processar webhook Asaas, Asaas deve reenviar: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("received", false, "error", "falha ao processar, tente novamente"));
         }
     }
 }

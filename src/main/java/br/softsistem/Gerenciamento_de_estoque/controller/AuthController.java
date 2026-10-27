@@ -13,6 +13,7 @@ import br.softsistem.Gerenciamento_de_estoque.exception.LimiteDispositivosExcept
 import br.softsistem.Gerenciamento_de_estoque.exception.UsuarioDesativadoException;
 import br.softsistem.Gerenciamento_de_estoque.service.AuthService;
 import br.softsistem.Gerenciamento_de_estoque.service.LoginAuditoriaService;
+import br.softsistem.Gerenciamento_de_estoque.service.RegistrationAbuseGuard;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -31,11 +32,14 @@ public class AuthController {
     private final LoginAuditoriaService loginAuditoriaService;
     private final RegistrationProperties registrationProperties;
     private final DemoProperties demoProperties;
+    private final RegistrationAbuseGuard registrationAbuseGuard;
 
     public AuthController(AuthService authService,
                           LoginAuditoriaService loginAuditoriaService,
                           RegistrationProperties registrationProperties,
-                          DemoProperties demoProperties) {
+                          DemoProperties demoProperties,
+                          RegistrationAbuseGuard registrationAbuseGuard) {
+        this.registrationAbuseGuard = registrationAbuseGuard;
         this.authService = authService;
         this.loginAuditoriaService = loginAuditoriaService;
         this.registrationProperties = registrationProperties;
@@ -107,8 +111,10 @@ public class AuthController {
      */
     @PostMapping("/register")
     public ResponseEntity<UsuarioDto> register(
-            @RequestBody @Valid UsuarioRequestDto usuarioRequestDto
+            @RequestBody @Valid UsuarioRequestDto usuarioRequestDto,
+            HttpServletRequest httpRequest
     ) {
+        registrationAbuseGuard.check(httpRequest, usuarioRequestDto.email());
         UsuarioDto criado = authService.register(usuarioRequestDto);
         return ResponseEntity.status(201).body(criado);
     }
