@@ -33,7 +33,7 @@ export class TrialBannerComponent implements OnInit, OnDestroy {
 
   private pollSub?: RxSubscription;
 
-  private readonly defaultTrialDays = 15;
+  private readonly defaultTrialDays = 30;
 
 
 

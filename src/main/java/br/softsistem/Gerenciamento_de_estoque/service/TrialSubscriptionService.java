@@ -18,7 +18,7 @@ import br.softsistem.Gerenciamento_de_estoque.repository.PlanRepository;
 import br.softsistem.Gerenciamento_de_estoque.repository.SubscriptionRepository;
 
 /**
- * Gerencia o período de teste gratuito (15 dias) controlado pela aplicação.
+ * Gerencia o período de teste gratuito (30 dias) controlado pela aplicação.
  */
 @Service
 @Transactional
@@ -26,7 +26,7 @@ public class TrialSubscriptionService {
 
     private static final Logger log = LoggerFactory.getLogger(TrialSubscriptionService.class);
 
-    @Value("${app.subscription.trial-days:15}")
+    @Value("${app.subscription.trial-days:30}")
     private int trialDays;
 
     private final SubscriptionRepository subscriptionRepository;
@@ -42,7 +42,7 @@ public class TrialSubscriptionService {
     }
 
     /**
-     * Inicia trial de 15 dias para novo usuário (lógica interna, sem Asaas).
+     * Inicia trial de 30 dias para novo usuário (lógica interna, sem Asaas).
      */
     public Subscription startTrialForUser(Usuario user) {
         if (subscriptionRepository.hasActiveOrTrialSubscription(user)) {

@@ -67,7 +67,7 @@ public class PlanService {
     }
 
     /**
-     * Plano mensal padrão do SaaS (Gerenciamento de Estoque — R$ 69,90).
+     * Plano mensal padrão do SaaS (Gerenciamento de Estoque — R$ 99,90).
      */
     public Optional<Plan> getDefaultSaasPlan() {
         return planRepository.findByType(PlanType.BASIC)
