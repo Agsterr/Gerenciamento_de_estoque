@@ -27,12 +27,13 @@ import { AjudaComponent } from './ajuda/ajuda.component';
 import { LoginLogsComponent } from './login-logs/login-logs.component';
 import { SugestaoComponent } from './sugestao/sugestao.component';
 import { PesquisaPrecoComponent } from './pesquisa-preco/pesquisa-preco.component';
+import { RegisterComponent } from './register/register.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   { path: 'home', component: HomeComponent },
   { path: 'login', component: LoginComponent },
-  { path: 'register', redirectTo: 'login', pathMatch: 'full' },
+  { path: 'register', component: RegisterComponent },
   { path: 'orgs', component: OrgComponent, canActivate: [MasterAdminGuard] },
   { path: 'assinatura', component: AssinaturaComponent, canActivate: [AuthGuard] },
   { path: 'subscription/blocked', component: SubscriptionBlockedComponent, canActivate: [AuthGuard] },
